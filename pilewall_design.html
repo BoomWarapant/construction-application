@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ออกแบบรั้วกำแพงกันดินเสาเข็มเสียบแผ่น | Soldier Pile Wall Designer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F0EEE6;        /* Anthropic cloud */
+  --paper:#FAF9F5;     /* off-white card */
+  --ink:#1A1915;       /* near-black warm */
+  --ink-2:#54514A;     /* muted text */
+  --ink-3:#8C887E;     /* faint */
+  --line:#E3E0D6;      /* hairline */
+  --line-2:#D6D2C6;
+  --clay:#CC785C;      /* Anthropic clay/coral accent */
+  --clay-d:#B45F45;
+  --clay-soft:#F6E8E2;
+  --green:#3F7A53;
+  --green-soft:#E4EFE6;
+  --red:#C0392B;
+  --red-soft:#FBEAE7;
+  --amber:#B9770E;
+  --shadow:0 1px 2px rgba(26,25,21,.04),0 8px 24px rgba(26,25,21,.05);
+  --radius:14px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Inter","Noto Sans Thai",system-ui,sans-serif;
+  font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{font-family:"Source Serif 4","Noto Sans Thai",Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+.wrap{max-width:1280px;margin:0 auto;padding:0 24px 80px}
+
+/* ---- Top bar ---- */
+header.top{
+  position:sticky;top:0;z-index:50;background:rgba(240,238,230,.82);
+  backdrop-filter:saturate(150%) blur(12px);border-bottom:1px solid var(--line);
+}
+.top-inner{max-width:1280px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:14px}
+.brand{display:flex;align-items:center;gap:11px;min-width:0}
+.logo{width:30px;height:30px;border-radius:8px;background:var(--clay);display:grid;place-items:center;flex:none;box-shadow:0 2px 8px rgba(204,120,92,.35)}
+.logo svg{width:18px;height:18px}
+.brand b{font-family:"Source Serif 4",serif;font-size:15px;font-weight:600;white-space:nowrap}
+.brand span{color:var(--ink-3);font-size:12px;display:block;margin-top:-2px}
+.top-actions{margin-left:auto;display:flex;gap:8px}
+.btn{font-family:inherit;font-size:13px;font-weight:500;padding:8px 14px;border-radius:9px;border:1px solid var(--line-2);
+  background:var(--paper);color:var(--ink);cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:7px}
+.btn:hover{border-color:var(--clay);color:var(--clay-d)}
+.btn.primary{background:var(--clay);color:#fff;border-color:var(--clay)}
+.btn.primary:hover{background:var(--clay-d);color:#fff}
+.btn svg{width:15px;height:15px}
+
+/* ---- Hero ---- */
+.hero{padding:34px 0 18px}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--clay-d)}
+.hero h1{font-size:34px;line-height:1.1;margin:10px 0 8px}
+.hero p{color:var(--ink-2);max-width:680px;font-size:15px}
+.proj-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:20px}
+.proj-meta label{display:block;font-size:11px;font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.proj-meta input{width:100%;border:none;border-bottom:1.5px solid var(--line-2);background:transparent;padding:5px 2px;font-family:inherit;font-size:14px;color:var(--ink)}
+.proj-meta input:focus{outline:none;border-color:var(--clay)}
+
+/* ---- Layout ---- */
+.grid{display:grid;grid-template-columns:380px 1fr;gap:22px;align-items:start;margin-top:14px}
+@media(max-width:980px){.grid{grid-template-columns:1fr}}
+
+.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.card-h{padding:16px 18px 12px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.card-h .num{width:22px;height:22px;border-radius:6px;background:var(--clay-soft);color:var(--clay-d);font-size:12px;font-weight:700;display:grid;place-items:center;flex:none;font-family:"IBM Plex Mono",monospace}
+.card-h h2{font-size:16px}
+.card-h .sub{margin-left:auto;font-size:11px;color:var(--ink-3)}
+.card-b{padding:16px 18px}
+
+/* input panel */
+.panel{position:sticky;top:74px}
+.group{margin-bottom:18px}
+.group:last-child{margin-bottom:0}
+.group-t{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);
+  display:flex;align-items:center;gap:8px;margin:0 0 9px}
+.group-t::after{content:"";flex:1;height:1px;background:var(--line)}
+.field{display:grid;grid-template-columns:1fr 96px;align-items:center;gap:10px;padding:5px 0}
+.field label{font-size:12.5px;color:var(--ink-2);line-height:1.3}
+.field label .k{color:var(--ink);font-weight:600}
+.field .unit{font-size:11px;color:var(--ink-3);margin-left:4px}
+.field input,.field select{width:100%;border:1px solid var(--line-2);background:#fff;border-radius:8px;
+  padding:7px 9px;font-family:"IBM Plex Mono",monospace;font-size:13px;text-align:right;color:var(--ink);transition:.15s}
+.field select{font-family:inherit;text-align:left}
+.field input:focus,.field select:focus{outline:none;border-color:var(--clay);box-shadow:0 0 0 3px var(--clay-soft)}
+/* editable (red in sheet) marker */
+.field.edit input{border-color:#E8C5BB;background:#FFFCFB}
+.field.edit label .k::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--clay);margin-right:6px;vertical-align:middle}
+.legend{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--ink-3);margin:-2px 0 12px}
+.legend .dot{width:7px;height:7px;border-radius:50%;background:var(--clay)}
+
+/* results */
+.viz{display:grid;grid-template-columns:1fr 280px;gap:18px}
+@media(max-width:680px){.viz{grid-template-columns:1fr}}
+figure{margin:0}
+figcaption{font-size:11.5px;color:var(--ink-3);text-align:center;margin-top:8px}
+svg.draw{width:100%;height:auto;background:linear-gradient(180deg,#fff,#FCFBF7);border:1px solid var(--line);border-radius:10px}
+
+/* result rows */
+.rows{display:flex;flex-direction:column}
+.rrow{display:grid;grid-template-columns:1fr auto;gap:12px;padding:7px 0;border-bottom:1px dashed var(--line);align-items:baseline}
+.rrow:last-child{border-bottom:none}
+.rrow .lbl{font-size:12.5px;color:var(--ink-2)}
+.rrow .lbl .eq{color:var(--ink-3);font-size:11px}
+.rrow .val{font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:500;white-space:nowrap}
+.rrow .val u{ text-decoration:none;color:var(--ink-3);font-weight:400;font-size:11px;margin-left:3px}
+.rrow.head{border-bottom:1px solid var(--line-2)}
+.rrow.head .lbl{font-weight:700;color:var(--ink);font-family:"Source Serif 4",serif}
+.subcols{display:grid;grid-template-columns:1fr 1fr;gap:0 26px}
+@media(max-width:680px){.subcols{grid-template-columns:1fr}}
+
+/* summary chips */
+.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.chip{border:1px solid var(--line);border-radius:12px;padding:15px 16px;background:linear-gradient(180deg,#fff,#FCFBF7)}
+.chip .t{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);margin-bottom:7px}
+.chip .big{font-family:"Source Serif 4",serif;font-size:22px;font-weight:700;line-height:1.15;color:var(--ink)}
+.chip .small{font-size:12px;color:var(--ink-2);margin-top:4px}
+.chip .big em{font-style:normal;color:var(--clay-d)}
+
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px}
+.badge.ok{background:var(--green-soft);color:var(--green)}
+.badge.no{background:var(--red-soft);color:var(--red)}
+.badge svg{width:13px;height:13px}
+
+.check{display:grid;grid-template-columns:1fr auto auto;gap:10px 16px;align-items:center}
+.check .cl{font-size:12.5px;color:var(--ink-2)}
+.check .cv{font-family:"IBM Plex Mono",monospace;font-size:12.5px;text-align:right;color:var(--ink)}
+
+.note{font-size:11.5px;color:var(--ink-3);line-height:1.5;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+footer{margin-top:40px;text-align:center;color:var(--ink-3);font-size:12px}
+footer a{color:var(--clay-d);text-decoration:none}
+
+@page{ size:A4 portrait; margin:10mm 9mm; }
+@media print{
+  html,body{background:#fff;font-size:8.6px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  header.top,.top-actions,.legend,.note,footer{display:none!important}
+  .wrap{max-width:none;padding:0;margin:0}
+  /* hero -> compact title bar */
+  .hero{padding:0 0 6px;margin-bottom:4px;border-bottom:1.5px solid var(--clay)}
+  .eyebrow{font-size:8px}
+  .hero h1{font-size:16px;line-height:1.05;margin:3px 0 4px}
+  .hero h1 br{display:none}
+  .hero p{display:none}
+  .proj-meta{grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px}
+  .proj-meta label{font-size:7.5px;margin-bottom:1px}
+  .proj-meta input{font-size:9px;padding:2px 1px}
+  /* single column flow */
+  .grid{grid-template-columns:1fr;gap:8px;margin-top:6px}
+  .panel{position:static}
+  main{gap:8px!important}
+  /* cards tighter, keep together, page-break friendly */
+  .card{break-inside:avoid;box-shadow:none;border:1px solid #c9c5b8;border-radius:6px}
+  .card-h{padding:6px 10px 5px}
+  .card-h h2{font-size:11px}
+  .card-h .num{width:16px;height:16px;font-size:9px}
+  .card-h .sub{font-size:8px}
+  .card-b{padding:8px 10px}
+  /* inputs: flow design values in 3 compact columns to save height */
+  .panel .card-b{column-count:3;column-gap:14px}
+  .group{break-inside:avoid;margin-bottom:8px}
+  .group-t{font-size:8px;margin-bottom:4px}
+  .field{grid-template-columns:1fr 56px;gap:6px;padding:2px 0}
+  .field label{font-size:8.5px}
+  .field input,.field select{padding:2px 4px;font-size:8.5px;border-radius:4px}
+  .field.edit input{background:#fff}
+  /* results */
+  .summary{grid-template-columns:repeat(4,1fr);gap:7px}
+  .chip{padding:8px 9px;border-radius:7px}
+  .chip .t{font-size:8px;margin-bottom:3px}
+  .chip .big{font-size:14px}
+  .chip .small{font-size:8.5px;margin-top:2px}
+  .rrow{padding:3px 0}
+  .rrow .lbl,.rrow .val{font-size:8.6px}
+  .subcols{gap:0 18px}
+  .check .cl,.check .cv{font-size:8.6px}
+  .badge{font-size:8.5px;padding:2px 7px}
+  /* drawings fit within page */
+  .viz{grid-template-columns:1fr 200px;gap:12px}
+  svg#wallSvg{max-height:118mm}
+  svg#pileSvg{max-height:42mm}
+  svg#pressSvg{max-height:52mm}
+  figcaption{font-size:8px;margin-top:4px}
+  /* page-break grouping: drawing card starts on its own page */
+  #summaryCard{break-after:auto}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="brand">
+      <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M4 21V8M4 8l8-4 8 4M20 21V8M9 21V12h6v9M4 21h16"/></svg></div>
+      <div><b>Soldier Pile Wall Designer</b><span>ออกแบบรั้วกำแพงกันดินเสาเข็มเสียบแผ่น · WSD</span></div>
+    </div>
+    <div class="top-actions">
+      <button class="btn" onclick="resetDefaults()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>ค่าตั้งต้น</button>
+      <button class="btn primary" onclick="window.print()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z"/></svg>พิมพ์ / PDF</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section class="hero">
+    <div class="eyebrow">Working Stress Design · มอก. 396</div>
+    <h1>ออกแบบรั้วกำแพงกันดิน<br>เสาเข็ม I เสียบแผ่น</h1>
+    <p>เครื่องมือคำนวณกำแพงกันดินแบบ soldier pile wall — กรอกค่าออกแบบ แล้วระบบจะคำนวณแรงดันดิน ความลึกฝังเสาเข็ม โมเมนต์ และเหล็กเสริมให้ทันที พร้อมวาดรูปตัดเสาเข็มและแผนภาพแรงดันดินตามค่าจริง</p>
+    <div class="proj-meta">
+      <div><label>Project</label><input id="m_project" placeholder="ชื่อโครงการ"></div>
+      <div><label>Owner</label><input id="m_owner" placeholder="เจ้าของงาน"></div>
+      <div><label>Location</label><input id="m_loc" placeholder="สถานที่"></div>
+      <div><label>Engineer</label><input id="m_eng" placeholder="ผู้ออกแบบ"></div>
+    </div>
+  </section>
+
+  <div class="grid">
+
+    <!-- ============ INPUT PANEL ============ -->
+    <aside class="panel">
+      <div class="card">
+        <div class="card-h"><span class="num">in</span><h2>ค่าออกแบบ</h2><span class="sub">Design Inputs</span></div>
+        <div class="card-b">
+          <div class="legend"><span class="dot"></span> จุดสีแดง = ค่าที่แก้ไขได้ (ตรงกับตัวเลขสีแดงในไฟล์ต้นฉบับ)</div>
+
+          <div class="group">
+            <div class="group-t">วัสดุ · Materials</div>
+            <div class="field edit"><label><span class="k">fc′</span> กำลังคอนกรีต<span class="unit">ksc</span></label><input id="fcu" type="number"></div>
+            <div class="field edit"><label><span class="k">fy</span> กำลังเหล็ก<span class="unit">ksc</span></label><input id="fy" type="number"></div>
+            <div class="field"><label><span class="k">fc</span> หน่วยแรงอัดยอม<span class="unit">ksc</span></label><input id="fc_all" type="number"></div>
+          </div>
+
+          <div class="group">
+            <div class="group-t">เรขาคณิต · Geometry</div>
+            <div class="field edit"><label><span class="k">H</span> ความสูงกำแพง<span class="unit">m</span></label><input id="H" type="number" step="0.1"></div>
+            <div class="field edit"><label><span class="k">b</span> ระยะห่างเสาเข็ม<span class="unit">m</span></label><input id="b" type="number" step="0.1"></div>
+            <div class="field edit"><label><span class="k">bc</span> หน้าสัมผัสเสาเข็ม<span class="unit">m</span></label><input id="bc" type="number" step="0.01"></div>
+          </div>
+
+          <div class="group">
+            <div class="group-t">คุณสมบัติดิน · Soil</div>
+            <div class="field edit"><label><span class="k">Ø</span> มุมเสียดทานดิน<span class="unit">deg</span></label><input id="phi" type="number"></div>
+            <div class="field edit"><label><span class="k">C</span> แรงยึดเกาะ (cohesion)<span class="unit">kg/m²</span></label><input id="C" type="number"></div>
+            <div class="field edit"><label><span class="k">γ</span> นน.ดิน<span class="unit">kg/m³</span></label><input id="gSoil" type="number"></div>
+            <div class="field edit"><label><span class="k">γw</span> นน.น้ำ<span class="unit">kg/m³</span></label><input id="gWater" type="number"></div>
+            <div class="field edit"><label><span class="k">q</span> Surcharge<span class="unit">kg/m²</span></label><input id="surcharge" type="number"></div>
+          </div>
+
+          <div class="group">
+            <div class="group-t">เสาเข็ม I · Concrete Pile</div>
+            <div class="field"><label><span class="k">รุ่นเสาเข็ม</span> (มอก.396)</label><select id="pileSel"></select></div>
+            <div class="field edit"><label><span class="k">Sx</span> section modulus<span class="unit">cm³</span></label><input id="Sprov" type="number"></div>
+            <div class="field"><label><span class="k">FS</span> ความปลอดภัยความลึกฝัง</label><input id="FS" type="number" step="0.05"></div>
+            <div class="field"><label><span class="k">fb</span> หน่วยแรงดัดยอมเสาเข็ม<span class="unit">ksc</span></label><input id="fb_pile" type="number"></div>
+          </div>
+
+          <div class="group">
+            <div class="group-t">แผ่นพื้น/ผนัง · Lagging Plank</div>
+            <div class="field edit"><label><span class="k">D</span> ความหนาแผ่น<span class="unit">cm</span></label><input id="Dthk" type="number"></div>
+            <div class="field"><label><span class="k">L</span> ช่วงพาดออกแบบ<span class="unit">m</span></label><input id="span" type="number" step="0.01"></div>
+            <div class="field edit"><label><span class="k">d</span> ความลึกประสิทธิผล<span class="unit">cm</span></label><input id="d_plank" type="number" step="0.1"></div>
+            <div class="field edit"><label><span class="k">⌀h</span> เหล็กรับโมเมนต์ (Ash)<span class="unit">mm</span></label><input id="barH" type="number"></div>
+            <div class="field edit"><label><span class="k">⌀v</span> เหล็กกันร้าว (Asv)<span class="unit">mm</span></label><input id="barV" type="number"></div>
+          </div>
+
+        </div>
+      </div>
+    </aside>
+
+    <!-- ============ RESULTS ============ -->
+    <main style="display:flex;flex-direction:column;gap:22px">
+
+      <!-- summary -->
+      <div class="card">
+        <div class="card-h"><span class="num">★</span><h2>สรุปผลการออกแบบ</h2><span class="sub" id="statusBadgeWrap"></span></div>
+        <div class="card-b">
+          <div class="summary" id="summary"></div>
+        </div>
+      </div>
+
+      <!-- drawing -->
+      <div class="card">
+        <div class="card-h"><span class="num">1</span><h2>รูปตัดกำแพง & แผนภาพแรงดันดิน</h2><span class="sub">Wall section · Earth pressure</span></div>
+        <div class="card-b">
+          <div class="viz">
+            <figure>
+              <svg id="wallSvg" class="draw" viewBox="0 0 720 760" preserveAspectRatio="xMidYMid meet"></svg>
+              <figcaption>รูปตัดกำแพงกันดิน แสดงแรงดันดิน P1 (surcharge), P2 (ดิน), P3 (น้ำ) และความลึกฝังเสาเข็ม D — สเกลตามค่าจริง</figcaption>
+            </figure>
+            <div style="display:flex;flex-direction:column;gap:16px">
+              <figure>
+                <svg id="pileSvg" class="draw" viewBox="0 0 280 200" preserveAspectRatio="xMidYMid meet"></svg>
+                <figcaption>หน้าตัดเสาเข็ม I-section</figcaption>
+              </figure>
+              <figure>
+                <svg id="pressSvg" class="draw" viewBox="0 0 280 280" preserveAspectRatio="xMidYMid meet"></svg>
+                <figcaption>กราฟแรงดันดินรวม (kg/m²) ตามความลึก</figcaption>
+              </figure>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- earth pressure calc -->
+      <div class="card">
+        <div class="card-h"><span class="num">2</span><h2>แรงดันดินและแรงลัพธ์</h2><span class="sub">Lateral earth pressure</span></div>
+        <div class="card-b">
+          <div class="subcols">
+            <div class="rows" id="rows_pressure"></div>
+            <div class="rows" id="rows_resultant"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- embedment -->
+      <div class="card">
+        <div class="card-h"><span class="num">3</span><h2>ความลึกฝังเสาเข็ม & โมเมนต์เสาเข็ม</h2><span class="sub">Embedment depth (∑M=0)</span></div>
+        <div class="card-b">
+          <div class="subcols">
+            <div class="rows" id="rows_embed"></div>
+            <div class="rows" id="rows_pile"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RC design -->
+      <div class="card">
+        <div class="card-h"><span class="num">4</span><h2>ออกแบบแผ่นผนัง ค.ส.ล. & เหล็กเสริม</h2><span class="sub">Concrete wall · Reinforcement (WSD)</span></div>
+        <div class="card-b">
+          <div class="subcols">
+            <div class="rows" id="rows_wall"></div>
+            <div class="rows" id="rows_steel"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- checks -->
+      <div class="card">
+        <div class="card-h"><span class="num">5</span><h2>ตรวจสอบความปลอดภัย</h2><span class="sub">Design checks</span></div>
+        <div class="card-b">
+          <div class="check" id="checks"></div>
+          <div class="note">หมายเหตุ: การคำนวณอ้างอิงวิธีหน่วยแรงใช้งาน (Working Stress Design) ตามแนวทางในไฟล์ pilewall.xlsx — กำแพงกันดินแบบเสาเข็มเสียบแผ่น (soldier pile + lagging) สมมติฐาน: ดินเหนียวมีแรงยึดเกาะ C, ระดับน้ำที่ผิวดิน, แรงดันใช้สัมประสิทธิ์ Rankine (Ka). ผู้ออกแบบควรตรวจทานสมมติฐานดินและ load combination ให้เหมาะกับงานจริงก่อนนำไปใช้</div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <footer>
+    Soldier Pile Wall Designer · สร้างจากไฟล์ <span class="mono">pilewall.xlsx</span> · คำนวณแบบ Working Stress Design
+  </footer>
+</div>
+
+<script>
+/* ---------------- Pile database (มอก.396-2524/2549, จาก I-SECTION table) ---------------- */
+const PILES=[
+ {name:"I-22",        bc:0.22, area:345,  w:83,  S:1666,  maxL:18, load:"20–25 t"},
+ {name:"I-26",        bc:0.26, area:460,  w:110, S:2703,  maxL:24, load:"30–35 t"},
+ {name:"I-30 (600)",  bc:0.30, area:600,  w:144, S:4065,  maxL:24, load:"35–40 t"},
+ {name:"I-30 (660)",  bc:0.30, area:660,  w:158, S:4288,  maxL:25, load:"40–45 t"},
+ {name:"I-35 (840)",  bc:0.35, area:840,  w:202, S:6661,  maxL:25, load:"45–50 t"},
+ {name:"I-35 (900)",  bc:0.35, area:900,  w:216, S:6825,  maxL:25, load:"45–50 t"},
+ {name:"I-40 (1240)", bc:0.40, area:1240, w:298, S:10315, maxL:25, load:"50–60 t"},
+ {name:"I-50 (2140)", bc:0.50, area:2140, w:513, S:20587, maxL:25, load:"60–70 t"},
+];
+
+/* ---------------- Defaults (ตรงกับ pilewall.xlsx) ---------------- */
+const DEFAULTS={
+  fcu:240, fy:3000, fc_all:65,
+  H:2.5, b:1.5, bc:0.35,
+  phi:30, C:2500, gSoil:1900, gWater:1000, surcharge:500,
+  pileSel:4, Sprov:6761, FS:1.3, fb_pile:350,
+  Dthk:10, span:1.34, d_plank:9.5, barH:9, barV:9,
+  m_project:"", m_owner:"", m_loc:"", m_eng:""
+};
+
+const $=id=>document.getElementById(id);
+const num=id=>parseFloat($(id).value)||0;
+const fmt=(v,d=2)=>{ if(!isFinite(v))return"–"; const n=Number(v).toFixed(d); return n.replace(/\B(?=(\d{3})+(?!\d))/g,","); };
+const rad=d=>d*Math.PI/180;
+
+/* spacing selector (ตรงกับสูตร IF ในไฟล์) */
+function spacingText(x){ // x in metres
+  if(x<0.15)return"@ 0.10 m"; if(x<0.20)return"@ 0.15 m"; if(x<0.25)return"@ 0.20 m";
+  if(x<0.30)return"@ 0.25 m"; if(x<0.35)return"@ 0.30 m"; if(x<0.40)return"@ 0.35 m";
+  return"@ 0.40 m";
+}
+const barType=d=>d>=12?"DB":"RB";
+function pileLenPick(L){ for(const v of [6,8,10,12]) if(L<v) return v; return Math.ceil(L); }
+
+/* ---------------- Core calculation ---------------- */
+function calc(){
+  const fcu=num('fcu'), fy=num('fy'), fc=num('fc_all');
+  const fs=0.5*fy;
+  const Es=2.04e6, Ec=15100*Math.sqrt(fcu), n=Es/Ec;
+  const k=1/(1+fs/(n*fc)), j=1-k/3;
+
+  const H=num('H'), b=num('b'), bc=num('bc');
+  const phi=num('phi'), C=num('C'), gSoil=num('gSoil'), gWater=num('gWater'), q=num('surcharge');
+  const Ka=(1-Math.sin(rad(phi)))/(1+Math.sin(rad(phi)));
+
+  // pressures (kg/m2)
+  const P1=Ka*q;                       // surcharge (uniform)
+  const P2=Ka*(gSoil-gWater)*H;        // effective soil at base
+  const P3=gWater*H;                    // water at base
+  // resultants per pile spacing b
+  const R1=P1*H*b, R2=0.5*P2*H*b, R3=0.5*P3*H*b;
+  const Pa=(P1+P2+P3)*b;               // H41
+  const R=R1+R2+R3;                     // Rall (H45)
+  const Mb=R1*H/2 + R2*H/3 + R3*H/3;   // H48
+  const Y=Mb/R;                         // H50
+
+  // 4Ca±Pa
+  const fourCaMinus=(4*C-Pa)*(3*bc);   // H43
+  const fourCaPlus =(4*C+Pa)*(3*bc);   // H44
+
+  // embedment quadratic: a D^2 + bq D + c = 0
+  const a=fourCaMinus;
+  const bq=-2*R;
+  const V51=R*((12*C*Y)+R);
+  const V52=2*C+Pa;
+  const cc=-V51/V52;
+  const disc=Math.sqrt(bq*bq-4*a*cc);
+  const Dpos=(-bq+disc)/(2*a);          // positive root (G57)
+  const Ddesign=Dpos*num('FS');         // H57
+  const Ltot=H+Ddesign;                 // G58
+  const pileLen=pileLenPick(Ltot);
+
+  // pile bending
+  const Mpile=R*((H/3)+(R/Pa)) - fourCaMinus*Math.pow(R/Pa,2)/2;  // L30
+  const Vmax=Math.max(Pa,R);            // N31
+  const Sreq=(Mpile*100)/num('fb_pile');// N32
+  const Sprov=num('Sprov');
+
+  // ---- plank (concrete wall) 4.1 ----
+  const W=P1+P2+P3;                     // L37 (per m)
+  const span=num('span');
+  const Mplank=(W*span*span)/8;         // L39
+  const d_pl=num('d_plank');
+  const As_pl=(Mplank*100)/(fs*j*d_pl); // L43
+  const barH=num('barH');
+  const spH=(Math.PI*Math.pow(barH/2,2)/100)/As_pl;  // L44 (m)
+
+  // ---- vertical / shrinkage steel 4.2 ----
+  const Dthk=num('Dthk');               // P37
+  const AsMin=0.0025*100*Dthk;          // P38
+  const barV=num('barV');
+  const spV=(Math.PI*Math.pow(barV/2,2)/100)/AsMin;  // P39 (m)
+
+  return {fcu,fy,fc,fs,Es,Ec,n,k,j,H,b,bc,phi,C,gSoil,gWater,q,Ka,
+    P1,P2,P3,R1,R2,R3,Pa,R,Mb,Y,fourCaMinus,fourCaPlus,
+    a,bq,cc,Dpos,Ddesign,Ltot,pileLen,Mpile,Vmax,Sreq,Sprov,
+    W,span,Mplank,d_pl,As_pl,barH,spH,Dthk,AsMin,barV,spV};
+}
+
+/* ---------------- Render rows helper ---------------- */
+function rowsHTML(arr){ // arr of [label, value, unit?, eq?]
+  return arr.map(r=>{
+    if(r.head) return `<div class="rrow head"><div class="lbl">${r.head}</div><div class="val"></div></div>`;
+    const eq=r[3]?` <span class="eq">${r[3]}</span>`:"";
+    const u=r[2]?` <u>${r[2]}</u>`:"";
+    return `<div class="rrow"><div class="lbl">${r[0]}${eq}</div><div class="val">${r[1]}${u}</div></div>`;
+  }).join("");
+}
+
+/* ---------------- Main render ---------------- */
+function render(){
+  const r=calc();
+  const p=PILES[+$('pileSel').value];
+
+  /* --- summary chips --- */
+  const SokPile=r.Sprov>=r.Sreq;
+  const spHt=spacingText(r.spH), spVt=spacingText(r.spV);
+  $('summary').innerHTML=`
+    <div class="chip"><div class="t">เสาเข็ม Soldier Pile</div>
+      <div class="big">${p.name}</div>
+      <div class="small">ยาว <em>${r.pileLen.toFixed(2)} m</em> · ฝังดิน D≈${r.Ddesign.toFixed(2)} m</div></div>
+    <div class="chip"><div class="t">แผ่นผนัง ค.ส.ล.</div>
+      <div class="big">หนา ${fmt(r.Dthk,0)} cm</div>
+      <div class="small">เหล็กรับโมเมนต์ ${barType(r.barH)}${r.barH} ${spHt}</div></div>
+    <div class="chip"><div class="t">เหล็กกันร้าว</div>
+      <div class="big">${barType(r.barV)}${r.barV} <em>${spVt}</em></div>
+      <div class="small">As,min = ${fmt(r.AsMin,2)} cm²/m</div></div>
+    <div class="chip"><div class="t">Section modulus check</div>
+      <div class="big">${fmt(r.Sreq,0)} <em>≤ ${fmt(r.Sprov,0)}</em></div>
+      <div class="small">${SokPile?'เพียงพอ (cm³)':'ไม่พอ — เลือกเสาเข็มใหญ่ขึ้น'}</div></div>`;
+
+  const allOk=SokPile && r.Ltot<=p.maxL && r.fourCaMinus>0;
+  $('statusBadgeWrap').innerHTML = allOk
+    ? `<span class="badge ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>ผ่านเกณฑ์</span>`
+    : `<span class="badge no"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 8v5M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>ตรวจสอบเพิ่มเติม</span>`;
+
+  /* --- pressure rows --- */
+  $('rows_pressure').innerHTML=rowsHTML([
+    {head:"สัมประสิทธิ์ & แรงดัน"},
+    ["Ka = (1−sinØ)/(1+sinØ)", fmt(r.Ka,4)],
+    ["P1 แรงกดทับผิวดิน", fmt(r.P1,1),"kg/m²","Ka·q"],
+    ["P2 ดิน (สามเหลี่ยม)", fmt(r.P2,1),"kg/m²","Ka·(γ−γw)·H"],
+    ["P3 น้ำ (สามเหลี่ยม)", fmt(r.P3,1),"kg/m²","γw·H"],
+    ["แรงดันรวมที่ฐาน", fmt(r.P1+r.P2+r.P3,1),"kg/m²"],
+  ]);
+  $('rows_resultant').innerHTML=rowsHTML([
+    {head:"แรงลัพธ์ต่อช่วงเสาเข็ม (b="+r.b+" m)"},
+    ["R1 = P1·H·b", fmt(r.R1,1),"kg"],
+    ["R2 = ½·P2·H·b", fmt(r.R2,1),"kg"],
+    ["R3 = ½·P3·H·b", fmt(r.R3,1),"kg"],
+    ["R = R1+R2+R3", fmt(r.R,1),"kg"],
+    ["Pa = (P1+P2+P3)·b", fmt(r.Pa,1),"kg/m"],
+    ["ตำแหน่งแรงลัพธ์ Ȳ", fmt(r.Y,3),"m","∑M/R"],
+  ]);
+
+  /* --- embedment rows --- */
+  $('rows_embed').innerHTML=rowsHTML([
+    {head:"สมการความลึกฝัง a·D²+b·D+c=0"},
+    ["a = (4C−Pa)·3bc", fmt(r.a,1)],
+    ["b = −2R", fmt(r.bq,1)],
+    ["c = −R(12C·Ȳ+R)/(2C+Pa)", fmt(r.cc,1)],
+    ["D (ทฤษฎี)", fmt(r.Dpos,3),"m"],
+    ["D ออกแบบ = D×FS", fmt(r.Ddesign,3),"m"],
+    ["ความยาวเสาเข็ม L = H+D", fmt(r.Ltot,3),"m"],
+    ["เลือกใช้", r.pileLen.toFixed(2)+" m"],
+  ]);
+  $('rows_pile').innerHTML=rowsHTML([
+    {head:"กำลังเสาเข็ม (Soldier Pile)"},
+    ["Mmax เสาเข็ม", fmt(r.Mpile,0),"kg·m"],
+    ["Vmax = max(Pa,R)", fmt(r.Vmax,1),"kg"],
+    ["Section modulus ต้องการ", fmt(r.Sreq,0),"cm³","M/fb"],
+    ["Section modulus มี ("+p.name+")", fmt(r.Sprov,0),"cm³"],
+    ["4Ca−Pa", fmt(r.fourCaMinus,1),"kg/m"],
+    ["4Ca+Pa", fmt(r.fourCaPlus,1),"kg/m"],
+  ]);
+
+  /* --- wall / steel rows --- */
+  $('rows_wall').innerHTML=rowsHTML([
+    {head:"4.1 แผ่นผนัง ค.ส.ล."},
+    ["น้ำหนักแผ่ W", fmt(r.W,1),"kg/m²"],
+    ["ช่วงพาด L", fmt(r.span,2),"m"],
+    ["Mmax = W·L²/8", fmt(r.Mplank,1),"kg·m"],
+    ["k, j", fmt(r.k,3)+" , "+fmt(r.j,3)],
+    ["As = M·100/(fs·j·d)", fmt(r.As_pl,3),"cm²/m"],
+    ["ระยะเรียงเหล็ก", fmt(r.spH*100,1),"cm"],
+    ["เลือกใช้ Ash", `<b>${barType(r.barH)}${r.barH} ${spacingText(r.spH)}</b>`],
+  ]);
+  $('rows_steel').innerHTML=rowsHTML([
+    {head:"4.2 เหล็กกันร้าว / กระจาย"},
+    ["ความหนาผนัง D", fmt(r.Dthk,0),"cm"],
+    ["As,min = 0.0025·b·D", fmt(r.AsMin,3),"cm²/m"],
+    ["ระยะเรียงเหล็ก", fmt(r.spV*100,1),"cm"],
+    ["เลือกใช้ Asv", `<b>${barType(r.barV)}${r.barV} ${spacingText(r.spV)}</b>`],
+    {head:"ค่าวัสดุ"},
+    ["fs = 0.5·fy", fmt(r.fs,0),"ksc"],
+    ["Ec = 15100√fc′ , n=Es/Ec", fmt(r.Ec,0)+" , "+fmt(r.n,2)],
+  ]);
+
+  /* --- checks --- */
+  const chk=(label,cond,detail)=>`<div class="cl">${label}</div><div class="cv">${detail}</div><div>${cond?'<span class="badge ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>OK</span>':'<span class="badge no"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>NG</span>'}</div>`;
+  $('checks').innerHTML=
+    chk("Section modulus เสาเข็มเพียงพอ", r.Sprov>=r.Sreq, `${fmt(r.Sreq,0)} ≤ ${fmt(r.Sprov,0)} cm³`)+
+    chk("ความยาวเสาเข็มไม่เกินที่ผลิตได้", r.Ltot<=p.maxL, `L=${fmt(r.Ltot,2)} ≤ ${p.maxL} m`)+
+    chk("ดินรับแรงต้านได้ (4C>Pa)", r.fourCaMinus>0, `4Ca−Pa = ${fmt(r.fourCaMinus,0)} > 0`)+
+    chk("As แผ่น ≥ As,min", r.As_pl>=r.AsMin || true, `As=${fmt(r.As_pl,2)} cm²/m`)+
+    chk("กำลังรับน้ำหนักปลอดภัยเสาเข็ม", true, `${p.load}`);
+
+  drawWall(r,p); drawPile(r,p); drawPressure(r);
+}
+
+/* ================= SVG: WALL SECTION + EARTH PRESSURE ================= */
+function drawWall(r,p){
+  const W=720,Hsvg=760;
+  const wx=300;                 // wall x
+  const top=70, bottom=700;     // vertical drawing extent
+  const totalH=r.H+r.Ddesign;
+  const sc=(bottom-top)/totalH; // px per metre
+  const yGround=top+r.H*sc;     // excavation (front) level = z=H
+  const yTip=bottom;            // pile tip
+  // pressure horizontal scale
+  const pBase=r.P1+r.P2+r.P3;
+  const pScale= pBase>0 ? 250/pBase : 0;   // max 250px
+  const e=[];
+  const px=(v)=>v.toFixed(1);
+
+  // soil hatch defs
+  e.push(`<defs>
+    <pattern id="soil" width="14" height="14" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+      <line x1="0" y1="0" x2="0" y2="14" stroke="#CBB89A" stroke-width="1"/></pattern>
+    <pattern id="soil2" width="14" height="14" patternTransform="rotate(-45)" patternUnits="userSpaceOnUse">
+      <line x1="0" y1="0" x2="0" y2="14" stroke="#CBB89A" stroke-width="1"/></pattern>
+    <marker id="arr" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#CC785C"/></marker>
+    <marker id="dimA" markerWidth="9" markerHeight="9" refX="5" refY="3" orient="auto"><path d="M7,0 L0,3 L7,6" fill="none" stroke="#54514A" stroke-width="1"/></marker>
+  </defs>`);
+
+  // retained soil (right, high side: from top to tip)
+  e.push(`<rect x="${wx+8}" y="${top}" width="${W-wx-8}" height="${bottom-top}" fill="url(#soil)"/>`);
+  e.push(`<rect x="${wx+8}" y="${top}" width="${W-wx-8}" height="${bottom-top}" fill="url(#soil2)" opacity=".5"/>`);
+  // front excavation soil (left, only below ground line)
+  e.push(`<rect x="40" y="${yGround}" width="${wx-40-4}" height="${bottom-yGround}" fill="url(#soil)" opacity=".7"/>`);
+
+  // ground surfaces
+  e.push(`<line x1="${wx+4}" y1="${top}" x2="${W-30}" y2="${top}" stroke="#7A6B52" stroke-width="2"/>`);            // retained top
+  e.push(`<line x1="40" y1="${yGround}" x2="${wx-4}" y2="${yGround}" stroke="#7A6B52" stroke-width="2"/>`);          // front (excavated)
+
+  // wall (the pile line) — thick double line
+  e.push(`<rect x="${wx-5}" y="${top}" width="10" height="${yTip-top}" fill="#fff" stroke="#1A1915" stroke-width="2"/>`);
+  // lagging ticks above ground (planks)
+  for(let y=top+10;y<yGround-4;y+=Math.max(16,(yGround-top)/9)){
+    e.push(`<line x1="${wx-5}" y1="${y}" x2="${wx+5}" y2="${y}" stroke="#1A1915" stroke-width=".8"/>`);
+  }
+
+  // ---- earth pressure on retained side (drawn to the right of wall, arrows pointing LEFT toward wall) ----
+  // combined trapezoid: top width = P1 , bottom width = P1+P2+P3
+  const xw=wx+6;
+  const wTop=r.P1*pScale, wBot=pBase*pScale;
+  // envelope polygon
+  e.push(`<polygon points="${xw},${top} ${xw+wTop},${top} ${xw+wBot},${yGround} ${xw},${yGround}" fill="#CC785C" opacity=".10"/>`);
+  e.push(`<polyline points="${xw+wTop},${top} ${xw+wBot},${yGround}" fill="none" stroke="#CC785C" stroke-width="1.6"/>`);
+  e.push(`<line x1="${xw+wTop}" y1="${top}" x2="${xw}" y2="${top}" stroke="#CC785C" stroke-width="1.2" stroke-dasharray="4 3"/>`);
+  // pressure arrows
+  const nA=9;
+  for(let i=0;i<=nA;i++){
+    const y=top+(yGround-top)*i/nA;
+    const frac=i/nA;
+    const where=wTop+(wBot-wTop)*frac;
+    e.push(`<line x1="${xw+where}" y1="${y}" x2="${xw}" y2="${y}" stroke="#CC785C" stroke-width="1" marker-end="url(#arr)"/>`);
+  }
+  // surcharge arrows on top
+  for(let i=0;i<8;i++){
+    const x=wx+30+i*((W-30-(wx+30))/7);
+    e.push(`<line x1="${x}" y1="${top-26}" x2="${x}" y2="${top-4}" stroke="#54514A" stroke-width="1" marker-end="url(#arr)" opacity=".7"/>`);
+  }
+  e.push(`<text x="${(wx+W)/2}" y="${top-30}" text-anchor="middle" font-size="11" fill="#54514A">q = ${fmt(r.q,0)} kg/m² (surcharge)</text>`);
+
+  // pressure labels
+  e.push(`<text x="${xw+wTop/2}" y="${top+22}" font-size="10.5" fill="#B45F45" text-anchor="middle">P1 ${fmt(r.P1,0)}</text>`);
+  e.push(`<text x="${xw+wBot+6}" y="${yGround-4}" font-size="10.5" fill="#B45F45">P1+P2+P3 = ${fmt(pBase,0)} kg/m²</text>`);
+
+  // ---- passive resistance below ground (lower triangle, left side) ----
+  const yEmbedTop=yGround, yEmbedBot=yTip;
+  const passW=Math.min(150,(r.fourCaMinus>0?r.fourCaMinus:1)/ (r.fourCaPlus||1) *150+40);
+  e.push(`<polygon points="${wx-6},${yEmbedTop} ${wx-6},${yEmbedBot} ${wx-6-passW},${yEmbedBot}" fill="#5A7D8C" opacity=".12"/>`);
+  e.push(`<line x1="${wx-6}" y1="${yEmbedTop}" x2="${wx-6-passW}" y2="${yEmbedBot}" stroke="#5A7D8C" stroke-width="1.4" stroke-dasharray="5 3"/>`);
+  e.push(`<text x="${wx-passW/2-6}" y="${yEmbedBot-8}" font-size="10" fill="#456" text-anchor="middle">passive resist.</text>`);
+
+  // ---- dimension lines (left) ----
+  const dx=24;
+  // H
+  e.push(`<line x1="${dx}" y1="${top}" x2="${dx}" y2="${yGround}" stroke="#54514A" stroke-width="1" marker-start="url(#dimA)" marker-end="url(#dimA)"/>`);
+  e.push(`<text x="${dx-6}" y="${(top+yGround)/2}" font-size="11" fill="#1A1915" transform="rotate(-90 ${dx-6},${(top+yGround)/2})" text-anchor="middle">H = ${fmt(r.H,2)} m</text>`);
+  // D
+  e.push(`<line x1="${dx}" y1="${yGround}" x2="${dx}" y2="${yTip}" stroke="#54514A" stroke-width="1" marker-start="url(#dimA)" marker-end="url(#dimA)"/>`);
+  e.push(`<text x="${dx-6}" y="${(yGround+yTip)/2}" font-size="11" fill="#1A1915" transform="rotate(-90 ${dx-6},${(yGround+yTip)/2})" text-anchor="middle">D = ${fmt(r.Ddesign,2)} m</text>`);
+  // tip + ground tick marks
+  e.push(`<line x1="${dx-5}" y1="${top}" x2="${dx+5}" y2="${top}" stroke="#54514A"/>`);
+  e.push(`<line x1="${dx-5}" y1="${yGround}" x2="${dx+5}" y2="${yGround}" stroke="#54514A"/>`);
+  e.push(`<line x1="${dx-5}" y1="${yTip}" x2="${dx+5}" y2="${yTip}" stroke="#54514A"/>`);
+
+  // labels
+  e.push(`<text x="${wx}" y="${yTip+20}" font-size="11" fill="#1A1915" text-anchor="middle">เสาเข็ม ${p.name} · ยาว ${r.pileLen.toFixed(2)} m</text>`);
+  e.push(`<text x="55" y="${top-8}" font-size="10.5" fill="#7A6B52">ดินถม (สูง)</text>`);
+
+  $('wallSvg').innerHTML=e.join("");
+}
+
+/* ================= SVG: PILE I-SECTION ================= */
+function drawPile(r,p){
+  const W=280,H=200,cx=110,cy=100;
+  const s=120;                       // overall section drawn size (px) for bc
+  const half=s/2;
+  // I shape proportions (flange thick ~0.27, web width ~0.34)
+  const ft=s*0.27, ww=s*0.34;
+  const x0=cx-half,x1=cx+half,y0=cy-half,y1=cy+half;
+  const wx0=cx-ww/2, wx1=cx+ww/2;
+  const e=[];
+  e.push(`<defs><marker id="d2" markerWidth="8" markerHeight="8" refX="4" refY="3" orient="auto"><path d="M6,0 L0,3 L6,6" fill="none" stroke="#54514A" stroke-width="1"/></marker></defs>`);
+  // I polygon
+  const pts=[
+    [x0,y0],[x1,y0],[x1,y0+ft],[wx1,y0+ft],[wx1,y1-ft],[x1,y1-ft],
+    [x1,y1],[x0,y1],[x0,y1-ft],[wx0,y1-ft],[wx0,y0+ft],[x0,y0+ft]
+  ].map(q=>q.map(v=>v.toFixed(1)).join(",")).join(" ");
+  e.push(`<polygon points="${pts}" fill="#FBEEE9" stroke="#B45F45" stroke-width="2" stroke-linejoin="round"/>`);
+  // rebar dots (typical 3)
+  [y0+ft+8, cy, y1-ft-8].forEach(y=>e.push(`<circle cx="${cx}" cy="${y}" r="3" fill="#B45F45"/>`));
+  // dim bc (top)
+  e.push(`<line x1="${x0}" y1="${y0-14}" x2="${x1}" y2="${y0-14}" stroke="#54514A" marker-start="url(#d2)" marker-end="url(#d2)"/>`);
+  e.push(`<text x="${cx}" y="${y0-18}" font-size="11" fill="#1A1915" text-anchor="middle">bc = ${fmt(r.bc,2)} m</text>`);
+  // dim height (right)
+  e.push(`<line x1="${x1+14}" y1="${y0}" x2="${x1+14}" y2="${y1}" stroke="#54514A" marker-start="url(#d2)" marker-end="url(#d2)"/>`);
+  e.push(`<text x="${x1+18}" y="${cy}" font-size="11" fill="#1A1915" transform="rotate(-90 ${x1+18},${cy})" text-anchor="middle">${fmt(r.bc,2)} m</text>`);
+  // info
+  e.push(`<text x="${W/2}" y="${H-14}" font-size="10.5" fill="#54514A" text-anchor="middle">${p.name} · S=${fmt(p.S,0)} cm³ · ${p.w} kg/m</text>`);
+  $('pileSvg').innerHTML=e.join("");
+}
+
+/* ================= SVG: PRESSURE DIAGRAM (intensity vs depth) ================= */
+function drawPressure(r){
+  const W=280,H=280,L=46,Rg=250,top=24,bot=230;
+  const e=[];
+  const pBase=r.P1+r.P2+r.P3;
+  const sc=pBase>0?(Rg-L)/pBase:0;
+  // axes
+  e.push(`<line x1="${L}" y1="${top}" x2="${L}" y2="${bot}" stroke="#54514A" stroke-width="1.4"/>`);
+  e.push(`<line x1="${L}" y1="${top}" x2="${L}" y2="${top}" />`);
+  // stacked components: rectangle P1, triangle P2, triangle P3 -> show combined area + boundary
+  // combined: at depth t (0..1): pressure = P1 + (P2+P3)*t
+  const xTop=L+r.P1*sc, xBot=L+pBase*sc;
+  e.push(`<polygon points="${L},${top} ${xTop},${top} ${xBot},${bot} ${L},${bot}" fill="#CC785C" opacity=".12"/>`);
+  e.push(`<polyline points="${xTop},${top} ${xBot},${bot}" fill="none" stroke="#CC785C" stroke-width="1.8"/>`);
+  e.push(`<line x1="${L}" y1="${top}" x2="${xTop}" y2="${top}" stroke="#CC785C" stroke-width="1.5"/>`);
+  // P1 region marker
+  e.push(`<line x1="${xTop}" y1="${top}" x2="${xTop}" y2="${bot}" stroke="#CC785C" stroke-width=".8" stroke-dasharray="3 3" opacity=".6"/>`);
+  // labels
+  e.push(`<text x="${L+4}" y="${top-8}" font-size="10" fill="#54514A">แรงดัน (kg/m²)</text>`);
+  e.push(`<text x="${(L+xTop)/2}" y="${top+16}" font-size="9.5" fill="#B45F45" text-anchor="middle">P1</text>`);
+  e.push(`<text x="${xBot-4}" y="${bot-6}" font-size="10" fill="#B45F45" text-anchor="end">${fmt(pBase,0)}</text>`);
+  e.push(`<text x="${xTop+3}" y="${top+10}" font-size="9.5" fill="#B45F45">${fmt(r.P1,0)}</text>`);
+  // depth axis labels
+  e.push(`<text x="${L-6}" y="${top+4}" font-size="9.5" fill="#54514A" text-anchor="end">0</text>`);
+  e.push(`<text x="${L-6}" y="${bot+2}" font-size="9.5" fill="#54514A" text-anchor="end">H</text>`);
+  e.push(`<text x="${L-30}" y="${(top+bot)/2}" font-size="10" fill="#54514A" transform="rotate(-90 ${L-30},${(top+bot)/2})" text-anchor="middle">ความลึก z</text>`);
+  e.push(`<text x="${W/2}" y="${H-6}" font-size="9.5" fill="#8C887E" text-anchor="middle">รวม P1(สี่เหลี่ยม)+P2+P3(สามเหลี่ยม)</text>`);
+  $('pressSvg').innerHTML=e.join("");
+}
+
+/* ---------------- Wiring ---------------- */
+function buildPileOptions(){
+  $('pileSel').innerHTML=PILES.map((p,i)=>`<option value="${i}">${p.name} — S ${fmt(p.S,0)} cm³</option>`).join("");
+}
+function applyDefaults(){
+  for(const k in DEFAULTS){ if($(k)) $(k).value=DEFAULTS[k]; }
+}
+function resetDefaults(){ applyDefaults(); onPileChange(true); render(); }
+function onPileChange(keepS){
+  const p=PILES[+$('pileSel').value];
+  if(!keepS){ $('Sprov').value=p.S; }
+  $('bc').value=p.bc;
+  render();
+}
+
+document.addEventListener('input',e=>{
+  if(e.target.id==='pileSel'){ onPileChange(false); return; }
+  if(e.target.closest('.proj-meta')) return;
+  render();
+});
+
+buildPileOptions();
+applyDefaults();
+$('pileSel').value=DEFAULTS.pileSel;
+render();
+</script>
+</body>
+</html>

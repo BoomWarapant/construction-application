@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ออกแบบกำแพงกันดิน คสล. — RC Retaining Wall Design</title>
+<style>
+:root{
+  --bg:#F0EEE6; --paper:#FBFAF7; --panel:#FFFFFF; --ink:#1A1915; --muted:#73706A;
+  --accent:#C96442; --accent-d:#A94E30; --accent-soft:#F3E3DC;
+  --ok:#3F7D58; --ok-bg:#E7F1EA; --ng:#C0392B; --ng-bg:#FBE9E7;
+  --line:#E5E0D6; --line2:#D8D2C5; --soil:#D8C9A8; --conc:#CFCBC2; --water:#BFD7DC;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--ink);
+  font-family:"Segoe UI","Sarabun","Tahoma",system-ui,sans-serif;font-size:14px;line-height:1.5}
+h1,h2,h3,h4{font-family:Georgia,"Times New Roman",serif;font-weight:600;letter-spacing:-.01em}
+.app{max-width:1320px;margin:0 auto;padding:18px 22px 60px}
+/* header */
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;
+  padding-bottom:14px;border-bottom:2px solid var(--ink);margin-bottom:18px;flex-wrap:wrap}
+.brand h1{font-size:26px;line-height:1.1}
+.brand .sub{color:var(--muted);font-size:13px;margin-top:3px}
+.brand .badge{display:inline-block;background:var(--accent-soft);color:var(--accent-d);
+  font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;margin-top:6px;letter-spacing:.02em}
+.proj{display:grid;grid-template-columns:auto 1fr;gap:4px 8px;font-size:12px;align-items:center}
+.proj label{color:var(--muted);text-align:right}
+.proj input{border:none;border-bottom:1px solid var(--line2);background:transparent;
+  font-size:12px;padding:2px 4px;width:160px;color:var(--ink);font-family:inherit}
+.proj input:focus{outline:none;border-bottom-color:var(--accent)}
+/* tabs */
+.tabs{display:flex;gap:6px;margin-bottom:16px}
+.tab{padding:8px 18px;border-radius:9px 9px 0 0;background:transparent;border:1px solid transparent;
+  cursor:pointer;font-size:13px;font-weight:600;color:var(--muted)}
+.tab.on{background:var(--panel);color:var(--ink);border-color:var(--line);border-bottom-color:var(--panel)}
+.btn{cursor:pointer;border:1px solid var(--accent);background:var(--accent);color:#fff;
+  font-size:13px;font-weight:600;padding:8px 16px;border-radius:8px;font-family:inherit}
+.btn:hover{background:var(--accent-d)}
+.btn.ghost{background:transparent;color:var(--accent-d)}
+.btn.ghost:hover{background:var(--accent-soft)}
+/* layout */
+.grid{display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:16px}
+.card h3{font-size:15px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:8px}
+.card h3 .dot{width:9px;height:9px;border-radius:50%;background:var(--accent)}
+/* input rows */
+.irow{display:grid;grid-template-columns:1fr 78px auto;gap:8px;align-items:center;
+  padding:5px 0;border-bottom:1px dashed var(--line)}
+.irow:last-child{border-bottom:none}
+.irow label{font-size:12.5px;color:var(--ink)}
+.irow label .sym{color:var(--muted);font-style:italic;font-family:Georgia,serif}
+.irow input,.irow select{width:100%;border:1px solid var(--line2);border-radius:6px;
+  padding:5px 7px;font-size:13px;font-family:inherit;background:var(--paper);color:var(--ink);text-align:right}
+.irow select{text-align:left}
+.irow input:focus,.irow select:focus{outline:none;border-color:var(--accent);background:#fff}
+.irow .unit{font-size:11px;color:var(--muted);min-width:42px}
+.rebar-row{display:grid;grid-template-columns:1fr auto auto auto auto;gap:6px;align-items:center;
+  padding:6px 0;border-bottom:1px dashed var(--line);font-size:12px}
+.rebar-row:last-child{border-bottom:none}
+.rebar-row .rl{font-size:11.5px;line-height:1.25}
+.rebar-row select,.rebar-row input{border:1px solid var(--line2);border-radius:6px;padding:4px 5px;
+  font-size:12px;font-family:inherit;background:var(--paper);width:58px;text-align:center}
+.rebar-row input{width:52px}
+.rebar-row .at{color:var(--muted)}
+.rebar-row .chk{font-size:10px;font-weight:700;padding:2px 6px;border-radius:5px;min-width:34px;text-align:center}
+.chk.ok{background:var(--ok-bg);color:var(--ok)} .chk.ng{background:var(--ng-bg);color:var(--ng)}
+/* result dashboard */
+.summary{display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:12px;margin-bottom:16px;
+  border:1px solid var(--line)}
+.summary.ok{background:linear-gradient(90deg,var(--ok-bg),#fff)}
+.summary.ng{background:linear-gradient(90deg,var(--ng-bg),#fff)}
+.summary .big{font-size:28px;line-height:1}
+.summary .txt h2{font-size:18px} .summary .txt p{font-size:12.5px;color:var(--muted)}
+.checks{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.checkcard{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:11px 13px;position:relative}
+.checkcard .ttl{font-size:12px;color:var(--muted);font-weight:600}
+.checkcard .val{font-size:20px;font-family:Georgia,serif;margin-top:3px}
+.checkcard .cmp{font-size:11.5px;color:var(--muted);margin-top:2px}
+.checkcard .pill{position:absolute;top:11px;right:12px;font-size:10px;font-weight:700;
+  padding:2px 8px;border-radius:12px}
+.pill.ok{background:var(--ok-bg);color:var(--ok)} .pill.ng{background:var(--ng-bg);color:var(--ng)}
+/* diagram */
+.diagram-wrap{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:8px;margin-bottom:16px}
+svg{display:block;width:100%;height:auto}
+/* report A4 */
+#report{display:none}
+.sheet{background:#fff;color:#000;width:190mm;min-height:277mm;margin:0 auto 18px;padding:10mm 11mm;
+  box-shadow:0 2px 14px rgba(0,0,0,.12);font-size:10.2px;line-height:1.42}
+.sheet h2{font-size:15px;text-align:center;margin-bottom:2px}
+.sheet .rsub{text-align:center;font-size:9.5px;color:#555;margin-bottom:8px}
+.rhead{display:grid;grid-template-columns:1fr 1fr;gap:1px 14px;font-size:9.6px;
+  border:1px solid #000;padding:5px 8px;margin-bottom:8px}
+.rhead div{padding:1px 0}
+.rsec{font-weight:700;background:#1A1915;color:#fff;padding:2px 7px;margin:9px 0 4px;font-size:10px;border-radius:2px}
+table.calc{width:100%;border-collapse:collapse;font-size:9.5px}
+table.calc td{padding:1.5px 5px;vertical-align:top}
+table.calc td.r{text-align:right;font-variant-numeric:tabular-nums}
+table.calc td.lbl{color:#222}
+table.calc td.sym{font-family:Georgia,serif;font-style:italic;color:#444;white-space:nowrap}
+table.calc tr.hl td{background:#F3E3DC;font-weight:600}
+.rgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
+.okbox{font-weight:700} .okbox.ok{color:var(--ok)} .okbox.ng{color:var(--ng)}
+.rrebar{width:100%;border-collapse:collapse;font-size:9.3px;margin-top:3px}
+.rrebar th,.rrebar td{border:1px solid #bbb;padding:2.5px 5px;text-align:center}
+.rrebar th{background:#EFece4}
+.rrebar td.l{text-align:left}
+.verdict{margin-top:10px;border:2px solid #000;padding:7px 10px;text-align:center;font-weight:700;font-size:12px}
+.verdict.ok{background:var(--ok-bg)} .verdict.ng{background:var(--ng-bg)}
+.refs{font-size:8.2px;color:#666;margin-top:8px;line-height:1.35}
+.note{font-size:11px;color:var(--muted);background:var(--accent-soft);border-radius:8px;padding:9px 12px;margin-bottom:14px}
+@media (max-width:920px){.grid{grid-template-columns:1fr}.checks{grid-template-columns:1fr}}
+/* print */
+@media print{
+  @page{size:A4 portrait;margin:0}
+  body{background:#fff}
+  .app{max-width:none;padding:0}
+  header,.tabs,.no-print,#designView{display:none!important}
+  #report{display:block!important}
+  .sheet{box-shadow:none;margin:0 auto;width:210mm;min-height:297mm;padding:11mm 12mm;page-break-after:always}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="brand">
+    <h1>ออกแบบกำแพงกันดิน คสล.</h1>
+    <div class="sub">RC Cantilever Retaining Wall · Working/Strength Design — ACI 318-89</div>
+    <span class="badge">Interactive Design Dashboard</span>
+  </div>
+  <div class="proj">
+    <label>Project</label><input id="p_project" value="">
+    <label>Client</label><input id="p_client" value="">
+    <label>Job No.</label><input id="p_job" value="">
+    <label>Design by</label><input id="p_by" value="">
+    <label>Date</label><input id="p_date" value="">
+  </div>
+</header>
+
+<div class="tabs no-print">
+  <button class="tab on" id="tab_design" onclick="showTab('design')">ออกแบบ (Design)</button>
+  <button class="tab" id="tab_report" onclick="showTab('report')">รายงานคำนวณ (Report A4)</button>
+  <div style="flex:1"></div>
+  <button class="btn ghost" onclick="resetDefaults()">โหลดค่าตัวอย่าง</button>
+  <button class="btn" onclick="window.print()">พิมพ์ / บันทึก PDF</button>
+</div>
+
+<!-- ================= DESIGN VIEW ================= -->
+<div id="designView">
+<div class="grid">
+  <!-- LEFT: INPUTS -->
+  <div>
+    <div class="card">
+      <h3><span class="dot"></span>คุณสมบัติดิน & วัสดุ</h3>
+      <div id="matInputs"></div>
+    </div>
+    <div class="card">
+      <h3><span class="dot"></span>ขนาดรูปตัด (Geometry)</h3>
+      <div id="geoInputs"></div>
+    </div>
+  </div>
+  <!-- RIGHT: DIAGRAM + RESULTS -->
+  <div>
+    <div id="summaryBox" class="summary ok">
+      <div class="big" id="sumIcon">✓</div>
+      <div class="txt"><h2 id="sumTitle">THE WALL DESIGN IS ADEQUATE</h2>
+      <p id="sumDesc">ผ่านทุกการตรวจสอบ</p></div>
+    </div>
+    <div class="diagram-wrap"><div id="diagram"></div></div>
+    <div class="card">
+      <h3><span class="dot"></span>ผลการตรวจสอบเสถียรภาพ & กำลัง</h3>
+      <div class="checks" id="checks"></div>
+    </div>
+    <div class="card">
+      <h3><span class="dot"></span>เหล็กเสริม (แก้ขนาด & ระยะได้)</h3>
+      <div id="rebarInputs"></div>
+      <p style="font-size:11px;color:var(--muted);margin-top:8px">ระยะที่ใส่ต้อง ≤ ระยะที่ต้องการ (req.) จึงจะ OK</p>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ================= REPORT VIEW ================= -->
+<div id="report"></div>
+
+</div>
+
+<script>
+/* ---------- rebar area table (cm2) จาก ConcreteRetainingWall.xlsx ---------- */
+const AREA={6:0.2827,8:0.5027,10:0.7854,12:1.1310,16:2.0106,20:3.1416,25:4.9087,28:6.1575,32:8.0425,40:12.5664};
+const BARS=[12,16,20,25,28,32,40];
+const num=v=>{const n=parseFloat(v);return isNaN(n)?0:n};
+const f=(x,d=2)=>{if(!isFinite(x))return"—";return x.toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d})};
+
+/* ---------- default inputs (ตัวอย่างจากไฟล์) ---------- */
+const DEF={
+  beta:0, phi:33.75, fc:240, gc:2400, fy:3000, Pa:1600, Pp:0, ws:800, mu:0.5, Qa:15000,
+  tt:20, tb:20, LT:0, LH:1, HF:0, HT:1, HB:1, hf:20, hp:0,
+  cov_s:5, cov_t:7.5,
+  r1d:12,r1s:15, r2d:12,r2s:55, r3d:12,r3s:12.5, r4d:12,r4s:20,
+  r5d:12,r5s:27.5, r7d:12,r7s:67.5, r8d:12,r8s:32.5, r6d:6,r6s:25
+};
+let S=Object.assign({},DEF);
+
+/* ---------- material/soil input defs ---------- */
+const MAT=[
+ ["beta","ความลาดดิน","β","degree"],["phi","มุมเสียดทานภายในดิน","ø","degree"],
+ ["fc","กำลังคอนกรีต","fc'","ksc"],["gc","นน.จำเพาะคอนกรีต","γc","kg/m³"],
+ ["fy","กำลังครากเหล็ก","fy","ksc"],["Pa","นน.ดิน/แรงดันด้านข้าง","Pa","kg/m³"],
+ ["Pp","Passive pressure","Pp","kg/m²"],["ws","Surcharge","ws","kg/m²"],
+ ["mu","สปส.เสียดทาน","μ","-"],["Qa","กำลังแบกทานดิน","Qa","kg/m²"]
+];
+const GEO=[
+ ["tt","ความหนาผนังบน","tt","cm"],["tb","ความหนาผนังล่าง","tb","cm"],
+ ["LT","ความยาว Toe","LT","m"],["LH","ความยาว Heel","LH","m"],
+ ["HF","ความสูง Fence","HF","m"],["HT","ความสูงผนังบน","HT","m"],
+ ["HB","ความสูงผนังล่าง","HB","m"],["hf","ความหนาฐานราก","hf","cm"],
+ ["hp","ดินทับ Toe","hp","m"],["cov_s","ระยะหุ้ม ผนัง/heel","cc1","cm"],
+ ["cov_t","ระยะหุ้ม toe","cc2","cm"]
+];
+const REBARS=[
+ ["r1","As1 ผนัง ด้านดิน (แนวตั้ง)"],["r2","As2 ผนัง แต่ละด้าน (แนวตั้ง)"],
+ ["r3","As3 ฐานราก Heel"],["r4","As4 ฐานราก Toe"],
+ ["r5","As5 ฐานราก ตามยาว"],["r7","As7 ผนัง ด้านดิน (แนวนอน)"],
+ ["r8","As8 ผนัง แต่ละด้าน (แนวนอน)"],["r6","As6 เหล็กปลอกฐานราก"]
+];
+
+/* ---------- build input UI ---------- */
+function inpRow(key,label,sym,unit){
+  return `<div class="irow"><label>${label} <span class="sym">${sym}</span></label>
+    <input type="number" step="any" id="in_${key}" value="${S[key]}" oninput="upd('${key}',this.value)">
+    <span class="unit">${unit}</span></div>`;
+}
+function buildInputs(){
+  document.getElementById("matInputs").innerHTML=MAT.map(m=>inpRow(...m)).join("");
+  document.getElementById("geoInputs").innerHTML=GEO.map(m=>inpRow(...m)).join("");
+  const isStir=k=>k==="r6";
+  document.getElementById("rebarInputs").innerHTML=REBARS.map(([k,lab])=>{
+    const opts=(isStir(k)?[6,9]:BARS).map(b=>`<option ${S[k+'d']==b?'selected':''}>${b}</option>`).join("");
+    const pre=isStir(k)?"RB":"DB";
+    return `<div class="rebar-row" id="row_${k}">
+      <span class="rl">${lab}</span>
+      <span>${pre}<select id="in_${k}d" onchange="upd('${k}d',this.value)">${opts}</select></span>
+      <span class="at">@</span>
+      <input type="number" step="any" id="in_${k}s" value="${S[k+'s']}" oninput="upd('${k}s',this.value)">
+      <span class="chk" id="chk_${k}">—</span>
+    </div>`;
+  }).join("");
+}
+function upd(key,val){S[key]=num(val);compute()}
+function resetDefaults(){S=Object.assign({},DEF);buildInputs();compute()}
+
+/* ================= CALCULATION ENGINE (ตรงกับ Excel) ================= */
+function calc(){
+  const x=S, rad=Math.PI/180;
+  const cb=Math.cos(x.beta*rad), cp=Math.cos(x.phi*rad);
+  const root=Math.sqrt(Math.max(0,cb*cb-cp*cp));
+  const Ka=cb*(cb-root)/(cb+root);
+  const Hh=x.HT+x.HB+x.hf/100;                       // total height
+  // service horizontal forces
+  const Hb=0.5*x.Pa*Hh*Hh*Ka;
+  const Hs=(x.Pp+x.ws)*Hh*Ka;
+  const Hp=0.5*x.Pa*x.hp*x.hp*Ka;
+  // service vertical loads
+  const Ws=x.ws*(x.LH+((x.tb-x.tt)/100)/2);
+  const Wb=(x.HT+x.HB)*x.Pa*(x.LH+((x.tb-x.tt)/100)/2);
+  const Wf=(x.hf/100)*(x.LH+x.tb/100+x.LT)*x.gc;
+  const Wwt=1.25*(x.tt/100)*x.HT*x.gc;
+  const Wwb=1.75*(x.tt/100)*x.HT*x.gc;
+  const DF=1.4, LF=1.7;
+  // overturning moment arms (about toe)
+  const yHb=Hh/3, yHs=(Hh-x.HF)/2, yHp=(4+x.HT+x.HB-x.hp/12)/2+(x.hp+x.hf)/12;
+  const Lo=Hb*yHb+Hs*yHs+Hp*yHp;                     // service overturning moment
+  const Ho=Hb+Hs+Hp;                                 // total horizontal
+  // resisting moment arms
+  const xWs=((x.LH+(x.tb-x.tt)/100)/2)+x.tt/100+x.LT;
+  let denom=(0.5*(x.LH+x.LH+(x.tb-x.tt)/100)*(x.HT+x.HB));
+  const xWb=denom!==0?(((2/3*(x.tb-x.tt)/100*0.5*(x.tb-x.tt)/100*(x.HT+x.HB))+(x.LH/2*x.LH*(x.HT+x.HB)))/denom)+x.tb/100+x.LT:x.tb/100+x.LT;
+  const xWf=(x.LT+x.tb/100+x.LH)/2;
+  const xWwt=(x.tt/200+1.5/3/3*(x.tb-x.tt)/100)+x.LT;
+  const xWwb=(1.5*(x.tb-x.tt)/200)+(1.5/3/3*(x.tb-x.tt)/100)+x.LT;
+  const sumW=Ws+Wb+Wf+Wwt+Wwb;
+  const Mr=Ws*xWs+Wb*xWb+Wf*xWf+Wwt*xWwt+Wwb*xWwb;   // service resisting moment
+  const FSot=Lo!==0?Mr/Lo:Infinity;
+  const FSsl=Ho!==0?sumW*x.mu/Ho:Infinity;
+  // bearing
+  const B=x.LT+x.tb/100+x.LH;
+  const e=B/2-(Mr-Lo)/sumW;
+  const qmax=(e<=B/6)?sumW*(1+6*e/B)/B:2*sumW/3/(0.5*B-e);
+  const qmin=sumW/B*(1-6*e/B);
+
+  // ---- flexure helper ----
+  function flex(Mu,d,fc,fy){
+    if(d<=0)return{Ru:Infinity,rho:Infinity,bad:true};
+    const Ru=Mu*100/(0.9*100*d*d);
+    const arg=1-2*Ru/0.85/fc;
+    const bad=arg<0;
+    const rho=(0.85*fc/fy)*(1-Math.sqrt(Math.max(0,arg)));
+    return{Ru,rho,bad};
+  }
+  const rhomin=14/x.fy;
+  function asReq(rho,d){return (rho<rhomin?rhomin:rho)*100*d}
+  function spacing(Asreq,db){return Asreq>0?100*AREA[db]/Asreq:Infinity}
+  function shear(d,fc){return 0.85*(0.53*Math.sqrt(fc)*100*d)}
+
+  // ---- STEM flexure ----
+  const Pb=0.5*x.Pa*Math.pow(x.HT+x.HB,2)*Ka;
+  const Ps=(x.Pp+x.ws)*(x.HT+x.HB)*Ka;
+  const gPb=LF*Pb, gPs=LF*Ps;
+  const Mu_s=gPb*(x.HT+x.HB)/3+gPs*(x.HT+x.HB)/2;
+  const Vu_s=gPb+gPs;
+  const d_s=x.tb-x.cov_s-x.r1d/20;
+  const Vc_s=shear(d_s,x.fc);
+  const fl_s=flex(Mu_s,d_s,x.fc,x.fy);
+  const As1=asReq(fl_s.rho,d_s);
+  const sp1=spacing(As1,x.r1d);
+  const As2=2/3*0.0015*100*(x.tt+x.tb)/2;
+  const sp2=spacing(As2,x.r2d);
+
+  // ---- HEEL flexure ----
+  const WfH=(x.hf/100*x.LH*x.gc)+(x.LH*(x.HT+x.HB)*x.Pa)+(x.LH*x.ws);
+  const Mu_h=DF*WfH*x.LH/2;
+  const Vu_h=DF*WfH;
+  const d_h=x.hf-x.cov_s-x.r3d/20;
+  const Vc_h=shear(d_h,x.fc);
+  const fl_h=flex(Mu_h,d_h,x.fc,x.fy);
+  const As3=asReq(fl_h.rho,d_h);
+  const sp3=spacing(As3,x.r3d);
+
+  // ---- TOE flexure ----
+  const WfT=x.tb/100*x.LT*x.gc;
+  const Pbtoe=qmax-(x.LT*(qmax-qmin)/3);
+  const Mu_t=(LF*0.5*qmax*x.LT*2/3*x.LT)+(LF*0.5*Pbtoe*x.LT*x.LT/3)-(0.9*WfT*x.LT/2);
+  const Vu_t=(LF*0.5*qmax*x.LT)+(LF*0.5*Pbtoe*x.LT)-(0.9*WfT);
+  const d_t=x.tb-x.cov_t-x.r4d/20;
+  const d_t2=x.hf-x.cov_t-x.r4d/20;
+  const Vc_t=shear(d_t,x.fc);
+  const fl_t=flex(Mu_t,d_t,x.fc,x.fy);
+  const As4=asReq(fl_t.rho,d_t2);
+  const sp4=spacing(As4,x.r4d);
+
+  // ---- longitudinal / stirrup / horizontal ----
+  const As5=0.002*x.hf*x.L*100; // L = total length; use LT+tb+LH? Excel uses input L(F23)
+  const Llong=x.LT+x.tb/100+x.LH; // total base width as length basis (F23 ~ 1.2)
+  const As5b=0.002*x.hf*Llong*100;
+  const sp5=As5b>0?Llong*100*AREA[x.r5d]/As5b:Infinity;
+  const sp6=sp3*1.95;
+  const As7=(x.tt+x.tb)/2*0.0025*100/3;
+  const sp7=spacing(As7,x.r7d);
+  const As8=(x.tt+x.tb)/2*0.0025*100/3*2;
+  const sp8=spacing(As8,x.r8d);
+
+  // ---- checks ----
+  const okOT=FSot>2, okSL=FSsl>1.5, okBR=qmax<x.Qa && qmax>0;
+  const okVs=Vc_s>Vu_s, okVh=Vc_h>Vu_h, okVt=Vc_t>Vu_t;
+  const reb=[
+    {id:"r1",name:"As1 ผนัง ด้านดิน",pre:"DB",d:x.r1d,prov:x.r1s,req:sp1},
+    {id:"r2",name:"As2 ผนัง แต่ละด้าน",pre:"DB",d:x.r2d,prov:x.r2s,req:sp2},
+    {id:"r3",name:"As3 Heel",pre:"DB",d:x.r3d,prov:x.r3s,req:sp3},
+    {id:"r4",name:"As4 Toe",pre:"DB",d:x.r4d,prov:x.r4s,req:sp4},
+    {id:"r5",name:"As5 ตามยาว",pre:"DB",d:x.r5d,prov:x.r5s,req:sp5},
+    {id:"r7",name:"As7 ผนัง แนวนอน(ดิน)",pre:"DB",d:x.r7d,prov:x.r7s,req:sp7},
+    {id:"r8",name:"As8 ผนัง แนวนอน",pre:"DB",d:x.r8d,prov:x.r8s,req:sp8},
+    {id:"r6",name:"As6 ปลอกฐานราก",pre:"RB",d:x.r6d,prov:x.r6s,req:sp6}
+  ];
+  reb.forEach(r=>r.ok=r.prov<=r.req+1e-6 && isFinite(r.req));
+  const allReb=reb.every(r=>r.ok);
+  const adequate=okOT&&okSL&&okBR&&okVs&&okVh&&okVt&&allReb;
+
+  return{Ka,Hh,Hb,Hs,Hp,Ws,Wb,Wf,Wwt,Wwb,DF,LF,yHb,yHs,yHp,Lo,Ho,
+    xWs,xWb,xWf,xWwt,xWwb,sumW,Mr,FSot,FSsl,B,e,qmax,qmin,
+    Pb,Ps,gPb,gPs,Mu_s,Vu_s,d_s,Vc_s,fl_s,As1,sp1,As2,sp2,
+    WfH,Mu_h,Vu_h,d_h,Vc_h,fl_h,As3,sp3,
+    WfT,Pbtoe,Mu_t,Vu_t,d_t,d_t2,Vc_t,fl_t,As4,sp4,
+    As5b,Llong,sp5,sp6,As7,sp7,As8,sp8,rhomin,
+    okOT,okSL,okBR,okVs,okVh,okVt,reb,allReb,adequate};
+}
+
+/* ================= RENDER DASHBOARD ================= */
+function compute(){
+  const r=calc();
+  // summary
+  const sb=document.getElementById("summaryBox");
+  sb.className="summary "+(r.adequate?"ok":"ng");
+  document.getElementById("sumIcon").textContent=r.adequate?"✓":"✕";
+  document.getElementById("sumTitle").textContent=r.adequate?"THE WALL DESIGN IS ADEQUATE":"DESIGN NOT ADEQUATE — ต้องปรับแก้";
+  document.getElementById("sumDesc").textContent=r.adequate?"ผ่านการตรวจสอบเสถียรภาพ กำลังเฉือน และระยะเหล็กครบทุกรายการ":"มีรายการที่ไม่ผ่าน (สีแดง) — ปรับขนาดหรือเหล็กเสริม";
+  // check cards
+  const C=(t,v,c,ok)=>`<div class="checkcard"><span class="pill ${ok?'ok':'ng'}">${ok?'OK':'NG'}</span>
+    <div class="ttl">${t}</div><div class="val">${v}</div><div class="cmp">${c}</div></div>`;
+  document.getElementById("checks").innerHTML=
+    C("Overturning FS",f(r.FSot),"ต้อง &gt; 2.0",r.okOT)+
+    C("Sliding FS",f(r.FSsl),"ต้อง &gt; 1.5",r.okSL)+
+    C("Soil bearing q<sub>max</sub>",f(r.qmax,0)+" <span style='font-size:11px'>kg/m²</span>","Qa = "+f(S.Qa,0),r.okBR)+
+    C("Eccentricity e",f(r.e,3)+" m","B/6 = "+f(r.B/6,3)+" m",r.e<=r.B/6)+
+    C("Stem shear øVc/Vu",f(r.Vc_s,0)+" / "+f(r.Vu_s,0),"øVc ต้อง &gt; Vu",r.okVs)+
+    C("Heel shear øVc/Vu",f(r.Vc_h,0)+" / "+f(r.Vu_h,0),"øVc ต้อง &gt; Vu",r.okVh);
+  // rebar checks
+  r.reb.forEach(rb=>{
+    const el=document.getElementById("chk_"+rb.id);
+    if(el){el.className="chk "+(rb.ok?"ok":"ng");el.textContent=rb.ok?"OK":"NG";
+      el.title="req. ≤ "+f(rb.req,1)+" cm";}
+  });
+  drawDiagram();
+  buildReport(r);
+}
+
+/* ================= SVG CROSS-SECTION ================= */
+function drawDiagram(){
+  const x=S;
+  const B=x.LT+x.tb/100+x.LH;                 // base width (m)
+  const Htot=x.HF+x.HT+x.HB+x.hf/100;          // total height (m)
+  const W=720,H=460, pad=70;
+  const sc=Math.min((W-2*pad)/Math.max(B,0.1),(H-2*pad)/Math.max(Htot,0.1));
+  const ox=pad+ (W-2*pad-B*sc)/2, oy=H-pad;    // origin = bottom-left of footing
+  const X=m=>ox+m*sc, Y=m=>oy-m*sc;            // m up = y
+  const hf=x.hf/100, tb=x.tb/100, tt=x.tt/100, LT=x.LT, LH=x.LH;
+  const stemBackX=LT+tb;                       // soil side (right) face of stem bottom
+  const stemFrontBot=LT;                       // toe side bottom
+  const stemFrontTop=stemBackX-tt;             // top front
+  const yFoot=hf, yTop=Htot;
+  // soil profile (behind stem, right)
+  const soilTop=yTop;
+  let svg=`<svg viewBox="0 0 ${W} ${H}">`;
+  // soil fill behind heel
+  svg+=`<defs><pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="7" stroke="#B7A77E" stroke-width="1"/></pattern></defs>`;
+  svg+=`<polygon points="${X(stemBackX)},${Y(yFoot)} ${X(B)},${Y(yFoot)} ${X(B)},${Y(soilTop)} ${X(stemBackX)},${Y(soilTop)}"
+    fill="var(--soil)" stroke="#B59B66" stroke-width="1"/>`;
+  // surcharge band
+  if(x.ws>0){svg+=`<rect x="${X(stemBackX)}" y="${Y(soilTop)-16}" width="${(B-stemBackX)*sc}" height="14" fill="url(#hatch)" stroke="#B59B66"/>`;
+    for(let i=0;i<6;i++){const xx=X(stemBackX)+8+i*((B-stemBackX)*sc-12)/5;
+      svg+=`<line x1="${xx}" y1="${Y(soilTop)-22}" x2="${xx}" y2="${Y(soilTop)-2}" stroke="var(--accent)" stroke-width="1.3" marker-end="url(#arr)"/>`;}
+    svg+=`<text x="${X((stemBackX+B)/2)}" y="${Y(soilTop)-26}" font-size="11" fill="var(--accent-d)" text-anchor="middle">ws=${x.ws} kg/m²</text>`;}
+  // footing
+  svg+=`<rect x="${X(0)}" y="${Y(hf)}" width="${B*sc}" height="${hf*sc}" fill="var(--conc)" stroke="#7d7a72" stroke-width="1.4"/>`;
+  // stem (trapezoid)
+  svg+=`<polygon points="${X(stemFrontBot)},${Y(yFoot)} ${X(stemBackX)},${Y(yFoot)} ${X(stemBackX)},${Y(yTop)} ${X(stemFrontTop)},${Y(yTop)}"
+    fill="var(--conc)" stroke="#7d7a72" stroke-width="1.4"/>`;
+  // earth pressure triangle on back of stem
+  svg+=`<polygon points="${X(stemBackX)},${Y(yTop)} ${X(stemBackX)},${Y(yFoot)} ${X(stemBackX)+46},${Y(yFoot)}"
+    fill="rgba(201,100,66,.10)" stroke="var(--accent)" stroke-dasharray="3 2" stroke-width="1"/>`;
+  svg+=`<text x="${X(stemBackX)+18} " y="${Y(yFoot)+14}" font-size="10" fill="var(--accent-d)">Pa</text>`;
+  // markers
+  svg+=`<defs><marker id="arr" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+    <path d="M0,0 L6,3 L0,6 Z" fill="var(--accent)"/></marker></defs>`;
+  // ground line
+  svg+=`<line x1="${X(-0.15)}" y1="${Y(0)}" x2="${X(B+0.15)}" y2="${Y(0)}" stroke="#555" stroke-width="1.5"/>`;
+  // dimensions
+  const dim=(x1,y1,x2,y2,txt,off)=>{
+    return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#8a877f" stroke-width=".8" marker-start="url(#arr)" marker-end="url(#arr)"/>
+      <text x="${(x1+x2)/2}" y="${(y1+y2)/2+off}" font-size="10" fill="#555" text-anchor="middle">${txt}</text>`;
+  };
+  // base width dim (below)
+  svg+=dim(X(0),Y(0)+28,X(B),Y(0)+28,"B = "+f(B,2)+" m",-4);
+  // height dim (left)
+  svg+=dim(X(0)-34,Y(0),X(0)-34,Y(yTop),"H = "+f(Htot,2)+" m",0);
+  svg+=`<text transform="translate(${X(0)-46},${Y(yTop/2)}) rotate(-90)" font-size="10" fill="#555" text-anchor="middle"></text>`;
+  // labels
+  svg+=`<text x="${X((stemFrontTop+stemBackX)/2)}" y="${Y(yTop)-6}" font-size="10" fill="#444" text-anchor="middle">tt=${x.tt}</text>`;
+  svg+=`<text x="${X(B+0.05)}" y="${Y(hf/2)+3}" font-size="10" fill="#444">hf=${x.hf}cm</text>`;
+  if(LT>0)svg+=`<text x="${X(LT/2)}" y="${Y(hf)+13}" font-size="9" fill="#666" text-anchor="middle">Toe ${f(LT,2)}</text>`;
+  svg+=`<text x="${X(stemBackX+LH/2)}" y="${Y(hf)+13}" font-size="9" fill="#666" text-anchor="middle">Heel ${f(LH,2)}</text>`;
+  svg+=`</svg>`;
+  document.getElementById("diagram").innerHTML=svg;
+}
+
+/* ================= A4 REPORT ================= */
+function buildReport(r){
+  const x=S;
+  const row=(lbl,sym,val,unit,hl)=>`<tr class="${hl?'hl':''}"><td class="lbl">${lbl}</td><td class="sym">${sym}</td><td class="r">${val}</td><td>${unit}</td></tr>`;
+  const ob=(ok)=>`<span class="okbox ${ok?'ok':'ng'}">[${ok?'Satisfactory':'Unsatisfactory'}]</span>`;
+  const proj=id=>document.getElementById(id).value||"—";
+  const rb=r.reb;
+  const rebRow=o=>`<tr><td class="l">${o.name}</td><td>${o.pre}${o.d}</td><td>${f(o.prov,1)}</td><td>${isFinite(o.req)?f(o.req,1):'—'}</td><td class="okbox ${o.ok?'ok':'ng'}">${o.ok?'OK':'NG'}</td></tr>`;
+
+  let html=`<div class="sheet">
+  <h2>รายการคำนวณกำแพงกันดิน คอนกรีตเสริมเหล็ก</h2>
+  <div class="rsub">Reinforced Concrete Cantilever Retaining Wall — Design Based on ACI 318-89</div>
+  <div class="rhead">
+    <div><b>Project :</b> ${proj('p_project')}</div><div><b>Job No. :</b> ${proj('p_job')}</div>
+    <div><b>Client :</b> ${proj('p_client')}</div><div><b>Design by :</b> ${proj('p_by')}</div>
+    <div><b>Date :</b> ${proj('p_date')}</div><div><b>Page :</b> 1/1</div>
+  </div>
+
+  <div class="rsec">1. ข้อมูลออกแบบ (INPUT DATA)</div>
+  <div class="rgrid">
+   <table class="calc">
+    ${row("Soil slope","β",f(x.beta,2),"deg")}
+    ${row("Angle of soil friction","ø",f(x.phi,2),"deg")}
+    ${row("Concrete strength","fc'",f(x.fc,0),"ksc")}
+    ${row("Unit weight concrete","γc",f(x.gc,0),"kg/m³")}
+    ${row("Rebar yield stress","fy",f(x.fy,0),"ksc")}
+    ${row("Lateral soil pressure","Pa",f(x.Pa,0),"kg/m³")}
+    ${row("Passive pressure","Pp",f(x.Pp,0),"kg/m²")}
+    ${row("Surcharge","ws",f(x.ws,0),"kg/m²")}
+    ${row("Friction coefficient","μ",f(x.mu,2),"")}
+    ${row("Allow soil pressure","Qa",f(x.Qa,0),"kg/m²")}
+   </table>
+   <table class="calc">
+    ${row("Thickness top stem","tt",f(x.tt,0),"cm")}
+    ${row("Thickness bot stem","tb",f(x.tb,0),"cm")}
+    ${row("Toe length","LT",f(x.LT,2),"m")}
+    ${row("Heel length","LH",f(x.LH,2),"m")}
+    ${row("Height fence","HF",f(x.HF,2),"m")}
+    ${row("Height top stem","HT",f(x.HT,2),"m")}
+    ${row("Height bot stem","HB",f(x.HB,2),"m")}
+    ${row("Footing thickness","hf",f(x.hf,0),"cm")}
+    ${row("Soil over toe","hp",f(x.hp,2),"m")}
+    ${row("Total height","H",f(r.Hh,2),"m")}
+   </table>
+  </div>
+
+  <div class="rsec">2. การวิเคราะห์ (ANALYSIS — Service Loads)</div>
+  <div class="rgrid">
+   <table class="calc">
+    ${row("Coeff. active earth pressure","Ka",f(r.Ka,4),"",1)}
+    ${row("Hb = ½·Pa·H²·Ka","Hb",f(r.Hb,1),"kg/m")}
+    ${row("Hs = (Pp+ws)·H·Ka","Hs",f(r.Hs,1),"kg/m")}
+    ${row("Hp = ½·Pa·hp²·Ka","Hp",f(r.Hp,1),"kg/m")}
+    ${row("Soil surcharge on heel","Ws",f(r.Ws,1),"kg")}
+    ${row("Soil weight on heel","Wb",f(r.Wb,1),"kg")}
+   </table>
+   <table class="calc">
+    ${row("Footing self weight","Wf",f(r.Wf,1),"kg")}
+    ${row("Stem weight (top)","Ww,t",f(r.Wwt,1),"kg")}
+    ${row("Stem weight (bot)","Ww,b",f(r.Wwb,1),"kg")}
+    ${row("Σ Vertical (service)","ΣW",f(r.sumW,1),"kg",1)}
+    ${row("Σ Horizontal (service)","ΣH",f(r.Ho,1),"kg/m",1)}
+    ${row("Overturning moment","ΣMo",f(r.Lo,1),"kg·m")}
+   </table>
+  </div>
+
+  <div class="rsec">3. ตรวจสอบเสถียรภาพ (STABILITY)</div>
+  <table class="calc">
+   ${row("Resisting moment about toe","ΣMr",f(r.Mr,1),"kg·m")}
+   <tr class="hl"><td class="lbl">Overturning F.S. = ΣMr / ΣMo</td><td class="sym">FSot</td><td class="r">${f(r.FSot)}</td><td>&gt; 2.0 &nbsp; ${ob(r.okOT)}</td></tr>
+   <tr class="hl"><td class="lbl">Sliding F.S. = ΣW·μ / ΣH</td><td class="sym">FSsl</td><td class="r">${f(r.FSsl)}</td><td>&gt; 1.5 &nbsp; ${ob(r.okSL)}</td></tr>
+   ${row("Base width","B",f(r.B,2),"m")}
+   ${row("Eccentricity","e",f(r.e,3),"m  (B/6 = "+f(r.B/6,3)+")")}
+   <tr class="hl"><td class="lbl">Max soil bearing pressure</td><td class="sym">qmax</td><td class="r">${f(r.qmax,0)}</td><td>kg/m² &lt; Qa &nbsp; ${ob(r.okBR)}</td></tr>
+   ${row("Min soil bearing pressure","qmin",f(r.qmin,0),"kg/m²")}
+  </table>
+
+  <div class="rsec">4. ตรวจสอบกำลังรับแรงดัด/เฉือน (FLEXURE & SHEAR)</div>
+  <div class="rgrid">
+   <table class="calc">
+    <tr><td colspan="4"><b>4.1 ผนัง (Stem)</b></td></tr>
+    ${row("Factored moment","Mu",f(r.Mu_s,1),"kg·m")}
+    ${row("Factored shear","Vu",f(r.Vu_s,1),"kg")}
+    ${row("Effective depth","d",f(r.d_s,1),"cm")}
+    <tr><td class="lbl">Shear capacity øVc</td><td class="sym">øVc</td><td class="r">${f(r.Vc_s,0)}</td><td>${ob(r.okVs)}</td></tr>
+    ${row("As1 required spacing","s1",f(r.sp1,1),"cm")}
+    ${row("As2 required spacing","s2",f(r.sp2,1),"cm")}
+    <tr><td colspan="4"><b>4.3 ฐานราก Toe</b></td></tr>
+    ${row("Factored moment","Mu",f(r.Mu_t,1),"kg·m")}
+    ${row("Factored shear","Vu",f(r.Vu_t,1),"kg")}
+    <tr><td class="lbl">Shear capacity øVc</td><td class="sym">øVc</td><td class="r">${f(r.Vc_t,0)}</td><td>${ob(r.okVt)}</td></tr>
+    ${row("As4 required spacing","s4",f(r.sp4,1),"cm")}
+   </table>
+   <table class="calc">
+    <tr><td colspan="4"><b>4.2 ฐานราก Heel</b></td></tr>
+    ${row("Total load on heel","WfH",f(r.WfH,0),"kg")}
+    ${row("Factored moment","Mu",f(r.Mu_h,1),"kg·m")}
+    ${row("Factored shear","Vu",f(r.Vu_h,1),"kg")}
+    <tr><td class="lbl">Shear capacity øVc</td><td class="sym">øVc</td><td class="r">${f(r.Vc_h,0)}</td><td>${ob(r.okVh)}</td></tr>
+    ${row("As3 required spacing","s3",f(r.sp3,1),"cm")}
+    <tr><td colspan="4"><b>4.4 เหล็กอื่น ๆ</b></td></tr>
+    ${row("As5 longitudinal spacing","s5",f(r.sp5,1),"cm")}
+    ${row("As6 stirrup spacing","s6",f(r.sp6,1),"cm")}
+    ${row("As7 horiz(soil) spacing","s7",f(r.sp7,1),"cm")}
+    ${row("As8 horiz(each) spacing","s8",f(r.sp8,1),"cm")}
+   </table>
+  </div>
+
+  <div class="rsec">5. เหล็กเสริมที่เลือกใช้ (REINFORCEMENT)</div>
+  <table class="rrebar">
+   <tr><th>รายการ</th><th>ขนาด</th><th>ระยะใช้ (cm)</th><th>ระยะมากสุด (cm)</th><th>ผล</th></tr>
+   ${rb.map(rebRow).join("")}
+  </table>
+
+  <div class="verdict ${r.adequate?'ok':'ng'}">
+   ${r.adequate?'✓ THE WALL DESIGN IS ADEQUATE — การออกแบบเพียงพอ':'✕ DESIGN NOT ADEQUATE — ต้องปรับขนาดหรือเหล็กเสริม'}
+  </div>
+
+  <div class="refs">
+   เอกสารอ้างอิง: 1) Ferguson, Breen, Jirsa — "Reinforced Concrete Fundamentals", 5th ed., 1988. &nbsp;
+   2) Meyer, C. — "Design of Concrete Structures", Prentice-Hall, 1996. &nbsp;
+   3) วินิต ช่อวิเชียร, วรนิติ ช่อวิเชียร — "การออกแบบโครงสร้างคอนกรีตเสริมเหล็ก", 2550. &nbsp;
+   4) ชัชวาลย์ พูนลาภพานิช — "วิศวกรรมฐานราก", สำนักพิมพ์ศรีปทุม, 2550.
+  </div>
+  </div>`;
+  document.getElementById("report").innerHTML=html;
+}
+
+/* ================= TABS ================= */
+function showTab(t){
+  document.getElementById("tab_design").classList.toggle("on",t==="design");
+  document.getElementById("tab_report").classList.toggle("on",t==="report");
+  document.getElementById("designView").style.display=t==="design"?"block":"none";
+  document.getElementById("report").style.display=t==="report"?"block":"none";
+}
+
+/* init */
+S.L=DEF.L=1.2;
+document.getElementById("p_date").value=new Date().toLocaleDateString("th-TH",{year:"numeric",month:"long",day:"numeric"});
+buildInputs();compute();
+</script>
+</body>
+</html>

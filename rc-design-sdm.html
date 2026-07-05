@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RC Design (Strength Design Method) — ออกแบบคอนกรีตเสริมเหล็กวิธีกำลัง</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ===== Anthropic brand palette =====
+   dark #141413 · light #faf9f5 · light-gray #e8e6dc · mid-gray #b0aea5
+   accent: orange #d97757 · blue #6a9bcc · green #788c5d */
+:root{
+  --navy:#141413; --navy2:#3d3d3a; --gold:#d97757; --blue:#35689f;
+  --bg:#faf9f5; --card:#ffffff; --line:#e8e6dc; --ok:#5f7347; --bad:#b5482e; --warn:#9a6b1f;
+  --txt:#141413; --muted:#73706a;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Sarabun',"Segoe UI",Tahoma,sans-serif;background:var(--bg);color:var(--txt);font-size:14px}
+h1,h2,h3,.panel-title,.memberbar .mt,.ph-title{font-family:'Poppins','Sarabun',sans-serif}
+header{background:linear-gradient(120deg,var(--navy),var(--navy2));color:#fff;padding:14px 22px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:20;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+header h1{font-size:18px;margin:0}
+header .sub{font-size:12px;opacity:.8}
+header .badge{margin-left:auto;background:var(--gold);color:#fff;font-weight:700;padding:4px 12px;border-radius:20px;font-size:12px}
+.wrap{max-width:1180px;margin:0 auto;padding:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:18px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.card h2{margin:0 0 4px;color:var(--navy);font-size:17px;border-left:5px solid var(--gold);padding-left:10px}
+.card h2 .en{font-size:12px;color:var(--muted);font-weight:400}
+.card .desc{color:var(--muted);font-size:12.5px;margin:2px 0 14px 15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px 18px}
+.f{display:flex;flex-direction:column;gap:3px}
+.f label{font-size:12px;color:var(--muted)}
+.f .unit{font-size:11px;color:var(--gold);font-weight:600}
+input,select{padding:7px 9px;border:1px solid var(--line);border-radius:7px;font-size:14px;font-family:inherit;background:#fbfcfe}
+/* BLUE = user editable */
+input.in,select.in{color:var(--blue);font-weight:700;border-color:#cbd9ea;background:#f6f9fc}
+input.in:focus,select.in:focus{outline:2px solid var(--blue);background:#fff}
+input[readonly]{color:#374151;font-weight:600;background:#f1f3f7;font-weight:700}
+.modbody{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:820px){.modbody{grid-template-columns:1fr}.wrap{padding:10px}}
+.panel-title{font-weight:700;color:var(--navy2);margin:6px 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.3px}
+table.res{width:100%;border-collapse:collapse;font-size:13px}
+table.res td{padding:5px 8px;border-bottom:1px dashed #eceadf}
+table.res td:first-child{color:var(--muted)}
+table.res td:last-child{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+.big{font-size:15px;color:var(--navy)}
+.chk{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:7px;margin:4px 0;font-size:13px}
+.chk.ok{background:#eef1e6;color:var(--ok)} .chk.bad{background:#f9ebe5;color:var(--bad)} .chk.warn{background:#f7efdd;color:var(--warn)}
+.chk b{margin-left:auto;font-variant-numeric:tabular-nums}
+.steps{font-family:"Consolas",monospace;font-size:12px;background:#141413;color:#e8e6dc;border-radius:8px;padding:12px;white-space:pre-wrap;line-height:1.6;margin-top:10px;max-height:280px;overflow:auto}
+.steps .v{color:#d97757}
+details summary{cursor:pointer;color:var(--blue);font-size:12.5px;margin-top:8px;user-select:none}
+.selgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.mc{border:1px solid var(--line);border-radius:10px;padding:12px;cursor:pointer;transition:.15s;background:#fbfcfe;display:flex;gap:10px;align-items:flex-start}
+.mc:hover{border-color:var(--gold);box-shadow:0 2px 8px rgba(0,0,0,.07)}
+.mc.on{border-color:var(--navy);background:#f5efe7}
+.mc input{margin-top:3px}
+.mc .t{font-weight:700;color:var(--navy2);font-size:13.5px}
+.mc .d{font-size:11px;color:var(--muted)}
+.tools{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+button.btn{background:var(--navy);color:#fff;border:none;padding:9px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600}
+button.btn:hover{background:var(--navy2)} button.btn.gold{background:var(--gold);color:#fff}
+button.btn.gold:hover{background:#c2613f}
+.legend{font-size:12px;color:var(--muted);margin-top:8px}
+.legend b{color:var(--blue)}
+.hidden{display:none}
+canvas{background:#fff;border:1px solid var(--line);border-radius:8px;max-width:100%}
+.sec-tag{display:inline-block;font-size:11px;background:#f0eee6;color:var(--navy2);border:1px solid #ddd9cb;border-radius:20px;padding:2px 10px;margin-bottom:6px}
+.mc{outline:none}
+.memberbar{display:flex;align-items:center;gap:14px;margin-bottom:14px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 16px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.memberbar .mt{font-weight:700;color:var(--navy);font-size:15px}
+.figwrap{margin-top:16px;border-top:1px dashed var(--line);padding-top:14px}
+.figimg{display:block;max-width:100%;border:1px solid var(--line);border-radius:8px;background:#fff;min-height:40px}
+/* รูปแบบ CAD (SVG วาดฝั่ง browser) */
+.figsvg{display:block}
+.figsvg svg{display:block;width:100%;height:auto;max-width:680px;margin:0 auto 10px;border:1px solid var(--line);border-radius:8px;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.fignote{font-size:12px;color:var(--bad);margin-top:6px}
+.fignote code{background:#fdecea;padding:1px 6px;border-radius:5px}
+/* หัวกระดาษ (letterhead) — แสดงเฉพาะตอนพิมพ์ (style นิยามไว้เสมอ) */
+.print-header{display:none}
+.print-footer{display:none}
+.print-header .ph-top{display:flex;align-items:center;justify-content:space-between;border-bottom:2.5px solid var(--navy);padding-bottom:6px;}
+.print-header .ph-brand{display:flex;align-items:center;gap:10px;}
+.print-header .ph-logo{width:38px;height:38px;border-radius:8px;background:var(--navy);color:#fff;font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;border:2px solid var(--gold);}
+.print-header .ph-title{font-size:14px;font-weight:800;color:var(--navy);line-height:1.15;}
+.print-header .ph-sub{font-size:9.5px;color:var(--muted);}
+.print-header .ph-meta{font-size:9.5px;color:var(--txt);text-align:right;line-height:1.45;}
+.print-header .ph-meta b{color:var(--navy);}
+.print-header .ph-bar{display:flex;justify-content:space-between;align-items:center;background:var(--navy);color:#fff;padding:5px 10px;border-radius:5px;margin-top:6px;}
+.print-header .ph-member{font-size:12px;font-weight:700;}
+.print-header .ph-ref{font-size:9.5px;opacity:.9;}
+/* ===================== โหมดชีต / พิมพ์ A4 (Sheet / Print) =====================
+   หลักการ: จัดเนื้อหาให้กว้างเท่าพื้นที่กระดาษ A4 (186mm) แล้วใช้ zoom (ตั้งค่าจาก JS)
+   ย่อให้พอดี โดยใช้จำนวนหน้าน้อยที่สุดที่ยังอ่านรายละเอียดได้
+   — กฎชุดนี้ใช้ทั้งตอน "วัดขนาด" บนจอ และตอน "พิมพ์" จึงวัดได้ตรงกับผลพิมพ์จริง */
+body.sheet{background:#fff!important;}
+body.sheet header,
+body.sheet .tools,
+body.sheet .memberbar,
+body.sheet details,
+body.sheet .fignote{display:none!important;}
+body.sheet .wrap{width:186mm;max-width:186mm;margin:0 auto;padding:0;}
+body.sheet .card{break-inside:avoid;box-shadow:none;}
+/* letterhead + footer */
+body.sheet .print-header{display:block;width:186mm;margin:0 auto 8px;zoom:var(--print-zoom,1);}
+body.sheet .print-footer{display:flex;justify-content:space-between;position:fixed;bottom:0;left:0;right:0;
+  font-size:8.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:3px;}
+
+/* ---- โหมดรายชิ้นส่วน : A4 แนวตั้ง พอดีหน้า ---- */
+body.print-member #dash{display:none!important;}
+body.print-member .module:not(.printing){display:none!important;}
+body.print-member .module.printing{display:block!important;font-size:10.5px;border:none;margin:0;padding:0;zoom:var(--print-zoom,1);}
+body.print-member .module.printing .sec-tag{display:none;}
+body.print-member .module.printing h2{font-size:14px;margin:2px 0;}
+body.print-member .module.printing h2 .en{font-size:10px;}
+body.print-member .module.printing .desc{font-size:9.5px;margin:2px 0 8px 0;}
+body.print-member .module.printing canvas{display:none;}
+body.print-member .module.printing .modbody{grid-template-columns:1.05fr 1fr;gap:12px;}
+body.print-member .module.printing .panel-title{font-size:10px;margin:4px 0 5px;}
+body.print-member .module.printing input,
+body.print-member .module.printing select{padding:3px 6px;font-size:10px;}
+body.print-member .module.printing .grid{gap:5px 12px;}
+body.print-member .module.printing .f label{font-size:9px;}
+body.print-member .module.printing table.res{font-size:10px;}
+body.print-member .module.printing table.res td{padding:2.5px 6px;}
+body.print-member .module.printing .chk{font-size:10px;padding:3px 6px;margin:2px 0;}
+body.print-member .module.printing .figwrap{margin-top:8px;padding-top:8px;break-inside:avoid;border-top:1px dashed var(--line);}
+body.print-member .module.printing .figimg{max-width:100%;max-height:118mm;width:auto;object-fit:contain;display:block;margin:0 auto;border:1px solid var(--line);}
+body.print-member .module.printing .figsvg svg{max-width:100%;max-height:118mm;width:auto;display:block;margin:0 auto;border:1px solid var(--line);}
+
+/* ---- เสารับแรงอัด+โมเมนต์ (colPM) : ตอนพิมพ์ ให้แสดงกราฟ P-M และ steps ด้วย ---- */
+body.print-member #mod_colPM.printing canvas{display:block!important;max-width:100%;height:auto;
+  border:1px solid var(--line);border-radius:6px;margin-top:8px;}
+body.print-member #mod_colPM.printing details{display:block!important;margin-top:8px;break-inside:avoid;}
+body.print-member #mod_colPM.printing details summary{list-style:none;color:var(--navy2);font-weight:700;
+  font-size:10px;margin:0 0 4px;cursor:default;}
+body.print-member #mod_colPM.printing details > .steps{display:block!important;max-height:none;overflow:visible;
+  font-size:8.5px;line-height:1.5;padding:8px 10px;}
+
+/* ---- โหมดแดชบอร์ด : ข้อมูลโครงการ + พารามิเตอร์วัสดุ ---- */
+body.print-dash #modules,
+body.print-dash #memberbar{display:none!important;}
+body.print-dash #dash{display:block!important;border:none;margin:0;padding:0;font-size:11px;zoom:var(--print-zoom,1);}
+body.print-dash #dash .sec-tag,
+body.print-dash #dash .selgrid,
+body.print-dash #dash .tools,
+body.print-dash #dash .legend{display:none!important;}
+body.print-dash #dash h2{font-size:15px;margin:2px 0;}
+body.print-dash #dash .desc{font-size:9.5px;margin:2px 0 8px 0;}
+body.print-dash #dash .panel-title{font-size:11px;margin:10px 0 6px;}
+body.print-dash #dash input,
+body.print-dash #dash select{padding:4px 7px;font-size:11px;}
+body.print-dash #dash .grid{gap:7px 16px;}
+body.print-dash #dash .f label{font-size:10px;}
+
+@media print{
+  @page{size:A4 portrait;margin:12mm 12mm 14mm 12mm;}
+  html,body{background:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  /* เผื่อกรณีกด Ctrl+P เองโดยไม่ผ่านปุ่ม (ไม่ได้อยู่ในโหมดชีต) ให้ยังพอใช้ได้ */
+  body:not(.sheet) header,
+  body:not(.sheet) .tools,
+  body:not(.sheet) .memberbar,
+  body:not(.sheet) details,
+  body:not(.sheet) .fignote{display:none!important;}
+  body:not(.sheet) #dash .selgrid{display:none!important;}
+  .card{break-inside:avoid;box-shadow:none;}
+}
+</style>
+</head>
+<body>
+<div id="printHeader" class="print-header" aria-hidden="true"></div>
+<div id="printFooter" class="print-footer" aria-hidden="true"></div>
+<header>
+  <div>
+    <h1>RC Design — Strength Design Method</h1>
+    <div class="sub">ออกแบบโครงสร้างคอนกรีตเสริมเหล็กด้วยวิธีกำลัง · หน่วย ksc·kg·cm·m·t</div>
+  </div>
+  <span class="badge">φ: ดัด 0.90 / เฉือน 0.85 / เสา 0.65</span>
+</header>
+
+<div class="wrap">
+
+<!-- ============ DASHBOARD ============ -->
+<div class="card" id="dash">
+  <span class="sec-tag">Dashboard</span>
+  <h2>1. รายละเอียดโครงการ &amp; พารามิเตอร์ออกแบบ <span class="en">Project &amp; Design Parameters</span></h2>
+  <div class="desc">กรอกข้อมูลโครงการและค่าวัสดุกลาง — ช่อง <b style="color:var(--blue)">ตัวเลขสีน้ำเงิน</b> แก้ไขได้</div>
+
+  <div class="panel-title">ข้อมูลโครงการ (Project Information)</div>
+  <div class="grid">
+    <div class="f"><label>ชื่อโครงการ / Project</label><input class="in" id="p_name" value=""></div>
+    <div class="f"><label>เจ้าของงาน / Owner</label><input class="in" id="p_owner" value=""></div>
+    <div class="f"><label>ผู้ออกแบบ / Engineer</label><input class="in" id="p_eng" value=""></div>
+    <div class="f"><label>ชิ้นส่วน / Member ref.</label><input class="in" id="p_ref" value=""></div>
+    <div class="f"><label>วันที่ / Date</label><input class="in" id="p_date" type="date"></div>
+  </div>
+
+  <div class="panel-title" style="margin-top:16px">พารามิเตอร์วัสดุกลาง (Global Materials)</div>
+  <div class="grid">
+    <div class="f"><label>f'c — กำลังอัดคอนกรีต <span class="unit">ksc</span></label><input class="in g" id="g_fc" type="number" value="240"></div>
+    <div class="f"><label>fy — กำลังครากเหล็กยืน <span class="unit">ksc</span></label><input class="in g" id="g_fy" type="number" value="4000"></div>
+    <div class="f"><label>fv — กำลังครากเหล็กปลอก <span class="unit">ksc</span></label><input class="in g" id="g_fv" type="number" value="2400"></div>
+    <div class="f"><label>covering — ระยะหุ้ม <span class="unit">cm</span></label><input class="in g" id="g_cov" type="number" value="2.5"></div>
+    <div class="f"><label>γc — นน.คอนกรีต <span class="unit">kg/m³</span></label><input class="in" id="g_gc" type="number" value="2400"></div>
+    <div class="f"><label>qa — กำลังแบกทานดิน <span class="unit">t/m²</span></label><input class="in" id="g_qa" type="number" value="20"></div>
+    <div class="f"><label>LF dead (DL)</label><input class="in" id="g_ld" type="number" value="1.4"></div>
+    <div class="f"><label>LF live (LL)</label><input class="in" id="g_ll" type="number" value="1.7"></div>
+  </div>
+  <div class="tools">
+    <button class="btn gold" onclick="applyGlobal()">↧ นำค่าวัสดุกลางไปใช้กับทุกชิ้นส่วน</button>
+    <button class="btn" onclick="printDashboard()">🖨 พิมพ์ / Export PDF</button>
+    <button class="btn" onclick="resetAll()">↺ ล้างค่าเริ่มต้น</button>
+  </div>
+
+  <div class="panel-title" style="margin-top:18px">2. เลือกชิ้นส่วนโครงสร้างที่ต้องการออกแบบ (Select Member)</div>
+  <div class="desc" style="margin-left:0">👉 คลิกการ์ดชิ้นส่วนเพื่อเข้าสู่หน้าคำนวณของชิ้นส่วนนั้น (ค่าเริ่มต้น: ยังไม่เลือกชิ้นส่วนใด)</div>
+  <div class="selgrid" id="selgrid"></div>
+  <div class="legend">💡 <b>ตัวเลขสีน้ำเงิน</b> = ช่องที่แก้ไขได้ · ตัวเลขสีดำ = ผลคำนวณอัตโนมัติ · ผลลัพธ์และรูป/กราฟอัปเดตทันทีที่แก้ค่า</div>
+</div>
+
+<div id="memberbar" class="memberbar hidden">
+  <button class="btn" onclick="showDashboard()">← กลับ Dashboard</button>
+  <span class="mt" id="memberTitle"></span>
+  <button class="btn gold" style="margin-left:auto" onclick="printCurrent()">🖨 พิมพ์ / Export PDF (A4)</button>
+</div>
+
+<div id="modules"></div>
+</div>
+
+<script>
+/* ============================ CORE ENGINE ============================ */
+const BARS=[
+ {n:'RB6',d:0.6,a:0.2827},{n:'RB9',d:0.9,a:0.6362},{n:'DB10',d:1.0,a:0.7854},
+ {n:'DB12',d:1.2,a:1.1310},{n:'DB16',d:1.6,a:2.0106},{n:'DB20',d:2.0,a:3.1416},
+ {n:'DB25',d:2.5,a:4.9087},{n:'DB28',d:2.8,a:6.1575},{n:'DB32',d:3.2,a:8.0425}];
+const BAR=Object.fromEntries(BARS.map(b=>[b.n,b]));
+const ES=2040000, ECU=0.003, K6120=6120;
+const f=(x,d=2)=>(isFinite(x)?Number(x).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}):'—');
+const sqrt=Math.sqrt, ceil=Math.ceil, max=Math.max, min=Math.min, PI=Math.PI;
+const beta1=fc=> fc<=280?0.85:max(0.65,0.85-0.05*(fc-280)/70);
+const rhoBal=(fc,fy)=>0.85*beta1(fc)*(fc/fy)*(K6120/(K6120+fy));
+const rhoMax=(fc,fy)=>0.75*rhoBal(fc,fy);
+const rhoMinBeam=(fc,fy)=>max(14/fy,0.8*sqrt(fc)/fy);
+const chooseBars=(As,bn)=>{const a=BAR[bn].a;const n=max(2,ceil(As/a));return{n,a,Asp:n*a};};
+
+// ===== Two-way slab moment-coefficient table (จากชีต 2waySlab : AF1:AX25) =====
+// 5 cases by number of discontinuous edges ; ratio columns m=[1.0,0.9,0.8,0.7,0.6,0.5]
+// 3 coefficients each: disc=M⁻ ขอบไม่ต่อเนื่อง, con=M⁻ ขอบต่อเนื่อง, pos=M⁺ กลางช่วง
+const TW_M=[1.0,0.9,0.8,0.7,0.6,0.5];
+const TWO_WAY={
+ 1:{disc:[0,0,0,0,0,0],                          con:[0.033,0.040,0.048,0.055,0.063,0.083], pos:[0.025,0.030,0.036,0.041,0.047,0.062]},
+ 2:{disc:[0.021,0.024,0.027,0.031,0.035,0.042],  con:[0.041,0.048,0.055,0.062,0.069,0.085], pos:[0.031,0.036,0.041,0.047,0.052,0.064]},
+ 3:{disc:[0.025,0.028,0.032,0.036,0.039,0.045],  con:[0.049,0.057,0.064,0.071,0.078,0.090], pos:[0.037,0.043,0.048,0.054,0.059,0.068]},
+ 4:{disc:[0.029,0.033,0.037,0.041,0.045,0.049],  con:[0.058,0.066,0.074,0.082,0.090,0.098], pos:[0.044,0.050,0.056,0.062,0.068,0.074]},
+ 5:{disc:[0.033,0.038,0.043,0.047,0.053,0.055],  con:[0,0,0,0,0,0],                          pos:[0.050,0.057,0.064,0.072,0.080,0.083]}};
+const TW_CASE=['1 : ต่อเนื่อง 4 ขอบ (พื้นภายใน)','2 : ไม่ต่อเนื่อง 1 ขอบ','3 : ไม่ต่อเนื่อง 2 ขอบ (มุม)','4 : ไม่ต่อเนื่อง 3 ขอบ','5 : ไม่ต่อเนื่อง 4 ขอบ'];
+// ด้านสั้น: interpolate ตาม m จริง / ด้านยาว: ใช้ค่าที่ m=1.0 (คอลัมน์แรก)
+function twC(cs,type,m){const row=TWO_WAY[cs][type];m=max(0.5,min(1,m));for(let i=0;i<TW_M.length-1;i++){if(m<=TW_M[i]&&m>=TW_M[i+1]){const t=(TW_M[i]-m)/(TW_M[i]-TW_M[i+1]);return row[i]+t*(row[i+1]-row[i]);}}return row[0];}
+const twC1=(cs,type)=>TWO_WAY[cs][type][0];
+const asMinFactor=fy=> fy<=2400?0.0025:(fy<4000?0.002:0.0018);
+
+// flexure: Mu in t·m ; b,d cm ; returns As cm²
+function flexure(Mu_tm,b,d,fc,fy,phi=0.9,dp=4,rminOpt){
+  const Mu=Math.abs(Mu_tm)*1e5; // kg·cm
+  const rmin=(rminOpt!==undefined)?rminOpt:rhoMinBeam(fc,fy), rmax=rhoMax(fc,fy);
+  const Rnmax=rmax*fy*(1-0.59*rmax*fy/fc);
+  const Rn=Mu/(phi*b*d*d);
+  let r={Rn,rmin,rmax,b,d};
+  if(Rn<=Rnmax){
+    const term=max(0,1-2*Rn/(0.85*fc));
+    let rho=(0.85*fc/fy)*(1-sqrt(term)); rho=max(rho,rmin);
+    r.rho=rho; r.As=rho*b*d; r.doubly=false; r.Asc=0;
+  }else{
+    const Mu1=phi*Rnmax*b*d*d, As1=rmax*b*d, Mu2=Mu-Mu1;
+    const As2=Mu2/(phi*fy*(d-dp));
+    r.rho=rmax; r.As=As1+As2; r.Asc=As2; r.doubly=true;
+  }
+  // capacity check — กรณี doubly หักผลเหล็กรับแรงอัด As' ออกจากบล็อกอัดคอนกรีต
+  const Asc=r.Asc||0, AsEff=r.As-Asc;
+  const a=AsEff*fy/(0.85*fc*b);
+  r.phiMn=phi*(AsEff*fy*(d-a/2)+Asc*fy*(d-dp))/1e5; // t·m
+  return r;
+}
+// shear: Vu t ; b,d cm ; legArea cm² ; nLegs
+function shearD(Vu_t,b,d,fc,fv,phi=0.85,legArea,nLegs=2){
+  const Vu=Math.abs(Vu_t)*1000, Vc=0.53*sqrt(fc)*b*d, phiVc=phi*Vc;
+  const Av=nLegs*legArea, VsMax=2.1*sqrt(fc)*b*d;
+  let r={Vu,Vc,phiVc:phiVc/1000,Av,need:true,note:''};
+  const VsReq=Vu/phi-Vc; r.Vs=max(0,VsReq);
+  if(Vu<=0.5*phiVc){r.need=false;r.note='ไม่ต้องการเหล็กปลอก (Vu ≤ ½φVc) — ใส่ตามขั้นต่ำ';r.s=min(d/2,60);}
+  else if(Vu<=phiVc){r.note='ใส่เหล็กปลอกขั้นต่ำ (½φVc < Vu ≤ φVc)';r.s=min(Av*fv/(3.5*b),d/2,60);}
+  else if(VsReq>VsMax){r.fail=true;r.note='⚠ Vs เกิน 2.1√f\'c·b·d — ต้องขยายหน้าตัด!';r.s=0;}
+  else{const smax=VsReq<=1.06*sqrt(fc)*b*d?min(d/2,60):min(d/4,30);r.s=min(Av*fv*d/VsReq,smax);r.note='คำนวณระยะเรียงจาก Vs';}
+  if(r.s>0)r.s=max(1,Math.floor(r.s)); // ปัดลงเป็น cm เต็ม — กันแสดงผลปัดขึ้นจนเกินพิกัด
+  r.VsMax=VsMax; return r;
+}
+// numeric max moment simply-supported, w(x) kg/m, length m -> kg·m
+function maxMoment(L,wf){const N=400,dx=L/N;let W=0,Wx=0;for(let i=0;i<N;i++){const x=(i+.5)*dx,w=wf(x)*dx;W+=w;Wx+=w*x;}const R1=(W-Wx/L);let mx=0;for(let i=0;i<=N;i++){const x=i*dx;let m=R1*x;for(let j=0;j<i;j++){const xs=(j+.5)*dx;m-=wf(xs)*dx*(x-xs);}mx=max(mx,m);}return mx;}
+
+/* ============================ MODULE DEFS ============================ */
+const opt=(arr)=>arr.map(o=>`<option value="${o.v}">${o.l}</option>`).join('');
+const barOpts=(sel)=>BARS.map(b=>`<option value="${b.n}" ${b.n===sel?'selected':''}>${b.n}</option>`).join('');
+const supOpts=[{v:8,l:'ช่วงเดียว Simply · wL²/8'},{v:10,l:'ต่อเนื่องปลายเดียว · /10'},{v:11,l:'ต่อเนื่อง 2 ปลาย · /11'},{v:24,l:'ช่วงกลางต่อเนื่อง · /24'}];
+
+const MODULES=[
+{id:'slab1',group:'พื้น',title:'พื้นทางเดียว',en:'One-way Slab',desc:'ออกแบบพื้นทางเดียวต่อความกว้าง 1.00 m · เลือกขนาดเหล็ก+ระยะเรียงได้ทั้งเหล็กหลักและเหล็กกันร้าว',
+ inputs:[['S','ช่วงสั้น (clear)','m',3.0],['t','ความหนาพื้น','m',0.12],['cov','ระยะหุ้ม','cm',2.0],
+  ['fc',"f'c",'ksc',240,'g'],['fy','fy','ksc',4000,'g'],['LL','นน.จร LL','kg/m²',200],['SDL','นน.คงที่เพิ่ม','kg/m²',100],
+  ['sup','สภาพรองรับ','',['sup',8]],
+  ['bar','เหล็กหลัก','',['sel','DB10']],['sp','ระยะเรียงเหล็กหลัก','cm',20],
+  ['barT','เหล็กกันร้าว','',['sel','RB9']],['spT','ระยะเรียงเหล็กกันร้าว','cm',20]],
+ calc(v){const t=v.t*100,d=t-v.cov-0.5*BAR[v.bar].d;const Wd=v.t*2400+v.SDL,Wu=LFd()*Wd+LFl()*v.LL;
+  const Mu=Wu*v.S*v.S/v.sup/1000; const fx=flexure(Mu,100,d,v.fc,v.fy,0.9);
+  const Asmin=asMinFactor(v.fy)*100*t; const AsReq=max(fx.As,Asmin);
+  const AstReq=(String(v.barT).startsWith('RB')?0.0025:asMinFactor(v.fy))*100*t; // กันร้าว: RB(SR24)→0.0025
+  const prov=(bar,sp)=>BAR[bar].a*100/sp;                 // As ที่จัดได้ cm²/m
+  const smax=min(3*t,45), smaxT=min(5*t,45);
+  const AsProv=prov(v.bar,v.sp), AstProv=prov(v.barT,v.spT);
+  const sgMain=max(5,min(Math.floor(BAR[v.bar].a*100/AsReq),Math.floor(smax))); // ระยะแนะนำ
+  const sgTemp=max(5,min(Math.floor(BAR[v.barT].a*100/AstReq),Math.floor(smaxT)));
+  return{res:[['Wu (น้ำหนักประลัย)',f(Wu,0),'kg/m'],['d ประสิทธิผล',f(d),'cm'],['Mu',f(Mu,3),'t·m/m'],
+   ['As ต้องการ (หลัก)',f(AsReq,2),'cm²/m'],['As,min',f(Asmin,2),'cm²/m'],
+   ['เหล็กหลัก',`${v.bar} @ ${f(v.sp,0)} (As=${f(AsProv,2)}) · แนะนำ@${sgMain}`,'cm'],
+   ['As ต้องการ (กันร้าว)',f(AstReq,2),'cm²/m'],
+   ['เหล็กกันร้าว',`${v.barT} @ ${f(v.spT,0)} (As=${f(AstProv,2)}) · แนะนำ@${sgTemp}`,'cm']],
+   chk:[chk('φMn ≥ Mu',fx.phiMn>=Mu-1e-9,`φMn=${f(fx.phiMn,3)} ≥ ${f(Mu,3)} t·m`),
+    chk('ρ ≤ ρmax',fx.rho<=fx.rmax,`ρ=${f(fx.rho,4)}`),
+    chk('As เหล็กหลักพอ',AsProv>=AsReq,`${f(AsProv,2)} ≥ ${f(AsReq,2)} cm²/m`),
+    chk('As กันร้าวพอ',AstProv>=AstReq,`${f(AstProv,2)} ≥ ${f(AstReq,2)} cm²/m`),
+    chk('ระยะเหล็กหลัก ≤ s,max',v.sp<=smax,`s,max=min(3t,45)=${f(smax,1)} cm`),
+    chk('ระยะกันร้าว ≤ s,max',v.spT<=smaxT,`s,max=min(5t,45)=${f(smaxT,1)} cm`)],
+   steps:`d = ${f(t,1)} - ${v.cov} - 0.5·${BAR[v.bar].d} = ${f(d,2)} cm\nWu = ${LFd()}·(${f(v.t*2400,0)}+${v.SDL}) + ${LFl()}·${v.LL} = ${f(Wu,0)} kg/m\nMu = Wu·S²/${v.sup} = ${f(Mu,3)} t·m\nRn = ${f(fx.Rn,2)} ; ρ = ${f(fx.rho,4)}\nAs(หลัก) ต้องการ = ${f(AsReq,2)} → จัด ${v.bar}@${f(v.sp,0)} (As=${f(AsProv,2)}) cm²/m\nAs(กันร้าว)=${String(v.barT).startsWith('RB')?'0.0025':f(asMinFactor(v.fy),4)}·100·t=${f(AstReq,2)} → จัด ${v.barT}@${f(v.spT,0)} (As=${f(AstProv,2)}) cm²/m`};}},
+
+{id:'slab2',group:'พื้น',title:'พื้นสองทาง',en:'Two-way Slab (Coefficient)',desc:'วิธีสัมประสิทธิ์โมเมนต์ (ตาราง 5 case จากชีต 2waySlab) — เลือก case แล้วดึง coeff. คำนวณอัตโนมัติ · แสดงทั้งด้านสั้น/ด้านยาว · เลือกเหล็ก+ระยะได้',
+ inputs:[['cs','กรณีแผ่นพื้น (จำนวนขอบไม่ต่อเนื่อง)','',['case',1]],
+  ['S','ด้านสั้น S','m',4.0],['L','ด้านยาว L','m',5.0],['t','ความหนา t','m',0.12],['cov','ระยะหุ้ม','cm',2.0],
+  ['fc',"f'c",'ksc',240,'g'],['fy','fy','ksc',4000,'g'],['LL','นน.จร LL','kg/m²',300],['SDL','นน.ผิวพื้น','kg/m²',100],
+  ['barSp','เหล็กด้านสั้น M⁺','',['sel','DB12']],['spSp','ระยะเรียง สั้น M⁺','cm',15],
+  ['barSn','เหล็กด้านสั้น M⁻','',['sel','DB12']],['spSn','ระยะเรียง สั้น M⁻','cm',15],
+  ['barLp','เหล็กด้านยาว M⁺','',['sel','DB12']],['spLp','ระยะเรียง ยาว M⁺','cm',15],
+  ['barLn','เหล็กด้านยาว M⁻','',['sel','DB12']],['spLn','ระยะเรียง ยาว M⁻','cm',15]],
+ calc(v){const mRaw=v.S/v.L,m=max(0.5,min(1,mRaw));const tcm=v.t*100;
+  const Wd=v.t*2400+v.SDL,Wu=LFd()*Wd+LFl()*v.LL;
+  // ด้านสั้น = interpolate ตาม m / ด้านยาว = ค่าที่ m=1.0
+  const CsP=twC(v.cs,'pos',m), CsC=twC(v.cs,'con',m), CsD=twC(v.cs,'disc',m), CsN=max(CsC,CsD);
+  const ClP=twC1(v.cs,'pos'),  ClC=twC1(v.cs,'con'),  ClD=twC1(v.cs,'disc'),  ClN=max(ClC,ClD);
+  const S2=v.S*v.S; // โมเมนต์ทุกตัวอิงฐาน Wu·S²
+  const MsP=CsP*Wu*S2/1000, MsN=CsN*Wu*S2/1000, MlP=ClP*Wu*S2/1000, MlN=ClN*Wu*S2/1000;
+  const dS=tcm-v.cov-0.5*BAR[v.barSp].d;            // เหล็กด้านสั้นวางชั้นนอก
+  const dL=tcm-v.cov-BAR[v.barSp].d-0.5*BAR[v.barLp].d; // เหล็กด้านยาววางชั้นใน
+  const fct=asMinFactor(v.fy), Asmin=fct*100*tcm;
+  const need=(M,d)=>max(flexure(M,100,d,v.fc,v.fy,0.9).As,Asmin);
+  const AsSp=need(MsP,dS),AsSn=need(MsN,dS),AsLp=need(MlP,dL),AsLn=need(MlN,dL);
+  const prov=(bar,sp)=>BAR[bar].a*100/sp; // cm²/m
+  const pSp=prov(v.barSp,v.spSp),pSn=prov(v.barSn,v.spSn),pLp=prov(v.barLp,v.spLp),pLn=prov(v.barLn,v.spLn);
+  const smax=min(3*tcm,30);
+  const sg=(As,bar)=>max(5,min(Math.floor(BAR[bar].a*100/As),Math.floor(smax))); // ระยะแนะนำ (cm) ไม่เกิน s,max
+  return{res:[
+   ['กรณี (case)','case '+TW_CASE[v.cs-1],''],
+   ['m = S/L',f(mRaw,3)+(mRaw<0.5?' (ใช้ coeff. ที่ m=0.50)':''),''],['Wu (ประลัย)',f(Wu,0),'kg/m²'],['As,min',f(Asmin,2),'cm²/m'],
+   ['━━ ด้านสั้น (Short) ━━','',''],
+   ['C⁻ / C⁺ (สั้น)',f(CsN,3)+' / '+f(CsP,3),''],
+   ['Mu⁻ / Mu⁺ (สั้น)',f(MsN,3)+' / '+f(MsP,3),'t·m/m'],['d (สั้น)',f(dS,2),'cm'],
+   ['As req ⁻ / ⁺ (สั้น)',f(AsSn,2)+' / '+f(AsSp,2),'cm²/m'],
+   ['เหล็กสั้น M⁻',`${v.barSn} @ ${f(v.spSn,0)} (As=${f(pSn,2)}) · แนะนำ@${sg(AsSn,v.barSn)}`,'cm'],
+   ['เหล็กสั้น M⁺',`${v.barSp} @ ${f(v.spSp,0)} (As=${f(pSp,2)}) · แนะนำ@${sg(AsSp,v.barSp)}`,'cm'],
+   ['━━ ด้านยาว (Long) ━━','',''],
+   ['C⁻ / C⁺ (ยาว, m=1.0)',f(ClN,3)+' / '+f(ClP,3),''],
+   ['Mu⁻ / Mu⁺ (ยาว)',f(MlN,3)+' / '+f(MlP,3),'t·m/m'],['d (ยาว)',f(dL,2),'cm'],
+   ['As req ⁻ / ⁺ (ยาว)',f(AsLn,2)+' / '+f(AsLp,2),'cm²/m'],
+   ['เหล็กยาว M⁻',`${v.barLn} @ ${f(v.spLn,0)} (As=${f(pLn,2)}) · แนะนำ@${sg(AsLn,v.barLn)}`,'cm'],
+   ['เหล็กยาว M⁺',`${v.barLp} @ ${f(v.spLp,0)} (As=${f(pLp,2)}) · แนะนำ@${sg(AsLp,v.barLp)}`,'cm']],
+   chk:[chk('m ≥ 0.5 (พื้นสองทาง)',mRaw>=0.5,mRaw>=0.5?`m=${f(mRaw,3)}`:`m=${f(mRaw,3)} < 0.5 — ควรออกแบบเป็นพื้นทางเดียว`),
+    chk('t ≥ t,min = (S+L)/90',tcm>=(v.S+v.L)/90*100,`t=${f(tcm,1)} ≥ ${f((v.S+v.L)/90*100,1)} cm`),
+    chk('As เหล็กสั้น M⁻ พอ',pSn>=AsSn,`${f(pSn,2)} ≥ ${f(AsSn,2)} cm²/m`),
+    chk('As เหล็กสั้น M⁺ พอ',pSp>=AsSp,`${f(pSp,2)} ≥ ${f(AsSp,2)} cm²/m`),
+    chk('As เหล็กยาว M⁻ พอ',pLn>=AsLn,`${f(pLn,2)} ≥ ${f(AsLn,2)} cm²/m`),
+    chk('As เหล็กยาว M⁺ พอ',pLp>=AsLp,`${f(pLp,2)} ≥ ${f(AsLp,2)} cm²/m`),
+    chk('ระยะเรียง ≤ s,max',max(v.spSp,v.spSn,v.spLp,v.spLn)<=smax,`s,max=min(3t,30)=${f(smax,1)} cm`)],
+   steps:`m = S/L = ${f(v.S,2)}/${f(v.L,2)} = ${f(mRaw,3)}${mRaw<0.5?' → ใช้ coeff. ที่ m=0.50':''}\nWu = ${LFd()}·(${f(v.t*2400,0)}+${v.SDL}) + ${LFl()}·${v.LL} = ${f(Wu,0)} kg/m²\nAs,min = ${f(fct,4)}·100·${f(tcm,1)} = ${f(Asmin,2)} cm²/m\n\n[ด้านสั้น — interpolate ตาม m]\n C⁻=${f(CsN,3)}  C⁺=${f(CsP,3)}\n Mu⁻ = C⁻·Wu·S² = ${f(MsN,3)} t·m ;  Mu⁺ = ${f(MsP,3)} t·m\n d=${f(dS,2)} cm → As⁻=${f(AsSn,2)} , As⁺=${f(AsSp,2)} cm²/m\n\n[ด้านยาว — coeff. ที่ m=1.0]\n C⁻=${f(ClN,3)}  C⁺=${f(ClP,3)}\n Mu⁻ = C⁻·Wu·S² = ${f(MlN,3)} t·m ;  Mu⁺ = ${f(MlP,3)} t·m\n d=${f(dL,2)} cm → As⁻=${f(AsLn,2)} , As⁺=${f(AsLp,2)} cm²/m\n\nAs(จัด) = พื้นที่เหล็ก·100/ระยะเรียง · ตรวจ ≥ As req`};}},
+
+{id:'slabC',group:'พื้น',title:'พื้นยื่น',en:'Cantilever Slab',desc:'พื้นยื่น ต่อความกว้าง 1.00 m · เลือกขนาด+ระยะเรียงเหล็กได้ทั้งเหล็กบนและเหล็กกันร้าว',
+ inputs:[['L','ความยาวยื่น','m',1.5],['t','ความหนา','m',0.15],['cov','ระยะหุ้ม','cm',2.0],
+  ['fc',"f'c",'ksc',240,'g'],['fy','fy','ksc',4000,'g'],['LL','นน.จร','kg/m²',200],['SDL','นน.คงที่เพิ่ม','kg/m²',100],['P','นน.จุดปลาย','kg/m',0],
+  ['bar','เหล็กบน','',['sel','DB12']],['sp','ระยะเรียงเหล็กบน','cm',15],
+  ['barT','เหล็กกันร้าว','',['sel','RB9']],['spT','ระยะเรียงกันร้าว','cm',15]],
+ calc(v){const t=v.t*100,d=t-v.cov-0.5*BAR[v.bar].d;const Wd=v.t*2400+v.SDL,Wu=LFd()*Wd+LFl()*v.LL,Pu=LFl()*v.P;
+  const Mu=(Wu*v.L*v.L/2+Pu*v.L)/1000;const fx=flexure(Mu,100,d,v.fc,v.fy);const Asmin=asMinFactor(v.fy)*100*t;const AsReq=max(fx.As,Asmin);
+  const AstReq=(String(v.barT).startsWith('RB')?0.0025:asMinFactor(v.fy))*100*t;
+  const prov=(bar,sp)=>BAR[bar].a*100/sp;const AsProv=prov(v.bar,v.sp),AstProv=prov(v.barT,v.spT);
+  const sgMain=max(5,Math.floor(BAR[v.bar].a*100/AsReq)),sgTemp=max(5,Math.floor(BAR[v.barT].a*100/AstReq)),smax=min(3*t,45);
+  return{res:[['t_min = L/10',f(v.L/10*100,1),'cm'],['Wu',f(Wu,0),'kg/m'],['Mu',f(Mu,3),'t·m'],['d',f(d,2),'cm'],
+   ['As ต้องการ (บน)',f(AsReq,2),'cm²/m'],['เหล็กบน',`${v.bar} @ ${f(v.sp,0)} (As=${f(AsProv,2)}) · แนะนำ@${sgMain}`,'cm'],
+   ['As กันร้าว',f(AstReq,2),'cm²/m'],['เหล็กกันร้าว',`${v.barT} @ ${f(v.spT,0)} (As=${f(AstProv,2)}) · แนะนำ@${sgTemp}`,'cm']],
+   chk:[chk('t ≥ t_min',t>=v.L/10*100,`t=${f(t,0)} ≥ ${f(v.L/10*100,1)} cm`),chk('φMn ≥ Mu',fx.phiMn>=Mu-1e-9,`φMn=${f(fx.phiMn,3)}`),
+    chk('As เหล็กบนพอ',AsProv>=AsReq,`${f(AsProv,2)} ≥ ${f(AsReq,2)} cm²/m`),chk('As กันร้าวพอ',AstProv>=AstReq,`${f(AstProv,2)} ≥ ${f(AstReq,2)} cm²/m`),
+    chk('ระยะเหล็กบน ≤ s,max',v.sp<=smax,`s,max=min(3t,45)=${f(smax,1)} cm`)],
+   steps:`d=${f(d,2)} cm\nMu=Wu·L²/2 + Pu·L = ${f(Mu,3)} t·m\nρ=${f(fx.rho,4)} → As=${f(AsReq,2)} cm²\nจัด ${v.bar}@${f(v.sp,0)} (As=${f(AsProv,2)}) · กันร้าว ${v.barT}@${f(v.spT,0)} (As=${f(AstProv,2)})`};}},
+
+{id:'beamP',group:'คาน',title:'คาน — โมเมนต์บวก',en:'Beam (M+)',desc:'คานสี่เหลี่ยม ดัด+เฉือน (รองรับเสริมรับแรงอัด)',
+ inputs:beamIn('DB16'),calc(v){return beamCalc(v);}},
+{id:'beamN',group:'คาน',title:'คาน — โมเมนต์ลบ',en:'Beam (M-)',desc:'คานสี่เหลี่ยม โมเมนต์ลบ (เหล็กรับแรงดึงด้านบน)',
+ inputs:beamIn('DB16'),calc(v){return beamCalc(v);}},
+
+{id:'beamT',group:'คาน',title:'คาน — แรงบิด',en:'Beam (Torsion)',desc:'ตรวจแรงบิดร่วมแรงเฉือน (φ=0.75)',
+ inputs:[['b','ความกว้าง','cm',30],['h','ความลึก','cm',50],['cov','ระยะหุ้ม','cm',4],
+  ['fc',"f'c",'ksc',240,'g'],['fy','fy','ksc',4000,'g'],['fv','fv ปลอก','ksc',2400,'g'],
+  ['Tu','แรงบิด Tu','t·m',1.0],['Vu','แรงเฉือน Vu','t',5],['stir','เหล็กปลอก','',['sel','RB9']]],
+ calc(v){const phi=0.75,Acp=v.b*v.h,Pcp=2*(v.b+v.h);const Tcr=1.06*sqrt(v.fc)*Acp*Acp/Pcp/1e5;
+  const Tth=phi*0.265*sqrt(v.fc)*Acp*Acp/Pcp/1e5;const x1=v.b-2*v.cov,y1=v.h-2*v.cov,Aoh=x1*y1,Ph=2*(x1+y1),Ao=0.85*Aoh;
+  const Tu=v.Tu*1e5;const Ats=Tu/(phi*2*Ao*v.fv);const Al=Ats*Ph*(v.fv/v.fy);
+  return{res:[['Tcr (แตกร้าว)',f(Tcr,3),'t·m'],['T_threshold φ·Tth',f(Tth,3),'t·m'],['Aoh',f(Aoh,0),'cm²'],['Ao',f(Ao,0),'cm²'],
+   ['At/s (1 ขา)',f(Ats,4),'cm²/cm'],['Al (เหล็กยืนเพิ่ม)',f(Al,2),'cm²']],
+   chk:[chk('พิจารณาแรงบิด',true,v.Tu>Tth?`Tu > φTth=${f(Tth,3)} — ต้องเสริมรับแรงบิด`:`Tu ≤ φTth=${f(Tth,3)} — ตัดผลแรงบิดได้`),
+        chk('หน้าตัดเพียงพอ (Tu ≤ Tcr)',v.Tu<=Tcr,`Tu=${f(v.Tu,3)} / Tcr=${f(Tcr,3)} t·m`)],
+   steps:`Acp=${Acp}, Pcp=${Pcp}\nTcr=1.06√fc·Acp²/Pcp=${f(Tcr,3)} t·m\nAoh=${f(Aoh,0)}, Ph=${f(Ph,0)}, Ao=0.85Aoh=${f(Ao,0)}\nAt/s=Tu/(φ·2·Ao·fv)=${f(Ats,4)}\nAl=(At/s)·Ph·(fv/fy)=${f(Al,2)} cm²`};}},
+
+{id:'colT',group:'เสา',title:'เสาปลอกเดี่ยว',en:'Tied Column (axial)',desc:'เสารับแรงอัดตรงศูนย์ φ=0.65, ตัวคูณ 0.80',
+ inputs:colIn(0.65,0.80),calc(v){return colCalc(v,0.65,0.80,false);}},
+{id:'colS',group:'เสา',title:'เสาปลอกเกลียว',en:'Spiral Column (axial)',desc:'เสากลมรับแรงอัด φ=0.75, ตัวคูณ 0.85',
+ inputs:[['D','เส้นผ่าศูนย์กลาง','cm',40],['cov','ระยะหุ้ม','cm',4],['fc',"f'c",'ksc',240,'g'],['fy','fy','ksc',4000,'g'],['fv','fv ปลอก','ksc',2400,'g'],
+  ['Pu','แรงอัด Pu','t',120],['bar','เหล็กยืน','',['sel','DB20']],['nb','จำนวนเหล็กยืน','',8],['sp','เหล็กปลอกเกลียว','',['sel','RB9']]],
+ calc(v){const Ag=PI/4*v.D*v.D,Ast=v.nb*BAR[v.bar].a,rg=Ast/Ag;
+  const Pnm=0.85*(0.85*v.fc*(Ag-Ast)+v.fy*Ast),phiPn=0.75*Pnm/1000;
+  const Dc=v.D-2*v.cov,Ach=PI/4*Dc*Dc,rsmin=0.45*(Ag/Ach-1)*v.fc/v.fv;const s=4*BAR[v.sp].a/(Dc*rsmin); // fyt = fv ของเหล็กเกลียว
+  return{res:[['Ag',f(Ag,0),'cm²'],['Ast',f(Ast,2),'cm²'],['ρg',f(rg*100,2),'%'],['φPn,max',f(phiPn,1),'t'],
+   ['ρs,min (เกลียว)',f(rsmin,4),''],['ระยะเกลียว s',f(s,2),'cm']],
+   chk:[chk('φPn ≥ Pu',phiPn>=v.Pu,`φPn=${f(phiPn,1)} ≥ ${f(v.Pu,1)} t`),chk('0.01 ≤ ρg ≤ 0.08',rg>=0.01&&rg<=0.08,`ρg=${f(rg*100,2)}%`),chk('ระยะเกลียว 2.5–7.5 cm',s>=2.5&&s<=7.5,`s=${f(s,2)}`)],
+   steps:`Ag=π/4·D²=${f(Ag,0)}\nPn,max=0.85·[0.85fc(Ag-Ast)+fy·Ast]\nφPn=0.75·Pn,max=${f(phiPn,1)} t\nρs,min=0.45(Ag/Ach-1)(fc/fyt)=${f(rsmin,4)} (fyt=fv เกลียว)\ns=4·Asp/(Dc·ρs)=${f(s,2)} cm`};}},
+
+{id:'colPM',group:'เสา',title:'เสารับแรงอัด+โมเมนต์',en:'Column P-M Interaction',desc:'ไดอะแกรมปฏิสัมพันธ์ P-M (ตรวจจุด Pu,Mu อยู่ในขอบเขต)',
+ inputs:[['b','ความกว้าง b','cm',30],['h','ความลึก h','cm',40],['cov','ระยะหุ้ม','cm',4],['fc',"f'c",'ksc',240,'g'],['fy','fy','ksc',4000,'g'],
+  ['Pu','Pu','t',60],['Mu','Mu','t·m',8],['bar','เหล็กยืน','',['sel','DB20']],['nb','จำนวนรวม','',8]],
+ calc(v){const r=pmDiagram(v);return r;},draw:drawPM},
+
+{id:'stairF',group:'บันได',title:'บันไดพาดช่วง',en:'Stair (Flight)',desc:'บันไดท้องเรียบพาดทางช่วง ต่อความกว้าง 1.00 m',
+ inputs:[['R','ลูกตั้ง','m',0.175],['T','ลูกนอน','m',0.25],['t','ความหนาท้อง','m',0.15],['L','ช่วงพาด','m',3.0],
+  ['cov','ระยะหุ้ม','cm',2.0],['fc',"f'c",'ksc',240,'g'],['fy','fy','ksc',4000,'g'],['LL','นน.จร','kg/m²',300],['SDL','ผิว finishing','kg/m²',100],['bar','เหล็ก','',['sel','DB12']],['sup','สภาพรองรับ','',['sup',8]]],
+ calc(v){const slope=sqrt(v.R*v.R+v.T*v.T)/v.T;const ww=v.t*2400*slope,ws=0.5*v.R*2400,Wd=ww+ws+v.SDL,Wu=LFd()*Wd+LFl()*v.LL;
+  const Mu=Wu*v.L*v.L/v.sup/1000;const t=v.t*100,d=t-v.cov-0.5*BAR[v.bar].d;const fx=flexure(Mu,100,d,v.fc,v.fy);const Asmin=asMinFactor(v.fy)*100*t;const As=max(fx.As,Asmin);
+  const sp=max(5,Math.floor(min(BAR[v.bar].a*100/As,3*t,45)));
+  return{res:[['slope factor',f(slope,3),''],['นน.ท้องบันได',f(ww,0),'kg/m²'],['นน.ขั้น',f(ws,0),'kg/m²'],['Wu',f(Wu,0),'kg/m'],['Mu',f(Mu,3),'t·m'],['As ต้องการ',f(As,2),'cm²/m'],['เหล็กหลัก',`${v.bar}@${f(sp,0)}`,'cm'],['เหล็กกันร้าว',`RB9@${f(max(5,Math.floor(min(BAR.RB9.a*100/(0.0025*100*t),45))),0)}`,'cm']],
+   chk:[chk('φMn ≥ Mu',fx.phiMn>=Mu-1e-9,`φMn=${f(fx.phiMn,3)}`),chk('ρ ≤ ρmax',fx.rho<=fx.rmax,`ρ=${f(fx.rho,4)}`)],
+   steps:`slope=√(R²+T²)/T=${f(slope,3)}\nww=t·2400·slope=${f(ww,0)} ; ws=R·2400/2=${f(ws,0)}\nWu=${f(Wu,0)} kg/m\nMu=Wu·L²/${v.sup}=${f(Mu,3)} t·m\nAs=${f(As,2)} cm²`};}},
+
+{id:'stairFL',group:'บันได',title:'บันไดมีชานพัก',en:'Stair (Flight + Landing)',desc:'บันได 2 โซน (ช่วงเอียง + ชานพัก) คำนวณ Mmax เชิงตัวเลข',
+ inputs:[['R','ลูกตั้ง','m',0.175],['T','ลูกนอน','m',0.25],['t','ความหนาท้อง','m',0.15],['Lf','ช่วงเอียง(แนวราบ)','m',2.4],['Ll','ชานพัก','m',1.2],
+  ['cov','ระยะหุ้ม','cm',2.0],['fc',"f'c",'ksc',240,'g'],['fy','fy','ksc',4000,'g'],['LL','นน.จร','kg/m²',300],['SDL','ผิว finishing','kg/m²',100],['bar','เหล็ก','',['sel','DB12']]],
+ calc(v){const slope=sqrt(v.R*v.R+v.T*v.T)/v.T;const Wf=LFd()*(v.t*2400*slope+0.5*v.R*2400+v.SDL)+LFl()*v.LL;
+  const Wl=LFd()*(v.t*2400+v.SDL)+LFl()*v.LL;const Lt=v.Lf+v.Ll;const wf=x=>x<=v.Lf?Wf:Wl;const Mu=maxMoment(Lt,wf)/1000;
+  const t=v.t*100,d=t-v.cov-0.5*BAR[v.bar].d;const fx=flexure(Mu,100,d,v.fc,v.fy);const Asmin=asMinFactor(v.fy)*100*t;const As=max(fx.As,Asmin);
+  const sp=max(5,Math.floor(min(BAR[v.bar].a*100/As,3*t,45)));
+  return{res:[['slope factor',f(slope,3),''],['Wu ช่วงเอียง',f(Wf,0),'kg/m'],['Wu ชานพัก',f(Wl,0),'kg/m'],['ช่วงรวม',f(Lt,2),'m'],['Mu,max',f(Mu,3),'t·m'],['As ต้องการ',f(As,2),'cm²/m'],['เหล็กหลัก',`${v.bar}@${f(sp,0)}`,'cm']],
+   chk:[chk('φMn ≥ Mu',fx.phiMn>=Mu-1e-9,`φMn=${f(fx.phiMn,3)}`),chk('ρ ≤ ρmax',fx.rho<=fx.rmax,`ρ=${f(fx.rho,4)}`)],
+   steps:`slope=${f(slope,3)}\nWu(เอียง)=${f(Wf,0)} ; Wu(ชานพัก)=${f(Wl,0)} kg/m\nLt=${f(Lt,2)} m → Mmax(เชิงตัวเลข)=${f(Mu,3)} t·m\nAs=${f(As,2)} cm²`};}},
+
+{id:'foot',group:'ฐานราก',title:'ฐานรากเดี่ยว',en:'Isolated Footing',desc:'ฐานแผ่สี่เหลี่ยมจัตุรัส ตรวจเฉือน 1 ทาง / เจาะทะลุ / ดัด',
+ inputs:[['P','นน.ใช้งาน P','t',40],['Pu','นน.ประลัย Pu','t',56],['col','ขนาดเสา (จัตุรัส)','cm',30],
+  ['qa','กำลังแบกทานดิน','t/m²',20,'g'],['fc',"f'c",'ksc',240,'g'],['fy','fy','ksc',4000,'g'],['cov','ระยะหุ้ม','cm',7.5],['h','ความหนาฐาน','m',0.40],
+  ['bar','เหล็กล่าง','',['sel','DB16']],['nb','จำนวนเหล็กล่าง/ทิศ (0=อัตโนมัติ)','',0],['barW','เหล็กรัดรอบ','',['sel','DB16']]],
+ calc(v){const qan=v.qa-v.h*2.4;const Areq=v.P/qan;let B=ceil(sqrt(Areq)/0.05)*0.05;B=max(B,(v.col/100)+0.3);
+  const qu=v.Pu/(B*B);const d=v.h*100-v.cov-BAR[v.bar].d;const cm=v.col/100,dm=d/100;
+  const Vu1=qu*B*((B-cm)/2-dm);const phiVc1=0.85*0.53*sqrt(v.fc)*(B*100)*d/1000;
+  const bo=4*(v.col+d);const Vu2=qu*(B*B-Math.pow((v.col+d)/100,2));const phiVc2=0.85*1.06*sqrt(v.fc)*bo*d/1000;
+  const Mu=qu*B*Math.pow((B-cm)/2,2)/2;const fx=flexure(Mu,B*100,d,v.fc,v.fy,0.9,4,0);const Asmin=asMinFactor(v.fy)*(B*100)*(v.h*100);const As=max(fx.As,Asmin); // ฐานราก: As,min=0.0018bh (ไม่ใช้ ρmin คาน)
+  const need=chooseBars(As,v.bar);const nb=(v.nb&&v.nb>0)?Math.round(v.nb):need.n;const AsProv=nb*BAR[v.bar].a;
+  return{res:[['qa,net',f(qan,2),'t/m²'],['A ต้องการ',f(Areq,2),'m²'],['ขนาดฐาน B×B',f(B,2)+'×'+f(B,2),'m'],['qu (ดันขึ้น)',f(qu,2),'t/m²'],['d',f(d,1),'cm'],
+   ['Mu (ที่ขอบเสา)',f(Mu,3),'t·m'],['As ต้องการ',f(As,2),'cm²'],['เหล็กล่าง',`${nb}-${v.bar} # (As=${f(AsProv,2)}) · ต้องการ≥${need.n}`,''],['เหล็กรัดรอบ',`${v.barW} รัดรอบ`,'']],
+   chk:[chk('เฉือน 1 ทาง φVc≥Vu',phiVc1>=Vu1,`φVc=${f(phiVc1,1)} ≥ Vu=${f(Vu1,1)} t`),
+        chk('เจาะทะลุ φVc≥Vu',phiVc2>=Vu2,`φVc=${f(phiVc2,1)} ≥ Vu=${f(Vu2,1)} t`),
+        chk('φMn ≥ Mu',fx.phiMn>=Mu-1e-9,`φMn=${f(fx.phiMn,3)}`),
+        chk('As เหล็กล่างพอ',AsProv>=As,`${f(AsProv,2)} ≥ ${f(As,2)} cm² (${nb} เส้น)`)],
+   steps:`qa,net=qa-h·2.4=${f(qan,2)} t/m²\nAreq=P/qa,net=${f(Areq,2)} → B=${f(B,2)} m\nqu=Pu/B²=${f(qu,2)} t/m²\nd=${f(d,1)} cm\nเฉือน1ทาง: Vu=${f(Vu1,1)} / φVc=${f(phiVc1,1)} t\nเจาะทะลุ: bo=${f(bo,0)}cm, Vu=${f(Vu2,1)} / φVc=${f(phiVc2,1)} t\nMu=qu·B·((B-c)/2)²/2=${f(Mu,3)} t·m → As=${f(As,2)} (ต้องการ≥${need.n}) → จัด ${nb}-${v.bar}`};}}
+];
+
+/* ---- shared beam ---- */
+function beamIn(db){return[['b','ความกว้าง b','cm',20],['h','ความลึก h','cm',40],['cov','ระยะหุ้ม','cm',3],
+ ['fc',"f'c",'ksc',240,'g'],['fy','fy','ksc',4000,'g'],['fv','fv ปลอก','ksc',2400,'g'],
+ ['Mu','โมเมนต์ Mu','t·m',5],['Vu','แรงเฉือน Vu','t',5],
+ ['bar','เหล็กหลัก','',['sel',db]],['nb','จำนวนเหล็กหลัก (0=อัตโนมัติ)','',0],
+ ['nc','จำนวนเหล็กอีกด้าน','',2],
+ ['stir','เหล็กปลอก','',['sel','RB9']],['sStir','ระยะเรียงปลอก (0=อัตโนมัติ)','cm',0]];}
+function beamCalc(v){
+  const dst=BAR[v.stir].d;const d=v.h-v.cov-dst-0.5*BAR[v.bar].d;const dp=v.cov+dst+0.5*BAR[v.bar].d;
+  const fx=flexure(v.Mu,v.b,d,v.fc,v.fy,0.9,dp);const As=max(fx.As,fx.rmin*v.b*d);const need=chooseBars(As,v.bar);
+  const nb=(v.nb&&v.nb>0)?Math.round(v.nb):need.n;const AsProv=nb*BAR[v.bar].a;
+  const nc=(v.nc&&v.nc>0)?Math.round(v.nc):(fx.doubly?chooseBars(fx.Asc,v.bar).n:2);
+  const sh=shearD(v.Vu,v.b,d,v.fc,v.fv,0.85,BAR[v.stir].a,2);
+  const sStir=(v.sStir&&v.sStir>0)?v.sStir:sh.s;
+  // กำลังเฉือนจากปลอกที่ "จัดจริง" : φVn = φVc + φ·Av·fv·d/s
+  const VsProv=(sStir>0)?sh.Av*v.fv*d/sStir/1000:0;
+  const phiVn=sh.phiVc+0.85*VsProv;
+  // กำลังดัดจากเหล็กที่ "จัดจริง" (หักผล As' กรณี doubly)
+  const AscP=fx.doubly?nc*BAR[v.bar].a:0;
+  const aP=max(0,AsProv-AscP)*v.fy/(0.85*v.fc*v.b);
+  const phiMnP=0.9*((AsProv-AscP)*v.fy*(d-aP/2)+AscP*v.fy*(d-dp))/1e5;
+  const res=[['d ประสิทธิผล',f(d,2),'cm'],['Rn',f(fx.Rn,2),'ksc'],['ρ',f(fx.rho,4),''],['ρmin / ρmax',f(fx.rmin,4)+' / '+f(fx.rmax,4),''],
+   ['As ต้องการ',f(As,2),'cm²'],['เหล็กหลัก',`${nb}-${v.bar} (As=${f(AsProv,2)}) · ต้องการ≥${need.n} เส้น`,''],
+   ['เหล็กอีกด้าน',`${nc}-${v.bar}`,''],
+   ['φMn (จากเหล็กที่จัด)',f(phiMnP,3),'t·m'],['Vc',f(sh.Vc/1000,2),'t'],['φVc',f(sh.phiVc,2),'t'],['Vs',f(sh.Vs/1000,2),'t'],['เหล็กปลอก',`${v.stir} @ ${f(sStir,0)} (คำนวณ@${f(sh.s,0)})`,'cm']];
+  if(fx.doubly)res.splice(5,0,["เหล็กรับแรงอัด As'",f(fx.Asc,2),'cm²']);
+  return{res,chk:[chk('φMn ≥ Mu',phiMnP>=Math.abs(v.Mu)-1e-9,`φMn=${f(phiMnP,3)} ≥ ${f(Math.abs(v.Mu),3)} t·m`),
+    chk('As เหล็กหลักพอ',AsProv>=As,`${f(AsProv,2)} ≥ ${f(As,2)} cm² (${nb} เส้น)`),
+    chk('ρ ≤ ρmax',fx.rho<=fx.rmax,fx.doubly?'เสริมรับแรงอัด (doubly)':`ρ=${f(fx.rho,4)}`),
+    chk('กำลังเฉือน φVn ≥ Vu',!sh.fail&&phiVn>=Math.abs(v.Vu),`φVn=${f(phiVn,2)} ≥ ${f(Math.abs(v.Vu),2)} t`),
+    chk('ระยะปลอก ≤ ที่คำนวณ',!sh.fail&&(sh.s===0||sStir<=sh.s+1e-6),`s,คำนวณ=${f(sh.s,0)} cm · ${sh.note}`)],
+   steps:`d=h-cov-d_stir-0.5d_bar=${f(d,2)} cm\nβ1=${f(beta1(v.fc),3)} ; ρbal=${f(rhoBal(v.fc,v.fy),4)} ; ρmax=${f(fx.rmax,4)}\nRn=Mu/(φbd²)=${f(fx.Rn,2)}\nρ=0.85fc/fy·(1-√(1-2Rn/0.85fc))=${f(fx.rho,4)}${fx.doubly?' → เกิน ρmax: doubly':''}\nAs=${f(As,2)} cm² (ต้องการ≥${need.n}) → จัด ${nb}-${v.bar} (As=${f(AsProv,2)})\nเฉือน: Vc=0.53√fc·bd=${f(sh.Vc/1000,2)}t ; φVc=${f(sh.phiVc,2)}t\nVs=Vu/φ-Vc=${f(sh.Vs/1000,2)}t → จัด ${v.stir}@${f(sStir,0)}cm (คำนวณ@${f(sh.s,0)} · ${sh.note})`};
+}
+/* ---- shared column axial ---- */
+function colIn(phi,k){return[['b','ความกว้าง b','cm',30],['h','ความลึก h','cm',30],['cov','ระยะหุ้ม','cm',4],
+ ['fc',"f'c",'ksc',240,'g'],['fy','fy','ksc',4000,'g'],['fv','fv ปลอก','ksc',2400,'g'],
+ ['Pu','แรงอัด Pu','t',80],['bar','เหล็กยืน','',['sel','DB20']],['nb','จำนวนเหล็กยืน','',8],['tie','เหล็กปลอก','',['sel','RB9']]];}
+function colCalc(v,phi,k){const Ag=v.b*v.h,Ast=v.nb*BAR[v.bar].a,rg=Ast/Ag;
+ const Pnm=k*(0.85*v.fc*(Ag-Ast)+v.fy*Ast),phiPn=phi*Pnm/1000;
+ const s=min(16*BAR[v.bar].d,48*BAR[v.tie].d,v.b,v.h);
+ return{res:[['Ag',f(Ag,0),'cm²'],['Ast',f(Ast,2),'cm²'],['ρg',f(rg*100,2),'%'],['Pn,max',f(Pnm/1000,1),'t'],['φPn,max',f(phiPn,1),'t'],['ระยะปลอก ≤',f(s,1),'cm']],
+  chk:[chk('φPn ≥ Pu',phiPn>=v.Pu,`φPn=${f(phiPn,1)} ≥ ${f(v.Pu,1)} t`),chk('0.01 ≤ ρg ≤ 0.08',rg>=0.01&&rg<=0.08,`ρg=${f(rg*100,2)}%`)],
+  steps:`Ag=${Ag} cm² ; Ast=${f(Ast,2)} cm² ; ρg=${f(rg*100,2)}%\nPn,max=${k}·[0.85fc(Ag-Ast)+fy·Ast]=${f(Pnm/1000,1)} t\nφPn=${phi}·Pn,max=${f(phiPn,1)} t\nปลอก ≤ min(16db, 48d_tie, b)=${f(s,1)} cm`};}
+/* ---- P-M interaction ---- */
+function pmDiagram(v){const b=v.b,h=v.h,fc=v.fc,fy=v.fy,b1=beta1(fc);
+ const cov=v.cov;const Asb=v.nb/2*BAR[v.bar].a; // bottom & top each half
+ const Ast=2*Asb;
+ const Pomax=0.8*0.65*(0.85*fc*(b*h-Ast)+fy*Ast)/1000; // φPn,max (เสาปลอกเดี่ยว ตัวคูณ 0.80)
+ const dt=h-cov-1, dc=cov+1; const layers=[{A:Asb,d:dt},{A:Asb,d:dc}];
+ const pts=[];for(let c=0.05*h;c<=2.5*h;c+=h*0.02){const a=min(b1*c,h);let Cc=0.85*fc*a*b,Pn=Cc,Mn=Cc*(h/2-a/2);
+   layers.forEach(L=>{let es=ECU*(c-L.d)/c;let fs=max(-fy,min(fy,ES*es));if(es>0)fs-=0.85*fc;Pn+=fs*L.A;Mn+=fs*L.A*(h/2-L.d);});
+   const et=ECU*(dt-c)/c;let phi=0.65;if(et>=0.005)phi=0.9;else if(et>0.002)phi=0.65+(et-0.002)*(0.25)/0.003;
+   pts.push({P:min(phi*Pn/1000,Pomax),M:phi*Mn/1e5,et});} // ตัดยอดที่ 0.80φPo
+ // capacity at given Mu (interp)
+ const Mu=v.Mu,Pu=v.Pu;let inside=false,Pcap=0;
+ for(let i=0;i<pts.length-1;i++){const A=pts[i],B=pts[i+1];if((Mu>=Math.min(A.M,B.M))&&(Mu<=Math.max(A.M,B.M))){const t=(Mu-A.M)/((B.M-A.M)||1e-9);Pcap=A.P+t*(B.P-A.P);if(Pu<=Pcap)inside=true;}}
+ return{res:[['β1',f(b1,3),''],['Ast รวม',f(2*Asb,2),'cm²'],['ρg',f(2*Asb/(b*h)*100,2),'%'],['φPn,max',f(Pomax,1),'t'],['φPn ที่ Mu='+f(Mu,1),f(Pcap,1),'t'],['จุดออกแบบ',f(Pu,1)+' t, '+f(Mu,1)+' t·m','']],
+  chk:[chk('จุด (Mu,Pu) อยู่ในขอบเขต',inside,inside?`Pu=${f(Pu,1)} ≤ φPn=${f(Pcap,1)} t`:'จุดออกแบบอยู่นอกขอบเขต — เพิ่มหน้าตัด/เหล็ก'),chk('0.01≤ρg≤0.08',2*Asb/(b*h)>=0.01&&2*Asb/(b*h)<=0.08,`ρg=${f(2*Asb/(b*h)*100,2)}%`)],
+  steps:`สร้าง P-M โดยไล่ค่า c (แกนสะเทิน)\nแต่ละ c: a=β1c, Cc=0.85fc·a·b, เหล็กแต่ละชั้น fs=Es·εs (≤fy)\nφ แปรผัน 0.65→0.90 ตาม εt\nφPn,max=${f(Pomax,1)} t ; ที่ Mu=${f(Mu,1)} → φPn=${f(Pcap,1)} t`,_pts:pts,_pt:{P:Pu,M:Mu}};}
+function drawPM(cv,r){const ctx=cv.getContext('2d'),W=cv.width,H=cv.height,pad=42;const pts=r._pts;if(!pts)return;
+ const mM=Math.max(...pts.map(p=>p.M))*1.1,mP=Math.max(...pts.map(p=>p.P))*1.1,mN=Math.min(0,...pts.map(p=>p.P));
+ const X=m=>pad+m/mM*(W-pad-12),Y=p=>H-pad-(p-mN)/(mP-mN)*(H-pad-12);
+ ctx.clearRect(0,0,W,H);ctx.strokeStyle='#d6d2c2';ctx.beginPath();ctx.moveTo(pad,12);ctx.lineTo(pad,H-pad);ctx.lineTo(W-12,H-pad);ctx.stroke();
+ ctx.fillStyle='#73706a';ctx.font='11px Sarabun, Segoe UI';ctx.fillText('φMn (t·m)',W-78,H-pad+24);ctx.save();ctx.translate(14,60);ctx.rotate(-Math.PI/2);ctx.fillText('φPn (t)',0,0);ctx.restore();
+ ctx.strokeStyle='#d97757';ctx.lineWidth=2;ctx.beginPath();pts.forEach((p,i)=>{const x=X(p.M),y=Y(p.P);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.stroke();
+ const pt=r._pt;ctx.fillStyle=r.chk[0].ok?'#788c5d':'#b5482e';ctx.beginPath();ctx.arc(X(pt.M),Y(pt.P),5,0,7);ctx.fill();
+ ctx.fillStyle='#141413';ctx.fillText(`(${f(pt.M,1)}, ${f(pt.P,1)})`,X(pt.M)+8,Y(pt.P)-6);}
+
+function chk(label,ok,detail){return{label,ok,detail};}
+function LFd(){return parseFloat(document.getElementById('g_ld').value)||1.4;}
+function LFl(){return parseFloat(document.getElementById('g_ll').value)||1.7;}
+
+/* ============================ RENDER ============================ */
+function buildSelector(){const g=document.getElementById('selgrid');
+ g.innerHTML=MODULES.map(m=>`<div class="mc" id="mc_${m.id}" tabindex="0" role="button"
+    onclick="openMember('${m.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMember('${m.id}')}">
+   <div><div class="t">${m.title}</div><div class="d">${m.group} · ${m.en}</div></div></div>`).join('');}
+function inputHTML(m,key,label,unit,def){
+ if(Array.isArray(def)&&def[0]==='sel')return `<div class="f"><label>${label}</label><select class="in" data-m="${m.id}" data-k="${key}">${barOpts(def[1])}</select></div>`;
+ if(Array.isArray(def)&&def[0]==='sup')return `<div class="f"><label>${label}</label><select class="in" data-m="${m.id}" data-k="${key}">${supOpts.map(o=>`<option value="${o.v}" ${o.v==def[1]?'selected':''}>${o.l}</option>`).join('')}</select></div>`;
+ if(Array.isArray(def)&&def[0]==='case')return `<div class="f" style="grid-column:1/-1"><label>${label}</label><select class="in" data-m="${m.id}" data-k="${key}">${TW_CASE.map((l,i)=>`<option value="${i+1}" ${(i+1)==def[1]?'selected':''}>${l}</option>`).join('')}</select></div>`;
+ const u=unit?`<span class="unit">${unit}</span>`:'';return `<div class="f"><label>${label} ${u}</label><input class="in" type="number" step="any" data-m="${m.id}" data-k="${key}" value="${def}"></div>`;}
+function buildModule(m){
+ const ins=m.inputs.map(i=>inputHTML(m,i[0],i[1],i[2],i[3])).join('');
+ const cv=m.draw?`<canvas id="cv_${m.id}" width="360" height="300"></canvas>`:'';
+ return `<div class="card module" id="mod_${m.id}"><span class="sec-tag">${m.group}</span>
+  <h2>${m.title} <span class="en">${m.en}</span></h2><div class="desc">${m.desc}</div>
+  <div class="modbody"><div><div class="panel-title">ค่าป้อน (Inputs)</div><div class="grid">${ins}</div>${cv}</div>
+  <div><div class="panel-title">ผลการออกแบบ (Results)</div><div id="out_${m.id}"></div></div></div>
+  <div class="figwrap"><div class="panel-title">แบบรายละเอียด CAD (Engineering Detail · SVG)</div>
+   <div class="figsvg" id="fig_${m.id}"></div>
+   <div class="fignote" id="fignote_${m.id}"></div></div></div>`;}
+let currentMemberId=null;
+function openMember(id){const m=MODULES.find(x=>x.id===id);currentMemberId=id;
+ let el=document.getElementById('mod_'+id);
+ if(!el){document.getElementById('modules').insertAdjacentHTML('beforeend',buildModule(m));bindModule(m);}
+ document.querySelectorAll('.module').forEach(x=>x.classList.add('hidden'));
+ document.getElementById('mod_'+id).classList.remove('hidden');
+ document.getElementById('dash').classList.add('hidden');
+ const bar=document.getElementById('memberbar');bar.classList.remove('hidden');
+ document.getElementById('memberTitle').textContent=m.title+' · '+m.en;
+ run(m);
+ window.scrollTo({top:0,behavior:'smooth'});}
+function showDashboard(){
+ document.getElementById('dash').classList.remove('hidden');
+ document.getElementById('memberbar').classList.add('hidden');
+ document.querySelectorAll('.module').forEach(x=>x.classList.add('hidden'));
+ window.scrollTo({top:0,behavior:'smooth'});}
+function bindModule(m){document.querySelectorAll(`[data-m="${m.id}"]`).forEach(e=>e.addEventListener('input',()=>run(m)));}
+/* ===== พิมพ์ / Export PDF รายชิ้นส่วน (A4 แนวตั้ง พอดี 1 หน้า + หัวกระดาษ) ===== */
+function gv(id){return (document.getElementById(id)||{}).value||'';}
+function buildPrintHeader(m){
+ const name=gv('p_name')||'(ไม่ระบุชื่อโครงการ)';
+ const owner=gv('p_owner'), eng=gv('p_eng'), ref=gv('p_ref'), date=gv('p_date');
+ const today=date||new Date().toISOString().slice(0,10);
+ document.getElementById('printHeader').innerHTML=
+  `<div class="ph-top">
+     <div class="ph-brand"><div class="ph-logo">RC</div>
+       <div><div class="ph-title">RC Design — Strength Design Method</div>
+            <div class="ph-sub">การออกแบบคอนกรีตเสริมเหล็กด้วยวิธีกำลัง (SDM) · หน่วย ksc·kg·cm·m·t</div></div></div>
+     <div class="ph-meta"><div>โครงการ: <b>${name}</b></div>
+       ${owner?`<div>เจ้าของงาน: ${owner}</div>`:''}${eng?`<div>ผู้ออกแบบ: ${eng}</div>`:''}</div>
+   </div>
+   <div class="ph-bar"><span class="ph-member">${m.title} · ${m.en}</span>
+     <span class="ph-ref">${ref?'Ref: '+ref+' · ':''}วันที่ ${today}</span></div>`;
+ document.getElementById('printFooter').innerHTML=
+  `<span>RC Design (SDM) · φ ดัด 0.90 / เฉือน 0.85 / เสา 0.65</span><span>ออกเอกสาร ${today}</span>`;
+}
+/* ---- คำนวณ zoom ให้พอดี A4 โดยใช้จำนวนหน้าน้อยที่สุดที่ยังอ่านได้ ---- */
+const PX_PER_MM=96/25.4; // CSS px ต่อ mm ที่ 96dpi (ตรงกับ layout ตอนพิมพ์ของ Chromium)
+function fitZoom(contentH,contentW){
+ const pageH=(297-12-14)*PX_PER_MM;   // ความสูงพื้นที่พิมพ์ A4 (หักขอบบน/ล่าง)
+ const pageW=(210-12-12)*PX_PER_MM;   // ความกว้างพื้นที่พิมพ์ A4 (หักขอบซ้าย/ขวา)
+ const availH=pageH-24;               // เผื่อแถบ footer ท้ายหน้า
+ const MIN=0.5;                       // ย่อได้ต่ำสุด (กันเล็กจนอ่านไม่ออก)
+ const scaleW=Math.min(1,pageW/contentW);
+ // หาจำนวนหน้าน้อยที่สุด ที่ทำให้ scale ตามความสูง ยัง >= MIN (ไม่ขยายเกิน 1)
+ let pages=1,scaleH=availH/contentH;
+ while(scaleH<MIN&&pages<8){pages++;scaleH=(availH*pages)/contentH;}
+ return Math.max(0.2,Math.min(1,scaleW,scaleH));
+}
+/* วัดขนาดเนื้อหา (reflow อย่างเดียว ไม่ paint จึงไม่กระพริบ) แล้วตั้ง --print-zoom */
+function applyFit(targetEl){
+ document.body.style.setProperty('--print-zoom','1'); // วัดที่ scale=1 ก่อน
+ const ph=document.getElementById('printHeader').getBoundingClientRect();
+ const tr=targetEl.getBoundingClientRect();
+ const contentH=ph.height+8+tr.height;
+ const contentW=Math.max(tr.width,186*PX_PER_MM);
+ const z=fitZoom(contentH,contentW);
+ document.body.style.setProperty('--print-zoom',z.toFixed(4));
+}
+function printMember(id){
+ const m=MODULES.find(x=>x.id===id);
+ const el=document.getElementById('mod_'+id);if(!el){alert('ยังไม่ได้เปิดหน้าชิ้นส่วนนี้');return;}
+ buildPrintHeader(m);
+ document.querySelectorAll('.module').forEach(x=>x.classList.remove('printing'));
+ el.classList.add('printing');document.body.classList.add('sheet','print-member');
+ // colPM: กางรายละเอียดการคำนวณ (steps) ให้แสดงตอนพิมพ์ (เก็บสถานะเดิมไว้คืนทีหลัง)
+ const det=el.querySelector('details');
+ if(det){det.dataset.prevOpen=det.open?'1':'0';det.open=true;}
+ applyFit(el); // จัดให้พอดี A4 ใช้หน้าน้อยที่สุด
+ // รูปเป็น SVG วาดฝั่ง browser แบบ synchronous — พิมพ์ได้ทันที
+ window.print();
+}
+function printDashboard(){
+ buildPrintHeader({title:'ข้อมูลโครงการ & พารามิเตอร์ออกแบบ',en:'Project & Design Parameters'});
+ document.body.classList.add('sheet','print-dash');
+ applyFit(document.getElementById('dash')); // จัดให้พอดี A4 ใช้หน้าน้อยที่สุด
+ window.print();
+}
+function printCurrent(){if(currentMemberId)printMember(currentMemberId);else printDashboard();}
+window.addEventListener('afterprint',()=>{
+ document.body.classList.remove('sheet','print-member','print-dash');
+ document.body.style.removeProperty('--print-zoom');
+ document.querySelectorAll('.module').forEach(x=>x.classList.remove('printing'));
+ // คืนสถานะ details (steps) ที่ถูกกางไว้ตอนพิมพ์
+ document.querySelectorAll('.module details[data-prev-open]').forEach(d=>{
+  d.open=d.dataset.prevOpen==='1';delete d.dataset.prevOpen;});
+});
+function readVals(m){const v={};m.inputs.forEach(i=>{const el=document.querySelector(`[data-m="${m.id}"][data-k="${i[0]}"]`);
+  v[i[0]]=el.type==='number'||(!isNaN(parseFloat(el.value))&&el.tagName==='INPUT')?parseFloat(el.value):el.value;
+  if(el.tagName==='SELECT'&&isNaN(parseFloat(el.value))===false&&i[3][0]==='sup')v[i[0]]=parseFloat(el.value);
+  if(el.tagName==='SELECT'&&i[3][0]==='case')v[i[0]]=parseInt(el.value,10);
+  if(el.tagName==='SELECT'&&i[3][0]==='sel')v[i[0]]=el.value;});return v;}
+function run(m){let v;try{v=readVals(m);}catch(e){return;}let r;try{r=m.calc(v);}catch(e){document.getElementById('out_'+m.id).innerHTML='<div class="chk bad">เกิดข้อผิดพลาดในการคำนวณ: '+e.message+'</div>';return;}
+ const rows=r.res.map(x=>`<tr><td>${x[0]}</td><td class="${x[0].includes('เหล็ก')||x[0].includes('ขนาด')?'big':''}">${x[1]}${x[2]?' <span style="color:#94a3b8;font-weight:400">'+x[2]+'</span>':''}</td></tr>`).join('');
+ const chks=r.chk.map(c=>`<div class="chk ${c.ok?'ok':'bad'}">${c.ok?'✔':'✘'} ${c.label}<b>${c.detail||''}</b></div>`).join('');
+ document.getElementById('out_'+m.id).innerHTML=`<table class="res">${rows}</table><div style="margin-top:10px">${chks}</div>
+  <details><summary>▸ แสดงรายละเอียดการคำนวณ (steps)</summary><div class="steps">${r.steps}</div></details>`;
+ if(m.draw){const cv=document.getElementById('cv_'+m.id);if(cv)m.draw(cv,r);}
+ refreshFig(m,v);}
+
+/* ============================================================
+   รูปแบบ CAD (Engineering Detail) — วาดด้วย SVG ฝั่ง browser
+   ตามกฎ 7 ข้อ: (1) ใช้ <svg> เท่านั้น (2) คิดเป็นเมตร × scale เดียว
+   (3) <pattern> hatch (4) helper dim/callout (5) ค่ามาจากที่เดียว
+   (6) verify ไม่มี undefined/NaN (7) ฟอนต์ Sarabun
+   ============================================================ */
+const CAD_NAVY='#141413',CAD_GOLD='#d97757',CAD_BLUE='#35689f',CAD_OK='#5f7347',CAD_BAD='#b5482e',CAD_STEEL='#c2613f';
+const cadR=n=>Math.round(n*10)/10;
+const cadEsc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+/* ---- พื้นที่วาด: map เมตร → px ด้วย scale เดียว (กฎข้อ 2) ---- */
+function cadWorld(xmin,xmax,ymin,ymax,o){
+  o=o||{};const pad=o.pad||38,padB=o.padB||46,maxW=o.W||540,maxH=o.H||360;
+  const wx=Math.max(1e-6,xmax-xmin),wy=Math.max(1e-6,ymax-ymin);
+  const S=Math.min((maxW-2*pad)/wx,(maxH-pad-padB)/wy);
+  const W=wx*S+2*pad,H=wy*S+pad+padB;
+  const X=x=>pad+(x-xmin)*S,Y=y=>(H-padB)-(y-ymin)*S;     // flip y (เมตรขึ้น → px ลง)
+  return {S,W,H,X,Y,vb:`0 0 ${cadR(W)} ${cadR(H)}`};
+}
+
+/* ---- pattern hatch + marker (กฎข้อ 3) ---- */
+const CAD_DEFS=`<defs>
+ <pattern id="cadConc" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+  <rect width="9" height="9" fill="#f6f5ef"/><line x1="0" y1="0" x2="0" y2="9" stroke="#d6d2c2" stroke-width="0.8"/></pattern>
+ <pattern id="cadLean" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+  <rect width="7" height="7" fill="#dadada"/><line x1="0" y1="0" x2="0" y2="7" stroke="#9a9a9a" stroke-width="1"/></pattern>
+ <pattern id="cadSand" width="10" height="10" patternUnits="userSpaceOnUse">
+  <rect width="10" height="10" fill="#efe6cf"/><circle cx="2.5" cy="2.5" r="1" fill="#b39b63"/><circle cx="7" cy="6.5" r="1" fill="#b39b63"/></pattern>
+ <marker id="cadArrow" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="${CAD_GOLD}"/></marker>
+</defs>`;
+const CAD_STYLE=`<style>
+ .cadsvg text{font-family:'Sarabun','TH Sarabun New',Tahoma,sans-serif}
+ .cconc{fill:url(#cadConc);stroke:#141413;stroke-width:1.6}
+ .cslab{fill:#fff;stroke:#141413;stroke-width:1.8}
+ .csup,.ccol{fill:#dedacc;stroke:#141413;stroke-width:1.4}
+ .clean{fill:url(#cadLean);stroke:#141413;stroke-width:1}
+ .csand{fill:url(#cadSand);stroke:#9a8c66;stroke-width:1}
+ .ccage{fill:none;stroke:#35689f;stroke-width:1.6}
+ .cstir{fill:none;stroke:#6a9bcc;stroke-width:1.6}
+ .cmain{fill:none;stroke:#141413;stroke-width:2}
+ .crebar{fill:none;stroke:#c2613f;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+ .cstepbar{fill:none;stroke:#6a9bcc;stroke-width:1.3;opacity:.9}
+ .cbarln{fill:none;stroke:#c2613f;stroke-width:2.2;stroke-linecap:round}
+ .cbarln2{fill:none;stroke:#35689f;stroke-width:1.8;stroke-linecap:round}
+ .ctmpln{fill:none;stroke:#788c5d;stroke-width:1.4}
+ .cdash{fill:none;stroke:#c2613f;stroke-width:1.8;stroke-dasharray:6 4}
+ .cbar{fill:#141413} .cbarB{fill:#c2613f} .ctemp{fill:#788c5d}
+ .cdim{stroke:#141413;stroke-width:1} .cext{stroke:#b0aea5;stroke-width:.8} .ctick{stroke:#141413;stroke-width:1.2}
+ .cdimtxt{font-size:12px;fill:#141413} .ccall{font-size:12px;font-weight:600}
+ .ctitle{font-size:14px;fill:#141413;font-weight:700}
+ .caxis{stroke:#b0aea5;stroke-width:.8;stroke-dasharray:14 4 3 4} .cnote{font-size:11px;fill:#57544a}
+</style>`;
+
+/* ---- shape helpers (รับพิกัดเป็นหน่วย world, y ขึ้น) ---- */
+function cadRect(wd,x0,y0,w,h,cls,extra){return `<rect x="${cadR(wd.X(x0))}" y="${cadR(wd.Y(y0+h))}" width="${cadR(w*wd.S)}" height="${cadR(h*wd.S)}" class="${cls}" ${extra||''}/>`;}
+function cadLine(wd,x1,y1,x2,y2,cls){return `<line x1="${cadR(wd.X(x1))}" y1="${cadR(wd.Y(y1))}" x2="${cadR(wd.X(x2))}" y2="${cadR(wd.Y(y2))}" class="${cls}"/>`;}
+function cadDot(wd,x,y,rm,cls){return `<circle cx="${cadR(wd.X(x))}" cy="${cadR(wd.Y(y))}" r="${cadR(rm*wd.S)}" class="${cls}"/>`;}
+function cadPoly(wd,pts,cls,closed){const p=pts.map(q=>`${cadR(wd.X(q[0]))},${cadR(wd.Y(q[1]))}`).join(' ');return closed?`<polygon points="${p}" class="${cls}"/>`:`<polyline points="${p}" fill="none" class="${cls}"/>`;}
+function cadTxt(wd,x,y,text,cls,anchor,dy){return `<text x="${cadR(wd.X(x))}" y="${cadR(wd.Y(y))+(dy||0)}" class="${cls||'cdimtxt'}" text-anchor="${anchor||'middle'}">${cadEsc(text)}</text>`;}
+
+/* ---- เส้นบอกระยะ + leader (กฎข้อ 4) ---- */
+function cadDimH(wd,x1,x2,y,label,extTo){const yy=cadR(wd.Y(y));let s=`<line x1="${cadR(wd.X(x1))}" y1="${yy}" x2="${cadR(wd.X(x2))}" y2="${yy}" class="cdim"/>`;
+  for(const xv of [x1,x2]){const px=cadR(wd.X(xv));s+=`<line x1="${px-4}" y1="${yy+4}" x2="${px+4}" y2="${yy-4}" class="ctick"/>`;
+    if(extTo!=null)s+=`<line x1="${px}" y1="${yy}" x2="${px}" y2="${cadR(wd.Y(extTo))}" class="cext"/>`;}
+  s+=`<text x="${cadR((wd.X(x1)+wd.X(x2))/2)}" y="${yy-6}" class="cdimtxt" text-anchor="middle">${cadEsc(label)}</text>`;return s;}
+function cadDimV(wd,y1,y2,x,label,extTo){const xx=cadR(wd.X(x));let s=`<line x1="${xx}" y1="${cadR(wd.Y(y1))}" x2="${xx}" y2="${cadR(wd.Y(y2))}" class="cdim"/>`;
+  for(const yv of [y1,y2]){const py=cadR(wd.Y(yv));s+=`<line x1="${xx-4}" y1="${py+4}" x2="${xx+4}" y2="${py-4}" class="ctick"/>`;
+    if(extTo!=null)s+=`<line x1="${xx}" y1="${py}" x2="${cadR(wd.X(extTo))}" y2="${py}" class="cext"/>`;}
+  const cy=cadR((wd.Y(y1)+wd.Y(y2))/2);s+=`<text x="${xx-6}" y="${cy}" class="cdimtxt" text-anchor="middle" transform="rotate(-90 ${xx-6} ${cy})">${cadEsc(label)}</text>`;return s;}
+function cadCallout(wd,xt,yt,xl,yl,text,color,anchor){const c=color||CAD_BLUE,tx=cadR(wd.X(xt)),ty=cadR(wd.Y(yt)),lx=cadR(wd.X(xl)),ly=cadR(wd.Y(yl));
+  return `<line x1="${tx}" y1="${ty}" x2="${lx}" y2="${ly}" stroke="${c}" stroke-width="1"/><circle cx="${tx}" cy="${ty}" r="2.5" fill="${c}"/>`
+    +`<text x="${lx}" y="${ly-2}" fill="${c}" class="ccall" text-anchor="${anchor||'middle'}">${cadEsc(text)}</text>`;}
+
+/* ---- ห่อเป็นแผ่นแบบ + VERIFY (กฎข้อ 6) ---- */
+function cadSheet(wd,body,title){const W=cadR(wd.W),H=cadR(wd.H);
+  let svg=`<svg viewBox="${wd.vb}" xmlns="http://www.w3.org/2000/svg" class="cadsvg">${CAD_DEFS}${CAD_STYLE}`
+    +`<rect x="0" y="0" width="${W}" height="${H}" fill="#fff"/>`
+    +`<rect x="6" y="6" width="${cadR(wd.W-12)}" height="${cadR(wd.H-12)}" fill="none" stroke="${CAD_GOLD}" stroke-width="1.2"/>`
+    +body;
+  if(title)svg+=`<text x="${cadR(wd.W/2)}" y="${cadR(wd.H-14)}" text-anchor="middle" class="ctitle">${cadEsc(title)}</text>`;
+  svg+=`</svg>`;
+  const bad=svg.match(/undefined|NaN|null(?![A-Za-z])/g);
+  if(bad)console.warn('CAD verify fail:',[...new Set(bad)].join(','));
+  return svg;}
+
+/* ---- เหล็กยืนรอบรูปสี่เหลี่ยม (port _perimeter_points) ---- */
+function cadPerimeter(b,h,cov,n){const x0=cov+1,y0=cov+1,x1=b-cov-1,y1=h-cov-1;
+  if(n<=4)return [[x0,y0],[x1,y0],[x1,y1],[x0,y1]].slice(0,n);
+  const pts=[[x0,y0],[x1,y0],[x1,y1],[x0,y1]],rem=n-4;
+  const nb=Math.floor(rem/4)+(rem%4>0?1:0),nt=Math.floor(rem/4)+(rem%4>1?1:0),nl=Math.floor(rem/4)+(rem%4>2?1:0),nr=Math.floor(rem/4);
+  const lin=(a,bv,k)=>{const o=[];for(let i=0;i<k;i++)o.push(a+(bv-a)*(i+1)/(k+1));return o;};
+  lin(x0,x1,nb).forEach(xx=>pts.push([xx,y0]));lin(x0,x1,nt).forEach(xx=>pts.push([xx,y1]));
+  lin(y0,y1,nl).forEach(yy=>pts.push([x0,yy]));lin(y0,y1,nr).forEach(yy=>pts.push([x1,yy]));return pts;}
+
+/* ============================ DRAWERS ============================ */
+/* ---- แปลนพื้นทางเดียว (แถบออกแบบกว้าง 1.00 ม.) ---- */
+function cadSlab1Plan(v,bar,spcm,barT,sptcm,S){
+  const W1=1.0,bw=0.20,sp=max(0.05,spcm/100),spt=max(0.05,sptcm/100);
+  const wd=cadWorld(-bw-0.5,S+bw+0.62,-0.46,W1+0.62,{W:580,H:330});let e='';
+  e+=cadRect(wd,-bw,0,bw,W1,'csup')+cadRect(wd,S,0,bw,W1,'csup');
+  e+=cadRect(wd,0,0,S,W1,'cslab');
+  let ym=W1*0.5;
+  for(let y=sp;y<W1-0.02;y+=sp){e+=cadLine(wd,0.04,y,S-0.04,y,'cbarln')
+    +cadLine(wd,0.04,y,0.04,min(W1-0.02,y+0.06),'cbarln')+cadLine(wd,S-0.04,y,S-0.04,min(W1-0.02,y+0.06),'cbarln');ym=y;}
+  for(let x=spt;x<S-0.02;x+=spt)e+=cadLine(wd,x,0.05,x,W1-0.05,'ctmpln');
+  e+=cadLine(wd,S*0.5,-0.16,S*0.5,W1+0.16,'caxis');                       // แนวรูปตัด ก-ก
+  e+=cadTxt(wd,S*0.5,W1+0.24,'ก','ccall')+cadTxt(wd,S*0.5,-0.32,'ก','ccall');
+  e+=cadDimH(wd,0,S,-0.26,`S = ${S.toFixed(2)} ม.`,0)+cadDimV(wd,0,W1,S+bw+0.3,'1.00 ม.',S);
+  e+=cadCallout(wd,S*0.28,ym,S*0.16,W1+0.42,`${bar} @ ${sp.toFixed(2)} ม. (เหล็กหลัก)`,CAD_STEEL);
+  const xT=min(S-0.1,spt*Math.ceil(0.7*S/spt));
+  e+=cadCallout(wd,xT,W1*0.3,S*0.82,W1+0.42,`${barT} @ ${spt.toFixed(2)} ม. (กันร้าว)`,CAD_OK);
+  return cadSheet(wd,e,'แปลนพื้นทางเดียว — TYPICAL PLAN (แถบ 1.00 ม.)');}
+/* ---- พื้นทางเดียว — รูปตัด ก-ก ---- */
+function cadSlab1(v){const tcm=v.t*100,bar=v.bar||'DB10',barT=v.barT||'RB6';
+  const d=tcm-v.cov-0.5*BAR[bar].d,Wd=v.t*2400+v.SDL,Wu=LFd()*Wd+LFl()*v.LL,Mu=Wu*v.S*v.S/v.sup/1000;
+  const fx=flexure(Mu,100,d,v.fc,v.fy,0.9),Asmin=asMinFactor(v.fy)*100*tcm,As=max(fx.As,Asmin),
+   Ast=(String(barT).startsWith('RB')?0.0025:asMinFactor(v.fy))*100*tcm;
+  const sp=(+v.sp||0)||min(BAR[bar].a*100/As,3*tcm,45),spt=(+v.spT||0)||min(BAR[barT].a*100/Ast,5*tcm,45);
+  const Ln=max(0.8,v.S),t=tcm/100,cv=v.cov/100,bw=0.20,bh=max(0.30,2.4*t),yb=-t+cv,yt=yb+max(0.012,BAR[barT].d/100);
+  const wd=cadWorld(-bw-0.55,Ln+bw+0.7,-bh-0.36,0.42,{W:580,H:300});let e='';
+  e+=cadRect(wd,-bw,-bh,bw,bh,'csup')+cadRect(wd,Ln,-bh,bw,bh,'csup')+cadRect(wd,-bw,-t,Ln+2*bw,t,'cconc');
+  e+=cadLine(wd,-bw+0.03,yb,Ln+bw-0.03,yb,'crebar');
+  const spTm=max(0.05,spt/100);for(let x=-bw+0.08;x<=Ln+bw-0.08+1e-9;x+=spTm)e+=cadDot(wd,x,yt,0.012,'ctemp');
+  e+=cadDimH(wd,0,Ln,-bh-0.18,`${Ln.toFixed(2)} ม.`,0)+cadDimV(wd,-t,0,Ln+bw+0.2,`${tcm.toFixed(0)} ซม.`,0);
+  e+=cadCallout(wd,Ln*0.6,yb,Ln*0.62,-t-0.24,`${bar} @ ${(sp/100).toFixed(2)} ม. (เหล็กหลัก)`,CAD_STEEL);
+  e+=cadCallout(wd,Ln*0.32,yt,Ln*0.28,0.30,`${barT} @ ${(spt/100).toFixed(2)} ม. (เหล็กกันร้าว)`,CAD_OK);
+  const sec=cadSheet(wd,e,`รูปตัด ก-ก · พื้นทางเดียว — เสริมเหล็กล่าง · Mu=${Mu.toFixed(3)} t·m/m`);
+  return cadSlab1Plan(v,bar,sp,barT,spt,Ln)+sec;}
+
+/* ---- รูปตัดเสริมเหล็กพื้น (ใช้ทั้งด้านสั้น/ยาวของพื้นสองทาง) ---- */
+function cadSlabSection(Ln,tcm,cov,barB,spB,barT,spT,title,dbOff,dtOff){
+  const t=tcm/100,cv=cov/100,bw=0.20,bh=0.50,yb=-t+cv,yt=-cv;
+  const EXT=[1/7,1/4],INT=[1/4,1/3],ceil05=x=>Math.ceil(x/0.05-1e-9)*0.05;
+  const wd=cadWorld(-bw-0.6,Ln+bw+0.72,-bh-0.34,0.48,{W:580,H:250});let e='';
+  e+=cadRect(wd,-bw,-bh,bw,bh,'csup')+cadRect(wd,Ln,-bh,bw,bh,'csup')+cadRect(wd,-bw,-t,Ln+2*bw,t,'cconc');
+  e+=cadLine(wd,0.02,yb,Ln-0.02,yb,'cmain');
+  const spBm=max(0.05,spB/100);for(let x=0.06;x<=Ln-0.06+1e-9;x+=spBm)e+=cadDot(wd,x,yb+dbOff,0.011,'cbar');
+  const spTm=max(0.05,spT/100);
+  for(const seg of [[0,EXT,1],[Ln,INT,-1]]){const xf=seg[0],frac=seg[1],sgn=seg[2],c2=ceil05(frac[1]*Ln);
+    e+=cadLine(wd,xf,yt,xf+sgn*c2,yt,'cmain');
+    const nd=max(1,Math.floor((c2-0.04)/spTm));
+    for(let i=0;i<=nd;i++){const x=xf+sgn*(0.02+i*spTm);e+=cadDot(wd,x,yt+dtOff,0.011,'cbar');}
+    const xh=xf-sgn*bw*0.55;e+=cadLine(wd,xh,yt,xf,yt,'cmain')+cadLine(wd,xh,yt,xh,yt-0.05,'cmain');
+    e+=cadDimH(wd,xf,xf+sgn*c2,-t-0.08,`${c2.toFixed(2)}`);}
+  const ybot=-bh-0.15;e+=cadDimH(wd,0,Ln,ybot,`${Ln.toFixed(2)}`)+cadDimV(wd,-bh,0,-bw-0.14,`${bh.toFixed(2)}`)+cadDimV(wd,-t,0,Ln+bw+0.14,`${t.toFixed(2)}`);
+  e+=cadCallout(wd,Ln*0.5,yb,Ln*0.5,0.22,`${barB}@${(spB/100).toFixed(2)}`,CAD_NAVY);
+  e+=cadCallout(wd,EXT[1]*Ln*0.5,yt,Ln*0.18,0.42,`${barT}@${(spT/100).toFixed(2)} เสริมพิเศษ`,CAD_NAVY);
+  return cadSheet(wd,e,title);}
+/* ---- แปลนพื้นสองทาง ---- */
+function cadSlab2Plan(v){
+  const S=v.S,L=v.L,bw=0.25;
+  const sSp=max(0.05,(+v.spSp||15)/100),sLp=max(0.05,(+v.spLp||15)/100);
+  const wd=cadWorld(-bw-0.66,L+bw+0.66,-bw-0.72,S+bw+0.92,{W:580,H:430});let e='';
+  e+=cadRect(wd,-bw,-bw,L+2*bw,S+2*bw,'csup')+cadRect(wd,0,0,L,S,'cslab');
+  // เหล็กล่างด้านสั้น (วิ่งขนานด้าน S) — แสดงแถบกลาง
+  for(let x=L/3;x<=2*L/3+1e-9;x+=sSp)e+=cadLine(wd,x,0.06,x,S-0.06,'cbarln');
+  // เหล็กล่างด้านยาว (วิ่งขนานด้าน L) — แสดงแถบกลาง
+  for(let y=S/3;y<=2*S/3+1e-9;y+=sLp)e+=cadLine(wd,0.06,y,L-0.06,y,'cbarln2');
+  // เหล็กบน M⁻ ที่ขอบ (เส้นประ ยื่นเข้าช่วง S/4, L/4)
+  const eS=S/4,eL=L/4;
+  for(const yy of [S*0.3,S*0.7]){e+=cadLine(wd,0,yy,eL,yy,'cdash')+cadLine(wd,L-eL,yy,L,yy,'cdash');}
+  for(const xx of [L*0.18,L*0.82]){e+=cadLine(wd,xx,0,xx,eS,'cdash')+cadLine(wd,xx,S-eS,xx,S,'cdash');}
+  // แนวรูปตัด ก-ก (เห็นช่วงสั้น) / ข-ข (เห็นช่วงยาว)
+  e+=cadLine(wd,L*0.5,-bw-0.14,L*0.5,S+bw+0.14,'caxis')+cadTxt(wd,L*0.5,-bw-0.3,'ก','ccall')+cadTxt(wd,L*0.5,S+bw+0.2,'ก','ccall');
+  e+=cadLine(wd,-bw-0.14,S*0.5,L+bw+0.14,S*0.5,'caxis')+cadTxt(wd,L+bw+0.3,S*0.5,'ข','ccall')+cadTxt(wd,-bw-0.3,S*0.5,'ข','ccall');
+  e+=cadDimH(wd,0,L,-bw-0.44,`L = ${L.toFixed(2)} ม.`,0)+cadDimV(wd,0,S,-bw-0.46,`S = ${S.toFixed(2)} ม.`,0);
+  e+=cadCallout(wd,L/3+sSp,S-0.07,L*0.16,S+bw+0.5,`${v.barSp} @ ${sSp.toFixed(2)} (ล่าง·สั้น)`,CAD_STEEL);
+  e+=cadCallout(wd,L-0.07,S/3+sLp,L*0.62,S+bw+0.5,`${v.barLp} @ ${sLp.toFixed(2)} (ล่าง·ยาว)`,CAD_BLUE);
+  e+=cadCallout(wd,L*0.82,S-eS*0.5,L*0.92,S+bw+0.22,`เหล็กบน M⁻`,CAD_BAD);
+  return cadSheet(wd,e,'แปลนพื้นสองทาง — REINFORCEMENT PLAN');}
+function cadSlab2(v){const tcm=v.t*100,bw=0.20,Sn=max(0.5,v.S-bw),Ln=max(0.5,v.L-bw);
+  return cadSlab2Plan(v)
+    +cadSlabSection(Sn,tcm,v.cov,v.barSp,+v.spSp,v.barSn,+v.spSn,'รูปตัด ก-ก — พื้นด้านสั้น',+0.011,-0.011)
+    +cadSlabSection(Ln,tcm,v.cov,v.barLp,+v.spLp,v.barLn,+v.spLn,'รูปตัด ข-ข — พื้นด้านยาว',-0.011,-0.011);}
+
+/* ---- พื้นยื่น (รูปตัว L) ---- */
+function cadSlabC(v){const tcm=v.t*100,bar=v.bar||'DB12',barT=v.barT||'RB6';
+  const d=tcm-v.cov-0.5*BAR[bar].d,Wd=v.t*2400+v.SDL,Wu=LFd()*Wd+LFl()*v.LL,Pu=LFl()*(v.P||0),Mu=(Wu*v.L*v.L/2+Pu*v.L)/1000;
+  const fx=flexure(Mu,100,d,v.fc,v.fy),Asmin=asMinFactor(v.fy)*100*tcm,As=max(fx.As,Asmin),
+   AstT=(String(barT).startsWith('RB')?0.0025:asMinFactor(v.fy))*100*tcm;
+  const sp=(+v.sp||0)||min(BAR[bar].a*100/As,3*tcm,45),spt=(+v.spT||0)||min(BAR[barT].a*100/AstT,45);
+  const t=v.t,L=max(0.4,v.L),cv=v.cov/100,dw=0.30,Hh=max(0.50,3*t),Wtot=dw+L;
+  const wd=cadWorld(-0.5,Wtot+0.66,-Hh-0.5,0.62,{W:540,H:380});let e='';
+  e+=cadPoly(wd,[[0,0],[Wtot,0],[Wtot,-t],[dw,-t],[dw,-Hh],[0,-Hh]],'cconc',true);
+  e+=cadPoly(wd,[[cv,-Hh+cv],[cv,-cv],[Wtot-cv,-cv],[Wtot-cv,-(t-cv)]],'crebar',false);
+  const spM=max(0.05,spt/100),yd=-cv-0.022;for(let x=dw;x<=Wtot-cv+1e-9;x+=spM)e+=cadDot(wd,x,yd,0.011,'ctemp');
+  e+=cadDimV(wd,-t,0,Wtot+0.13,`${t.toFixed(2)}`)+cadDimV(wd,-Hh,0,-0.17,`${Hh.toFixed(2)}`)
+    +cadDimH(wd,0,dw,-Hh-0.13,`${dw.toFixed(2)}`)+cadDimH(wd,dw,Wtot,-t-0.24,`L=${L.toFixed(2)}`);
+  e+=cadCallout(wd,dw+L*0.5,-cv,dw+L*0.5,0.44,`${bar} @ ${(sp/100).toFixed(2)} m (เหล็กบน/หลัก)`,CAD_BAD);
+  e+=cadCallout(wd,dw+L*0.22,yd,dw+L*0.05,0.56,`${barT} @ ${(spt/100).toFixed(2)} m (กันร้าว)`,CAD_BAD);
+  return cadSheet(wd,e,'พื้นยื่น — แบบขยาย');}
+
+/* ---- รูปตัดคาน ---- */
+function cadBeamSection(v,tension){const b=v.b,h=v.h,cov=v.cov,stir=v.stir||'RB9',bar=v.bar;
+  const dst=BAR[stir].d,d=h-cov-dst-0.5*BAR[bar].d,dp=cov+dst+0.5*BAR[bar].d;
+  const fx=flexure(v.Mu,b,d,v.fc,v.fy,0.9,dp),As=max(fx.As,fx.rmin*b*d),bars=chooseBars(As,bar);
+  const sh=shearD(v.Vu,b,d,v.fc,v.fv,0.85,BAR[stir].a,2),sStir=(+v.sStir||0)||(sh.s||0);
+  let n=(+v.nb>0)?Math.round(v.nb):bars.n;n=max(2,n);
+  let nc=(+v.nc>0)?Math.round(v.nc):(fx.doubly?chooseBars(fx.Asc,bar).n:2);nc=max(2,nc);
+  const bm=b/100,hm=h/100,cvm=cov/100,rb=BAR[bar].d/200;
+  const wd=cadWorld(-0.42*bm,bm*2.05,-0.2*hm,hm*1.34,{W:430,H:430});let e='';
+  e+=cadRect(wd,0,0,bm,hm,'cconc');
+  const sw=bm-2*cvm,sh2=hm-2*cvm,rr=Math.min(bm,hm)*0.07;
+  e+=`<rect x="${cadR(wd.X(cvm))}" y="${cadR(wd.Y(cvm+sh2))}" width="${cadR(sw*wd.S)}" height="${cadR(sh2*wd.S)}" rx="${cadR(rr*wd.S)}" class="cstir"/>`;
+  const x0=(cov+dst+BAR[bar].d/2)/100,x1=(b-cov-dst-BAR[bar].d/2)/100;
+  const rowxs=k=>{const a=[];for(let i=0;i<k;i++)a.push(x0+(x1-x0)*(k>1?i/(k-1):0.5));return a;};
+  const tenY=(tension==='bottom')?(cov+dst+BAR[bar].d/2)/100:(h-cov-dst-BAR[bar].d/2)/100;
+  const compY=(tension==='bottom')?(h-cov-dst-BAR[bar].d/2)/100:(cov+dst+BAR[bar].d/2)/100;
+  rowxs(n).forEach(x=>e+=cadDot(wd,x,tenY,rb,'cbarB'));rowxs(nc).forEach(x=>e+=cadDot(wd,x,compY,rb,'cbarB'));
+  e+=cadDimV(wd,0,hm,-0.18*bm,`${hm.toFixed(2)}`)+cadDimH(wd,0,bm,hm+0.16*hm,`${bm.toFixed(2)}`);
+  e+=cadDimV(wd,(tension==='bottom')?tenY:0,(tension==='bottom')?hm:tenY,bm*1.1,`d=${(d/100).toFixed(2)}`,bm);
+  const xr=bm*1.32,topLbl=(tension==='bottom')?[nc,compY]:[n,tenY],botLbl=(tension==='bottom')?[n,tenY]:[nc,compY];
+  e+=cadCallout(wd,bm-cvm,topLbl[1],xr,hm*0.86,`${topLbl[0]}-${bar}`,CAD_NAVY,'start');
+  e+=cadCallout(wd,bm-cvm,botLbl[1],xr,hm*0.14,`${botLbl[0]}-${bar}`,CAD_NAVY,'start');
+  const stxt=sStir>0?`${stir} @ ${(sStir/100).toFixed(2)} m`:`${stir} (min)`;
+  e+=`<text x="${cadR(wd.X(xr))}" y="${cadR(wd.Y(hm*0.5))}" class="ccall" fill="${CAD_OK}" text-anchor="start">${cadEsc(stxt)}</text>`;
+  return cadSheet(wd,e,`รูปตัดคาน (M${tension==='bottom'?'+':'−'})`);}
+
+/* ---- คาน แรงบิด ---- */
+function cadBeamT(v){const b=v.b,h=v.h,cov=v.cov,bm=b/100,hm=h/100,cvm=cov/100;
+  const wd=cadWorld(-0.35*bm,bm*1.15,-0.3*hm,hm*1.14,{W:380,H:380});let e='';
+  e+=cadRect(wd,0,0,bm,hm,'cconc');
+  e+=`<rect x="${cadR(wd.X(cvm))}" y="${cadR(wd.Y(hm-cvm))}" width="${cadR((bm-2*cvm)*wd.S)}" height="${cadR((hm-2*cvm)*wd.S)}" fill="none" stroke="${CAD_BAD}" stroke-width="1.6"/>`;
+  for(const c of [[cvm+0.01,cvm+0.01],[bm-cvm-0.01,cvm+0.01],[cvm+0.01,hm-cvm-0.01],[bm-cvm-0.01,hm-cvm-0.01]])e+=cadDot(wd,c[0],c[1],0.009,'cbar');
+  e+=`<path d="M ${cadR(wd.X(bm*0.28))} ${cadR(wd.Y(hm*0.6))} Q ${cadR(wd.X(bm*0.5))} ${cadR(wd.Y(hm*0.82))} ${cadR(wd.X(bm*0.72))} ${cadR(wd.Y(hm*0.6))}" fill="none" stroke="${CAD_GOLD}" stroke-width="2" marker-end="url(#cadArrow)"/>`;
+  e+=`<text x="${cadR(wd.X(bm*0.5))}" y="${cadR(wd.Y(hm*0.46))}" class="ctitle" fill="${CAD_GOLD}" text-anchor="middle">T</text>`;
+  e+=cadDimV(wd,0,hm,-0.18*bm,`h=${h.toFixed(0)}`)+cadDimH(wd,0,bm,-0.16*hm,`b=${b.toFixed(0)}`);
+  return cadSheet(wd,e,'รูปตัดคาน — แรงบิด');}
+
+/* ---- เสาปลอกเดี่ยว / P-M section ---- */
+function cadColRect(v,title,showRho){const b=v.b,h=v.h,cov=v.cov,bar=v.bar,nb=Math.round(v.nb);
+  const Ag=b*h,Ast=nb*BAR[bar].a,rg=Ast/Ag,bm=b/100,hm=h/100,cvm=cov/100,rb=BAR[bar].d/200;
+  const wd=cadWorld(-0.35*bm,bm*1.15,-0.3*hm,hm*1.2,{W:380,H:380});let e='';
+  e+=cadRect(wd,0,0,bm,hm,'cconc');
+  e+=`<rect x="${cadR(wd.X(cvm))}" y="${cadR(wd.Y(hm-cvm))}" width="${cadR((bm-2*cvm)*wd.S)}" height="${cadR((hm-2*cvm)*wd.S)}" fill="none" stroke="${CAD_BAD}" stroke-width="1.4"/>`;
+  cadPerimeter(b,h,cov,nb).forEach(p=>e+=cadDot(wd,p[0]/100,p[1]/100,rb,'cbar'));
+  e+=cadDimV(wd,0,hm,-0.18*bm,`h=${h.toFixed(0)}`)+cadDimH(wd,0,bm,-0.16*hm,`b=${b.toFixed(0)}`);
+  const lbl=showRho?`${nb}-${bar} (ρg=${(rg*100).toFixed(2)}%)`:`${nb}-${bar}`;
+  e+=`<text x="${cadR(wd.X(bm/2))}" y="${cadR(wd.Y(hm+0.06*hm))}" class="cdimtxt" text-anchor="middle" font-weight="700">${cadEsc(lbl)}</text>`;
+  return cadSheet(wd,e,title);}
+function cadColT(v){return cadColRect(v,'เสาปลอกเดี่ยว — รูปตัด',true);}
+function cadColPM(v){return cadColRect(v,'รูปตัดเสา (P-M)',false);}
+
+/* ---- เสาปลอกเกลียว (กลม) ---- */
+function cadColS(v){const D=v.D,cov=v.cov,bar=v.bar,nb=Math.round(v.nb);
+  const Ag=PI/4*D*D,Ast=nb*BAR[bar].a,rg=Ast/Ag,Dm=D/100,Rm=Dm/2,cvm=cov/100,rb=BAR[bar].d/200;
+  const wd=cadWorld(-0.2*Dm,Dm*1.2,-0.25*Dm,Dm*1.2,{W:380,H:380});let e='';
+  e+=`<circle cx="${cadR(wd.X(Rm))}" cy="${cadR(wd.Y(Rm))}" r="${cadR(Rm*wd.S)}" class="cconc"/>`;
+  e+=`<circle cx="${cadR(wd.X(Rm))}" cy="${cadR(wd.Y(Rm))}" r="${cadR((Rm-cvm)*wd.S)}" fill="none" stroke="${CAD_BAD}" stroke-width="1.3" stroke-dasharray="5 3"/>`;
+  const rbar=Rm-cvm-BAR[bar].d/200;
+  for(let i=0;i<nb;i++){const ang=2*PI*i/nb-PI/2;e+=cadDot(wd,Rm+rbar*Math.cos(ang),Rm+rbar*Math.sin(ang),rb,'cbar');}
+  e+=cadDimH(wd,0,Dm,-0.16*Dm,`D=${D.toFixed(0)} cm`);
+  e+=`<text x="${cadR(wd.X(Rm))}" y="${cadR(wd.Y(Dm+0.06*Dm))}" class="cdimtxt" text-anchor="middle" font-weight="700">${cadEsc(`${nb}-${bar} (ρg=${(rg*100).toFixed(2)}%)`)}</text>`;
+  return cadSheet(wd,e,'เสาปลอกเกลียว — รูปตัด (SECTION)');}
+
+/* ---- เสาปลอกเดี่ยว — รูปด้าน (Elevation พร้อมระยะปลอก) ---- */
+function cadColElev(v){const b=v.b,cov=v.cov,bar=v.bar,tie=v.tie||'RB9';
+  const s=min(16*BAR[bar].d,48*BAR[tie].d,v.b,v.h),H=150,y0=5,s2=min(s,H-8-y0);
+  const wd=cadWorld(-0.55*b,b*2.75,-17,H+17,{W:340,H:430});let e='';
+  e+=cadRect(wd,0,0,b,H,'cconc');
+  e+=cadPoly(wd,[[-0.12*b,H+5],[b*0.35,H+11],[b*0.65,H+1],[b*1.12,H+7]],'cmain',false);
+  e+=cadPoly(wd,[[-0.12*b,-7],[b*0.35,-1],[b*0.65,-11],[b*1.12,-5]],'cmain',false);
+  e+=cadLine(wd,cov,1,cov,H-1,'crebar')+cadLine(wd,b-cov,1,b-cov,H-1,'crebar');
+  for(let y=y0;y<=H-3;y+=s)e+=cadLine(wd,cov-0.6,y,b-cov+0.6,y,'cstir');
+  e+=cadDimV(wd,y0,y0+s2,b+0.22*b,`@${s.toFixed(0)}`,b);
+  e+=cadCallout(wd,cov,H*0.8,b*1.55,H*0.86,`${Math.round(v.nb)}-${bar} เหล็กยืน`,CAD_STEEL,'start');
+  e+=cadCallout(wd,b-cov+0.6,y0+2*s,b*1.55,H*0.45,`ปลอก ${tie} @ ${s.toFixed(0)} ซม.`,CAD_BLUE,'start');
+  e+=cadDimH(wd,0,b,-13,`${b.toFixed(0)} ซม.`);
+  return cadSheet(wd,e,'เสาปลอกเดี่ยว — รูปด้าน (ELEVATION)');}
+
+/* ---- เสาปลอกเกลียว — รูปด้าน (Elevation พร้อมระยะเกลียว) ---- */
+function cadColSElev(v){const D=v.D,cov=v.cov,bar=v.bar;
+  const Ag=PI/4*D*D,Dc=D-2*cov,Ach=PI/4*Dc*Dc,rsmin=0.45*(Ag/Ach-1)*v.fc/v.fv;
+  let s=4*BAR[v.sp].a/(Dc*rsmin);s=max(2.5,min(7.5,s));
+  const H=150,y0=5,s2=min(s,H-8-y0);
+  const wd=cadWorld(-0.55*D,D*2.75,-17,H+17,{W:340,H:430});let e='';
+  e+=cadRect(wd,0,0,D,H,'cconc');
+  e+=cadPoly(wd,[[-0.12*D,H+5],[D*0.35,H+11],[D*0.65,H+1],[D*1.12,H+7]],'cmain',false);
+  e+=cadPoly(wd,[[-0.12*D,-7],[D*0.35,-1],[D*0.65,-11],[D*1.12,-5]],'cmain',false);
+  e+=cadLine(wd,cov,1,cov,H-1,'crebar')+cadLine(wd,D-cov,1,D-cov,H-1,'crebar');
+  for(let y=y0;y<=H-8;y+=s)e+=cadLine(wd,cov-0.6,y,D-cov+0.6,y+s*0.55,'cstir');
+  e+=cadDimV(wd,y0,y0+s2,D+0.22*D,`pitch ${s.toFixed(1)}`,D);
+  e+=cadCallout(wd,cov,H*0.8,D*1.55,H*0.86,`${Math.round(v.nb)}-${bar} เหล็กยืน`,CAD_STEEL,'start');
+  e+=cadCallout(wd,D-cov+0.6,y0+2*s,D*1.55,H*0.45,`เกลียว ${v.sp} @ ${s.toFixed(1)} ซม.`,CAD_BLUE,'start');
+  e+=cadDimH(wd,0,D,-13,`D=${D.toFixed(0)} ซม.`);
+  return cadSheet(wd,e,'เสาปลอกเกลียว — รูปด้าน (ELEVATION)');}
+
+/* ---- บันได ---- */
+function cadStairReb(v,Mu){const bar=v.bar||'DB12',tcm=v.t*100,d=tcm-v.cov-0.5*BAR[bar].d;
+  const fx=flexure(Mu,100,d,v.fc,v.fy),Asmin=asMinFactor(v.fy)*100*tcm,As=max(fx.As,Asmin);
+  const sp=max(5,Math.floor(min(BAR[bar].a*100/As,3*tcm,45))),spt=max(5,Math.floor(min(BAR.RB9.a*100/(0.0025*100*tcm),45)));
+  return {bar,As,sp,tie:'RB9',spt,Mu};}
+function cadStairDetail(v,flightRun,withLanding,landingRun,reb,title){
+  const R=v.R,T=v.T,t=v.t,cov=v.cov/100,n=max(2,Math.round(flightRun/T)),run=n*T,rise=n*R,slope=sqrt(R*R+T*T)/T,tv=t*slope;
+  const top=[[0,0]];let x=0,y=0;for(let i=0;i<n;i++){x+=T;top.push([x,y]);y+=R;top.push([x,y]);}
+  if(withLanding)top.push([run+landingRun,rise]);
+  const endX=withLanding?run+landingRun:run,under=[[0,-tv],[run,rise-tv]];if(withLanding)under.push([run+landingRun,rise-t]);
+  const sw=T*0.9;
+  const wd=cadWorld(-sw-0.55,endX+0.58,-tv-t-0.55,rise+0.55,{W:580,H:400});let e='';
+  e+=cadPoly(wd,top.concat(under.slice().reverse()),'cconc',true);
+  e+=cadRect(wd,-sw,-tv-t,sw,t,'csup');
+  if(withLanding)e+=cadRect(wd,endX,rise-t-0.30,t,0.30,'csup');else e+=cadRect(wd,run,rise-tv-t,sw,t,'csup');
+  const mb=[[0,-tv+cov],[run,rise-tv+cov]];if(withLanding)mb.push([endX,rise-t+cov]);
+  e+=cadPoly(wd,mb,'crebar',false)+cadLine(wd,0,-tv+cov,0,-tv+cov+0.12,'crebar')+cadLine(wd,endX,mb[mb.length-1][1],endX,mb[mb.length-1][1]-0.12,'crebar');
+  e+=cadPoly(wd,top.map(p=>[p[0],p[1]-cov]),'cstepbar',false);
+  const nd=max(2,Math.round(run/(reb.spt/100)));for(let i=0;i<=nd;i++){const f=i/nd;e+=cadDot(wd,f*run,f*rise-tv+cov,0.017,'ctemp');}
+  for(let i=1;i<n;i++)e+=`<circle cx="${cadR(wd.X(i*T))}" cy="${cadR(wd.Y(i*R-cov))}" r="${cadR(0.02*wd.S)}" fill="none" stroke="#788c5d" stroke-width="1.1"/>`;
+  const k=max(1,Math.floor(n/2));
+  e+=cadDimV(wd,k*R,(k+1)*R,(k+1)*T+0.1,`R=${R.toFixed(3)}`)+cadDimH(wd,k*T,(k+1)*T,(k+1)*R+0.12,`T=${T.toFixed(3)}`)
+    +cadDimV(wd,-tv,rise,-sw-0.2,`H=${rise.toFixed(2)}`)+cadDimH(wd,0,endX,-tv-t-0.24,`${withLanding?'รวม':'run'}=${endX.toFixed(2)}`);
+  if(withLanding)e+=cadDimH(wd,run,endX,rise+0.13,`ชานพัก=${landingRun.toFixed(2)}`);
+  e+=cadCallout(wd,run*0.5,run*0.5*(rise/run)-tv+cov,run*0.3,rise*0.72,`${reb.bar} @ ${(reb.sp/100).toFixed(2)} m`,CAD_BAD);
+  return cadSheet(wd,e,title);}
+function cadStairF(v){const slope=sqrt(v.R*v.R+v.T*v.T)/v.T,ww=v.t*2400*slope,ws=0.5*v.R*2400,Wd=ww+ws+v.SDL,Wu=LFd()*Wd+LFl()*v.LL,Mu=Wu*v.L*v.L/v.sup/1000;
+  return cadStairDetail(v,v.L,false,0,cadStairReb(v,Mu),'บันไดพาดช่วงเดียว — แบบขยาย');}
+function cadStairFL(v){const slope=sqrt(v.R*v.R+v.T*v.T)/v.T;
+  const Wf=LFd()*(v.t*2400*slope+0.5*v.R*2400+v.SDL)+LFl()*v.LL,Wl=LFd()*(v.t*2400+v.SDL)+LFl()*v.LL;
+  const Lt=v.Lf+v.Ll,wf=x=>x<=v.Lf?Wf:Wl,Mu=maxMoment(Lt,wf)/1000;
+  return cadStairDetail(v,v.Lf,true,v.Ll,cadStairReb(v,Mu),'บันไดมีชานพัก — แบบขยาย');}
+
+/* ---- ฐานรากเดี่ยว: ค่าร่วมแปลน/รูปตัด ---- */
+function footGeom(v){const qan=v.qa-v.h*2.4,Areq=v.P/qan;let B=Math.ceil(sqrt(Areq)/0.05)*0.05;B=max(B,(v.col/100)+0.3);
+  const qu=v.Pu/(B*B),d=v.h*100-v.cov-BAR[v.bar].d,Mu=qu*B*Math.pow((B-v.col/100)/2,2)/2;
+  const Asmin=asMinFactor(v.fy)*(B*100)*(v.h*100),fx=flexure(Mu,B*100,d,v.fc,v.fy,0.9,4,0),As=max(fx.As,Asmin),bars=chooseBars(As,v.bar);
+  let nb=(+v.nb>0)?Math.round(v.nb):bars.n;nb=max(2,nb);
+  return{B,qu,d,Mu,nb};}
+/* ---- ฐานรากเดี่ยว — แปลน ---- */
+function cadFootPlan(v){const g=footGeom(v),B=g.B,nb=g.nb;
+  const Bc=B*100,col=v.col,cov=v.cov;
+  const wd=cadWorld(-0.34*Bc,Bc*1.34,-0.34*Bc,Bc*1.3,{W:460,H:440});let e='';
+  e+=cadRect(wd,0,0,Bc,Bc,'cslab')+cadRect(wd,Bc/2-col/2,Bc/2-col/2,col,col,'ccol');
+  e+=cadLine(wd,Bc/2,-0.14*Bc,Bc/2,Bc*1.14,'caxis')+cadLine(wd,-0.14*Bc,Bc/2,Bc*1.14,Bc/2,'caxis');
+  const xs=[];for(let i=0;i<nb;i++)xs.push(cov+(Bc-2*cov)*(nb>1?i/(nb-1):0.5));
+  xs.forEach(p=>{e+=cadLine(wd,cov,p,Bc-cov,p,'cbarln')+cadLine(wd,p,cov,p,Bc-cov,'cbarln2');});
+  e+=cadDimH(wd,0,Bc,-0.22*Bc,`B = ${B.toFixed(2)} ม.`,0)+cadDimV(wd,0,Bc,-0.22*Bc,`B = ${B.toFixed(2)} ม.`,0);
+  e+=cadDimH(wd,Bc/2-col/2,Bc/2+col/2,Bc*1.08,`${(col/100).toFixed(2)}`,Bc/2+col/2);
+  e+=cadCallout(wd,xs[1]||cov,xs[1]||cov,Bc*0.72,Bc*1.22,`${nb}-${v.bar} # ทั้งสองทาง`,CAD_STEEL);
+  return cadSheet(wd,e,'ฐานรากเดี่ยว — แปลน (FOOTING PLAN)');}
+/* ---- ฐานรากเดี่ยว (รูปตัด · หน่วย world = ซม.) ---- */
+function cadFoot(v){const qan=v.qa-v.h*2.4,Areq=v.P/qan;let B=Math.ceil(sqrt(Areq)/0.05)*0.05;B=max(B,(v.col/100)+0.3);
+  const qu=v.Pu/(B*B),d=v.h*100-v.cov-BAR[v.bar].d,Mu=qu*B*Math.pow((B-v.col/100)/2,2)/2;
+  const Asmin=asMinFactor(v.fy)*(B*100)*(v.h*100),fx=flexure(Mu,B*100,d,v.fc,v.fy,0.9,4,0),As=max(fx.As,Asmin),bars=chooseBars(As,v.bar),barW=v.barW||v.bar;
+  const Bc=B*100,hc=v.h*100,col=v.col,cov=v.cov;let nb=(+v.nb>0)?Math.round(v.nb):bars.n;nb=max(2,nb);
+  const colh=hc*0.75,ext=max(8,0.06*Bc),lean=5,sand=10;
+  const wd=cadWorld(-ext-0.3*Bc,Bc+ext+0.66*Bc,-lean-sand-0.36*hc,hc+colh+0.64*hc,{W:580,H:400});let e='';
+  e+=cadRect(wd,0,0,Bc,hc,'cconc')+cadRect(wd,Bc/2-col/2,hc,col,colh,'ccol')+cadLine(wd,Bc/2,hc,Bc/2,hc+colh,'caxis');
+  e+=cadRect(wd,-ext,-lean,Bc+2*ext,lean,'clean')+cadRect(wd,-ext,-lean-sand,Bc+2*ext,sand,'csand');
+  e+=`<rect x="${cadR(wd.X(cov))}" y="${cadR(wd.Y(hc-cov))}" width="${cadR((Bc-2*cov)*wd.S)}" height="${cadR((hc-2*cov)*wd.S)}" class="ccage"/>`;
+  const xs=[];for(let i=0;i<nb;i++)xs.push(cov+(Bc-2*cov)*(nb>1?i/(nb-1):0.5));
+  xs.forEach(x=>e+=`<circle cx="${cadR(wd.X(x))}" cy="${cadR(wd.Y(cov+1.2))}" r="${cadR(1.1*wd.S)}" class="cbarB"/>`);
+  e+=`<line x1="${cadR(wd.X(cov))}" y1="${cadR(wd.Y(hc-cov))}" x2="${cadR(wd.X(Bc-cov))}" y2="${cadR(wd.Y(hc-cov))}" stroke="${CAD_BLUE}" stroke-width="1.3" stroke-dasharray="5 3"/>`;
+  for(const ex of [cov,Bc-cov])e+=`<circle cx="${cadR(wd.X(ex))}" cy="${cadR(wd.Y(hc-cov))}" r="${cadR(1.4*wd.S)}" fill="none" stroke="${CAD_BLUE}" stroke-width="1.4"/>`;
+  e+=cadDimV(wd,0,hc,-ext-0.12*Bc,`${v.h.toFixed(2)} m`)+cadDimH(wd,0,Bc,-lean-sand-0.22*hc,`B = ${B.toFixed(2)} m`)
+    +cadDimH(wd,Bc/2-col/2,Bc/2+col/2,hc+colh+7,`${(col/100).toFixed(2)} m`);
+  e+=`<text x="${cadR(wd.X(Bc+ext+3))}" y="${cadR(wd.Y(-lean/2))+4}" class="cnote" text-anchor="start">LEAN CONCRETE</text>`;
+  e+=`<text x="${cadR(wd.X(Bc+ext+3))}" y="${cadR(wd.Y(-lean-sand/2))+4}" class="cnote" text-anchor="start">COMPACTED SAND</text>`;
+  e+=cadCallout(wd,xs[Math.floor(xs.length/2)],cov+1.2,Bc*0.6,hc*0.42,`${nb}-${v.bar} # (เหล็กล่าง)`,CAD_BAD,'start');
+  e+=cadCallout(wd,Bc-cov,hc-cov,Bc*0.64,hc+colh*0.55,`${barW} รัดรอบ`,CAD_BAD,'start');
+  return cadSheet(wd,e,'ฐานรากเดี่ยว — รูปตัด (SECTION)');}
+
+/* ============================ DISPATCH + RENDER ============================ */
+const CAD_DRAW={
+  slab1:cadSlab1,slab2:cadSlab2,slabC:cadSlabC,
+  beamP:v=>cadBeamSection(v,'bottom'),beamN:v=>cadBeamSection(v,'top'),beamT:cadBeamT,
+  colT:v=>cadColT(v)+cadColElev(v),colS:v=>cadColS(v)+cadColSElev(v),colPM:cadColPM,
+  stairF:cadStairF,stairFL:cadStairFL,foot:v=>cadFootPlan(v)+cadFoot(v)};
+function refreshFig(m,v){
+  const box=document.getElementById('fig_'+m.id);if(!box)return;
+  const note=document.getElementById('fignote_'+m.id);
+  const fn=CAD_DRAW[m.id];
+  if(!fn){box.innerHTML='';if(note)note.textContent='';return;}
+  try{box.innerHTML=fn(v);if(note)note.textContent='';}
+  catch(e){box.innerHTML='';if(note)note.textContent='วาดรูปไม่สำเร็จ: '+e.message;}
+}
+
+function applyGlobal(){const fc=val('g_fc'),fy=val('g_fy'),fv=val('g_fv'),cov=val('g_cov'),qa=val('g_qa');
+ MODULES.forEach(m=>{m.inputs.forEach(i=>{const el=document.querySelector(`[data-m="${m.id}"][data-k="${i[0]}"]`);if(!el)return;
+   if(i[0]==='fc')el.value=fc;if(i[0]==='fy')el.value=fy;if(i[0]==='fv')el.value=fv;
+   if(i[0]==='cov'&&!['foot','colT','colS','beamT'].includes(m.id))el.value=cov;if(i[0]==='qa')el.value=qa;});run(m);});}
+function val(id){return parseFloat(document.getElementById(id).value)||0;}
+function resetAll(){if(confirm('ล้างค่าทั้งหมดกลับเป็นค่าเริ่มต้น?')){localStorage.removeItem('rcsdm');location.reload();}}
+
+buildSelector();
+// ค่าเริ่มต้น: แสดงเฉพาะ Dashboard — ยังไม่เลือกชิ้นส่วนใด
+showDashboard();
+</script>
+</body>
+</html>

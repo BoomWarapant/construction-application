@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="th" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Steel Section Finder - เครื่องมือหาหน้าตัดเหล็ก</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Fonts: clean modern sans + warm serif (Anthropic-inspired) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* ===== Anthropic-inspired theme (warm, modern, clean) ===== */
+        :root[data-bs-theme="light"] {
+            --bg-main: #F0EEE6;       /* warm ivory / cloud */
+            --bg-card: #FCFBF7;       /* near-white warm */
+            --bg-input: #FFFFFF;
+            --border-color: #E3E0D4;  /* warm border */
+            --text-main: #1A1A18;     /* near-black */
+            --text-muted: #6B6A62;    /* warm grey */
+            --primary-color: #C9603F; /* Anthropic coral / book cloth */
+            --primary-hover: #B14F31;
+            --accent-color: #C9603F;
+            --accent-soft: rgba(201, 96, 63, 0.10);
+            --success-color: #4F7A4D; /* muted sage */
+            --warning-color: #C98A2B; /* warm ochre */
+
+            --bs-body-bg: var(--bg-main);
+            --bs-body-color: var(--text-main);
+            --bs-secondary-color: var(--text-muted);
+        }
+
+        :root[data-bs-theme="dark"] {
+            --bg-main: #1E1B16;       /* warm charcoal */
+            --bg-card: #2A2620;
+            --bg-input: #34302A;
+            --border-color: #3C372F;
+            --text-main: #F4F1E8;
+            --text-muted: #A8A294;
+            --primary-color: #E08866; /* lighter coral on dark */
+            --primary-hover: #EB9A7B;
+            --accent-color: #E08866;
+            --accent-soft: rgba(224, 136, 102, 0.14);
+            --success-color: #7FA877;
+            --warning-color: #E0AE5C;
+
+            --bs-body-bg: var(--bg-main);
+            --bs-body-color: var(--text-main);
+            --bs-secondary-color: var(--text-muted);
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: 'Inter', 'IBM Plex Sans Thai', 'Segoe UI', Tahoma, sans-serif;
+            padding-bottom: 50px;
+            transition: background-color 0.3s, color 0.3s;
+            letter-spacing: -0.01em;
+        }
+
+        /* Top Bar */
+        .app-header {
+            background-color: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .app-title {
+            font-family: 'Fraunces', Georgia, serif;
+            font-size: 1.55rem;
+            font-weight: 500;
+            color: var(--text-main);
+            margin: 0;
+            letter-spacing: -0.02em;
+        }
+        .app-title i { color: var(--primary-color); }
+
+        /* Custom Form Controls */
+        .form-label {
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-bottom: 0.4rem;
+            font-size: 0.9rem;
+        }
+        .form-control, .form-select {
+            background-color: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            border-radius: 8px;
+        }
+        .form-control:focus, .form-select:focus {
+            background-color: var(--bg-input);
+            border-color: var(--primary-color);
+            color: var(--text-main);
+            box-shadow: 0 0 0 0.2rem var(--accent-soft);
+        }
+        .form-check-input:checked {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        .form-check-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem var(--accent-soft);
+        }
+
+        /* Checkbox Custom Styling for Section Types */
+        .section-type-btn {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            border-radius: 999px;
+            padding: 7px 16px;
+            cursor: pointer;
+            transition: all 0.18s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            user-select: none;
+        }
+        .section-type-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--text-main);
+        }
+        .section-type-checkbox:checked + .section-type-btn {
+            background-color: var(--accent-soft);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+        .section-type-checkbox:checked + .section-type-btn i {
+            color: var(--primary-color);
+        }
+
+        /* Calculate Button */
+        .btn-calculate {
+            background-color: var(--primary-color);
+            color: #fff;
+            border: none;
+            padding: 13px;
+            border-radius: 10px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            letter-spacing: 0;
+            transition: background-color 0.2s, transform 0.05s;
+        }
+        .btn-calculate:hover {
+            background-color: var(--primary-hover);
+            color: #fff;
+        }
+        .btn-calculate:active { transform: translateY(1px); }
+
+        /* Print button */
+        .btn-print {
+            background-color: transparent;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .btn-print:hover {
+            background-color: var(--primary-color);
+            color: #fff;
+        }
+
+        /* Result Dashboard Cards */
+        .dashboard-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 14px 16px;
+            height: 100%;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .dashboard-label {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin-bottom: 4px;
+        }
+        .dashboard-value {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        /* Sort Tabs */
+        .sort-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .sort-btn {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 6px 16px;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.88rem;
+        }
+        .sort-btn.active {
+            background-color: var(--accent-soft);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        /* Result Item Card */
+        .result-item {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin-bottom: 14px;
+            transition: border-color 0.2s, box-shadow 0.2s, background-color 0.3s;
+        }
+        .result-item:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 2px 12px rgba(201, 96, 63, 0.08);
+        }
+        .result-item.rank-1 {
+            border-left: 4px solid var(--primary-color);
+            background-color: var(--accent-soft);
+        }
+
+        .result-title {
+            font-family: 'Fraunces', Georgia, serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin: 0;
+            letter-spacing: -0.01em;
+        }
+        .badge-type {
+            background-color: var(--accent-soft);
+            color: var(--primary-color);
+            border: 1px solid var(--border-color);
+            font-weight: 500;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            border-bottom: 1px dashed var(--border-color);
+            padding-bottom: 4px;
+        }
+        .stat-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .stat-label {
+            color: var(--text-muted);
+        }
+        .stat-value {
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        /* Assumptions Box */
+        .assumptions-box {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--primary-color);
+            border-radius: 10px;
+            padding: 22px 24px;
+            margin-top: 30px;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .assumptions-box h6 { font-family: 'Fraunces', Georgia, serif; }
+
+        /* Theme Toggle Button */
+        .theme-toggle-btn {
+            border-color: var(--border-color);
+            color: var(--text-muted);
+            background-color: var(--bg-main);
+        }
+        .theme-toggle-btn:hover {
+            background-color: var(--border-color);
+            color: var(--text-main);
+        }
+
+        h4 { font-family: 'Fraunces', Georgia, serif; letter-spacing: -0.01em; }
+        .text-success { color: var(--success-color) !important; }
+        .text-warning { color: var(--warning-color) !important; }
+        .text-primary { color: var(--primary-color) !important; }
+
+        /* ============================================================
+           PRINT — A4 portrait, fit content to page
+           ============================================================ */
+        @page {
+            size: A4 portrait;
+            margin: 12mm 12mm 14mm 12mm;
+        }
+
+        @media print {
+            :root[data-bs-theme="dark"],
+            :root[data-bs-theme="light"] {
+                /* force the warm-light palette for clean paper output */
+                --bg-main: #ffffff;
+                --bg-card: #ffffff;
+                --bg-input: #ffffff;
+                --border-color: #c9c6ba;
+                --text-main: #1a1a18;
+                --text-muted: #555248;
+                --primary-color: #b14f31;
+                --accent-color: #b14f31;
+                --accent-soft: #f4ece8;
+                --success-color: #3f6a3d;
+                --warning-color: #9a6a1f;
+            }
+
+            html, body {
+                background: #fff !important;
+                color: #000 !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                font-size: 10pt;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            /* Hide interactive / non-essential UI */
+            .no-print,
+            #themeToggleBtn,
+            .app-header .btn-outline-secondary,
+            .btn-calculate,
+            .sort-tabs,
+            #finderForm {
+                display: none !important;
+            }
+
+            .app-header {
+                border-bottom: 1.5px solid #b14f31;
+                padding: 0 0 8px 0;
+                margin-bottom: 10px;
+            }
+            .app-title { font-size: 16pt; }
+
+            .container {
+                max-width: 100% !important;
+                width: 100% !important;
+                margin-top: 8px !important;
+                padding: 0 !important;
+                display: flex;
+                flex-direction: column;
+            }
+            /* Print order: results first, assumptions reference last */
+            #resultsArea { order: 1; }
+            .assumptions-box { order: 2; }
+
+            /* Compact result dashboard for print */
+            #resultsArea { display: block !important; }
+            .dashboard-card { padding: 6px 9px; border-radius: 6px; }
+            .dashboard-label { font-size: 7.5pt; margin-bottom: 1px; }
+            .dashboard-value { font-size: 9pt; }
+            .dashboard-value small { font-size: 7pt; }
+            .row.g-3 { --bs-gutter-y: 0.4rem; --bs-gutter-x: 0.4rem; }
+
+            h4 { font-size: 12.5pt; margin-bottom: 8px !important; }
+            #resCount { font-size: 8pt; margin-bottom: 8px !important; }
+
+            /* Result items — keep each card intact across pages */
+            .result-item {
+                padding: 8px 12px;
+                margin-bottom: 7px;
+                border: 1px solid #ccc8bc;
+                border-radius: 6px;
+                page-break-inside: avoid;
+                break-inside: avoid;
+                box-shadow: none !important;
+            }
+            .result-item.rank-1 {
+                border-left: 3px solid #b14f31;
+                background: #f7f1ee !important;
+            }
+            .result-item .mb-3 { margin-bottom: 5px !important; }
+            .result-title { font-size: 11pt; }
+            .badge-type { font-size: 7.5pt; padding: 2px 8px !important; }
+            .stat-row { margin-top: 3px; padding-bottom: 2px; font-size: 9pt; }
+
+            /* Assumptions box: start on its own page, fit nicely */
+            .assumptions-box {
+                page-break-before: always;
+                break-before: page;
+                margin-top: 0 !important;
+                padding: 14px 16px;
+                font-size: 9.5pt;
+            }
+            .assumptions-box h6 { font-size: 11pt !important; }
+            .assumptions-box p, .assumptions-box li { margin-bottom: 4px !important; line-height: 1.5 !important; }
+            .assumptions-box ul { margin-bottom: 8px !important; }
+
+            a[href]:after { content: ""; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <div class="app-header shadow-sm">
+        <h1 class="app-title"><i class="fa-solid fa-ruler-combined me-2"></i>Steel Section Finder</h1>
+        <div class="d-flex align-items-center gap-2 no-print">
+            <!-- ปุ่มพิมพ์ A4 -->
+            <button id="printBtn" class="btn btn-sm btn-print" title="พิมพ์ผลลัพธ์ลงกระดาษ A4">
+                <i class="fa-solid fa-print me-1"></i> Print
+            </button>
+            <!-- ปุ่มเปลี่ยนโหมด Light / Dark -->
+            <button id="themeToggleBtn" class="btn btn-sm theme-toggle-btn rounded-circle px-2" title="สลับโหมดการแสดงผล">
+                <i class="fa-solid fa-sun" id="themeIcon"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-secondary border-0"><i class="fa-solid fa-xmark fs-5"></i></button>
+        </div>
+    </div>
+
+    <div class="container mt-4">
+        
+        <!-- Input Form Section -->
+        <form id="finderForm">
+            <div class="row mb-4">
+                <!-- Moment & Unit -->
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Moment (M)</label>
+                    <input type="number" class="form-control" id="momentInput" step="0.001" placeholder="เช่น 150" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Unit</label>
+                    <select class="form-select" id="momentUnit">
+                        <option value="100000">ton·m (metric)</option>
+                        <option value="100">kg·m</option>
+                        <option value="10197.16">kN·m</option>
+                    </select>
+                </div>
+
+                <!-- Steel Grade & Allowable Stress Factor -->
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Steel Grade</label>
+                    <select class="form-select" id="steelGrade">
+                        <option value="2500">SS400 (Fy=245 MPa)</option>
+                        <option value="3500">SM490 (Fy=345 MPa)</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label d-block">Allowable Stress Factor</label>
+                    <div class="d-flex gap-4 mt-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="stressFactor" id="sf1" value="0.60" checked>
+                            <label class="form-check-label text-muted" for="sf1">0.60Fy (Conservative)</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="stressFactor" id="sf2" value="0.66">
+                            <label class="form-check-label text-muted" for="sf2">0.66Fy (Compact Section) <i class="fa-solid fa-star text-warning"></i></label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bending Axis -->
+                <div class="col-12 mb-4">
+                    <label class="form-label d-block">Bending Axis</label>
+                    <div class="d-flex gap-4 mt-1">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="bendingAxis" id="ax1" value="zx" checked>
+                            <label class="form-check-label text-muted" for="ax1">X-X (Major Axis)</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="bendingAxis" id="ax2" value="zy">
+                            <label class="form-check-label text-muted" for="ax2">Y-Y (Minor Axis)</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section Types -->
+                <div class="col-12 mb-4">
+                    <label class="form-label d-block mb-3">Section Types</label>
+                    <div class="d-flex flex-wrap gap-3" id="sectionTypesContainer">
+                        <!-- Checkboxes will be generated here -->
+                    </div>
+                </div>
+
+                <!-- Show Results Limit -->
+                <div class="col-12 mb-4">
+                    <label class="form-label d-block mb-2">Show Results</label>
+                    <div class="d-flex gap-4 mt-1">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="showLimit" id="lim1" value="5">
+                            <label class="form-check-label text-muted" for="lim1">Top 5 <i class="fa-solid fa-star text-warning"></i></label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="showLimit" id="lim2" value="10">
+                            <label class="form-check-label text-muted" for="lim2">Top 10</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="showLimit" id="lim3" value="20">
+                            <label class="form-check-label text-muted" for="lim3">Top 20</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="showLimit" id="lim4" value="999" checked>
+                            <label class="form-check-label text-muted" for="lim4">All</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-calculate w-100 mb-4">
+                <i class="fa-solid fa-calculator me-2"></i> Calculate
+            </button>
+        </form>
+
+        <!-- Design Assumptions Box (ย้ายมาต่อท้ายปุ่มคำนวณตามคำสั่งพี่บุ๋ม) -->
+        <div class="assumptions-box mb-5">
+            <h6 class="fw-bold mb-4" style="color: var(--accent-color); font-size: 1.1rem;">
+                <i class="fa-solid fa-book-open me-2"></i>สมมติฐานการออกแบบ (Design Assumptions)
+            </h6>
+            <p class="mb-4 fw-bold">การออกแบบอ้างอิงหลัก ASD (Allowable Stress Design)</p>
+            
+            <p class="mb-3 fw-bold">กำลังดัดที่ยอมให้ (Allowable Bending Stress)</p>
+            <p class="mb-3 fst-italic text-muted ms-3">F<sub>b</sub> = factor &times; F<sub>y</sub></p>
+            <ul class="text-muted mb-4" style="line-height: 1.8;">
+                <li class="mb-2"><strong style="color: var(--text-main);">0.60 F<sub>y</sub></strong> – ใช้ได้กับหน้าตัดทั่วไป (Conservative)</li>
+                <li><strong style="color: var(--text-main);">0.66 F<sub>y</sub></strong> – ใช้กับ Compact Section<br>
+                <small>(เช่น WF, H-Beam ที่มีการค้ำยันด้านข้างเพียงพอ – Fully Braced)</small></li>
+            </ul>
+
+            <p class="mb-3 fw-bold">การคำนวณใช้</p>
+            <p class="mb-3 fst-italic text-muted ms-3">Z<sub>required</sub> = M / F<sub>b</sub></p>
+            <p class="mb-4 text-muted small ms-3">โดยใช้ Elastic Section Modulus (Zx)</p>
+            
+            <p class="mb-3 fw-bold">ขอบเขตการตรวจสอบ</p>
+            <ul class="text-muted mb-4" style="line-height: 1.8;">
+                <li class="mb-2">พิจารณาเฉพาะ <strong style="color: var(--text-main);">แรงดัด</strong></li>
+                <li><strong style="color: var(--text-main);">ไม่รวม</strong> ผลของ
+                    <ul class="list-unstyled ms-3 mt-1 text-muted">
+                        <li>– Lateral-Torsional Buckling</li>
+                        <li>– แรงเฉือน (Shear)</li>
+                        <li>– การโก่งตัว (Deflection)</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <p class="mb-3 fw-bold">คำแนะนำ</p>
+            <ul class="text-muted mb-0" style="line-height: 1.8;">
+                <li class="mb-2">ผลลัพธ์ใช้สำหรับ <strong class="text-warning">การเลือกหน้าตัดเบื้องต้น (Preliminary Design)</strong></li>
+                <li>สำหรับการออกแบบจริง ควรตรวจสอบเพิ่มเติมตามมาตรฐาน AISC / วสท. / มยผ. ที่เกี่ยวข้อง</li>
+            </ul>
+        </div>
+
+        <!-- Results Section (Hidden initially) -->
+        <div id="resultsArea" style="display: none;">
+            <h4 class="mb-3 text-success fw-bold"><i class="fa-solid fa-square-check me-2"></i>ผลลัพธ์</h4>
+            
+            <!-- Dashboard Cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-4 col-lg-2">
+                    <div class="dashboard-card">
+                        <div class="dashboard-label">Moment Input:</div>
+                        <div class="dashboard-value" id="resMoment">3 ton·m</div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-lg-2">
+                    <div class="dashboard-card">
+                        <div class="dashboard-label">Steel Grade:</div>
+                        <div class="dashboard-value" id="resGrade">SS400</div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-lg-3">
+                    <div class="dashboard-card">
+                        <div class="dashboard-label">Fb:</div>
+                        <div class="dashboard-value" id="resFb">147.0 MPa</div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-lg-2">
+                    <div class="dashboard-card">
+                        <div class="dashboard-label">Z Required:</div>
+                        <div class="dashboard-value text-primary" id="resZReq">&ge; 200 cm³</div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-lg-3">
+                    <div class="dashboard-card">
+                        <div class="dashboard-label">Axis:</div>
+                        <div class="dashboard-value" id="resAxis">X-X (Major Axis)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-muted small mt-2 mb-3" id="resCount">Results Found: 0 sections</div>
+
+            <!-- Sort Controls -->
+            <div class="sort-tabs">
+                <button class="sort-btn active" data-sort="weight"><i class="fa-solid fa-scale-balanced me-1"></i> เบาสุด</button>
+                <button class="sort-btn" data-sort="z"><i class="fa-solid fa-bullseye me-1"></i> Z ใกล้พอดี</button>
+                <button class="sort-btn" data-sort="depth"><i class="fa-solid fa-ruler-vertical me-1"></i> ความลึกต่ำสุด</button>
+            </div>
+
+            <!-- Results List -->
+            <div id="resultCardsContainer">
+                <!-- Cards injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap & App Script -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // --- 0. Theme Toggle Logic ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeToggleBtn = document.getElementById('themeToggleBtn');
+            const themeIcon = document.getElementById('themeIcon');
+            const htmlElement = document.documentElement;
+
+            // ตรวจสอบค่า Theme เดิมที่บันทึกไว้ (ถ้ามี) ถ้าไม่มีให้ใช้ Light (Anthropic warm)
+            const savedTheme = localStorage.getItem('steelAppTheme') || 'light';
+            applyTheme(savedTheme);
+
+            // ปุ่มพิมพ์ A4
+            const printBtn = document.getElementById('printBtn');
+            if (printBtn) {
+                printBtn.addEventListener('click', () => window.print());
+            }
+
+            themeToggleBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const currentTheme = htmlElement.getAttribute('data-bs-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                applyTheme(newTheme);
+            });
+
+            function applyTheme(theme) {
+                htmlElement.setAttribute('data-bs-theme', theme);
+                localStorage.setItem('steelAppTheme', theme);
+                
+                if (theme === 'dark') {
+                    themeIcon.className = 'fa-solid fa-sun text-warning'; // โชว์รูปพระอาทิตย์เมื่ออยู่โหมดมืด
+                } else {
+                    themeIcon.className = 'fa-solid fa-moon text-secondary'; // โชว์รูปพระจันทร์เมื่ออยู่โหมดสว่าง
+                }
+            }
+        });
+
+
+        // --- 1. Database (Expanded with FULL comprehensive data from standard JIS/TIS tables matching KHC PDF) ---
+        const steelDB = [
+            // ================= WF (Wide Flange) =================
+            { type: "WF (Wide Flange)", size: "WF-150 x 75", w: 14.0, h: 150, zx: 89, zy: 13 },
+            { type: "WF (Wide Flange)", size: "WF-150 x 100", w: 21.1, h: 148, zx: 138, zy: 30 },
+            { type: "WF (Wide Flange)", size: "WF-200 x 100", w: 21.3, h: 200, zx: 184, zy: 27 },
+            { type: "WF (Wide Flange)", size: "WF-200 x 150", w: 30.6, h: 194, zx: 277, zy: 68 },
+            { type: "WF (Wide Flange)", size: "WF-250 x 125", w: 29.6, h: 250, zx: 324, zy: 47 },
+            { type: "WF (Wide Flange)", size: "WF-250 x 175", w: 44.1, h: 244, zx: 502, zy: 113 },
+            { type: "WF (Wide Flange)", size: "WF-300 x 150", w: 36.7, h: 300, zx: 481, zy: 68 },
+            { type: "WF (Wide Flange)", size: "WF-300 x 200", w: 56.8, h: 294, zx: 771, zy: 160 },
+            { type: "WF (Wide Flange)", size: "WF-350 x 175", w: 49.6, h: 350, zx: 775, zy: 112 },
+            { type: "WF (Wide Flange)", size: "WF-350 x 250", w: 79.7, h: 340, zx: 1280, zy: 292 },
+            { type: "WF (Wide Flange)", size: "WF-400 x 200", w: 66.0, h: 400, zx: 1190, zy: 174 },
+            { type: "WF (Wide Flange)", size: "WF-400 x 300", w: 107.0, h: 390, zx: 1980, zy: 481 },
+            { type: "WF (Wide Flange)", size: "WF-450 x 200", w: 76.0, h: 450, zx: 1490, zy: 187 },
+            { type: "WF (Wide Flange)", size: "WF-450 x 300", w: 124.0, h: 440, zx: 2550, zy: 541 },
+            { type: "WF (Wide Flange)", size: "WF-500 x 200", w: 89.6, h: 500, zx: 1910, zy: 214 },
+            { type: "WF (Wide Flange)", size: "WF-500 x 300", w: 128.0, h: 488, zx: 2910, zy: 541 },
+            { type: "WF (Wide Flange)", size: "WF-600 x 200", w: 106.0, h: 600, zx: 2590, zy: 228 },
+            { type: "WF (Wide Flange)", size: "WF-600 x 300", w: 151.0, h: 588, zx: 4020, zy: 601 },
+            { type: "WF (Wide Flange)", size: "WF-700 x 300", w: 185.0, h: 700, zx: 5760, zy: 722 },
+            { type: "WF (Wide Flange)", size: "WF-800 x 300", w: 210.0, h: 800, zx: 7290, zy: 782 },
+            { type: "WF (Wide Flange)", size: "WF-900 x 300", w: 243.0, h: 900, zx: 9140, zy: 843 },
+            
+            // Add intermediate/heavy variants for WF to ensure comprehensive results
+            { type: "WF (Wide Flange)", size: "WF-400 x 200 (Heavy)", w: 75.5, h: 404, zx: 1360, zy: 202 },
+            { type: "WF (Wide Flange)", size: "WF-450 x 200 (Heavy)", w: 88.9, h: 456, zx: 1770, zy: 230 },
+            { type: "WF (Wide Flange)", size: "WF-500 x 200 (Heavy)", w: 103.0, h: 506, zx: 2230, zy: 257 },
+            { type: "WF (Wide Flange)", size: "WF-600 x 200 (Heavy)", w: 120.0, h: 606, zx: 2980, zy: 271 },
+            { type: "WF (Wide Flange)", size: "WF-600 x 300 (Heavy)", w: 175.0, h: 594, zx: 4620, zy: 701 },
+            { type: "WF (Wide Flange)", size: "WF-800 x 300 (Heavy)", w: 241.0, h: 800, zx: 8460, zy: 900 },
+            { type: "WF (Wide Flange)", size: "WF-900 x 300 (Heavy)", w: 286.0, h: 912, zx: 10900, zy: 1040 },
+
+            // ================= H-Beam =================
+            { type: "H-Beam", size: "HB-100 x 100", w: 17.2, h: 100, zx: 77, zy: 27 },
+            { type: "H-Beam", size: "HB-125 x 125", w: 23.8, h: 125, zx: 136, zy: 47 },
+            { type: "H-Beam", size: "HB-150 x 150", w: 31.5, h: 150, zx: 219, zy: 75 },
+            { type: "H-Beam", size: "HB-175 x 175", w: 40.2, h: 175, zx: 330, zy: 112 },
+            { type: "H-Beam", size: "HB-200 x 200", w: 49.9, h: 200, zx: 472, zy: 160 },
+            { type: "H-Beam", size: "HB-200 x 204", w: 56.2, h: 200, zx: 498, zy: 167 },
+            { type: "H-Beam", size: "HB-250 x 250", w: 72.4, h: 250, zx: 867, zy: 292 },
+            { type: "H-Beam", size: "HB-250 x 255", w: 82.2, h: 250, zx: 919, zy: 304 },
+            { type: "H-Beam", size: "HB-300 x 300", w: 94.0, h: 300, zx: 1360, zy: 450 },
+            { type: "H-Beam", size: "HB-300 x 305", w: 106.0, h: 300, zx: 1440, zy: 466 },
+            { type: "H-Beam", size: "HB-350 x 350", w: 137.0, h: 350, zx: 2300, zy: 776 },
+            { type: "H-Beam", size: "HB-400 x 400", w: 172.0, h: 400, zx: 3330, zy: 1120 },
+            { type: "H-Beam", size: "HB-400 x 408", w: 197.0, h: 400, zx: 3540, zy: 1170 },
+
+            // ================= I-Beam =================
+            { type: "I-Beam", size: "IB-100 x 75", w: 12.9, h: 100, zx: 56.2, zy: 12.6 },
+            { type: "I-Beam", size: "IB-125 x 75", w: 16.1, h: 125, zx: 86.0, zy: 15.3 },
+            { type: "I-Beam", size: "IB-150 x 75", w: 17.1, h: 150, zx: 109, zy: 15.3 },
+            { type: "I-Beam", size: "IB-150 x 125", w: 36.2, h: 150, zx: 235, zy: 61.6 },
+            { type: "I-Beam", size: "IB-180 x 100", w: 23.6, h: 180, zx: 186, zy: 27.5 },
+            { type: "I-Beam", size: "IB-200 x 100", w: 26.0, h: 200, zx: 217, zy: 27.7 },
+            { type: "I-Beam", size: "IB-200 x 150", w: 50.4, h: 200, zx: 446, zy: 100 },
+            { type: "I-Beam", size: "IB-250 x 125", w: 38.3, h: 250, zx: 414, zy: 53.9 },
+            { type: "I-Beam", size: "IB-250 x 125 (Heavy)", w: 55.5, h: 250, zx: 585, zy: 86 },
+            { type: "I-Beam", size: "IB-300 x 150", w: 48.3, h: 300, zx: 632, zy: 78.4 },
+            { type: "I-Beam", size: "IB-350 x 150", w: 58.5, h: 350, zx: 870, zy: 93.5 },
+            { type: "I-Beam", size: "IB-400 x 150", w: 72.0, h: 400, zx: 1200, zy: 115 },
+            { type: "I-Beam", size: "IB-450 x 175", w: 91.7, h: 450, zx: 1740, zy: 173 },
+            { type: "I-Beam", size: "IB-600 x 190", w: 133.0, h: 600, zx: 3280, zy: 259 },
+            { type: "I-Beam", size: "IB-600 x 190 (Heavy)", w: 176.0, h: 600, zx: 4330, zy: 373 },
+
+            // ================= Channel =================
+            { type: "Channel", size: "CH-75 x 40", w: 6.92, h: 75, zx: 20.1, zy: 4.47 },
+            { type: "Channel", size: "CH-100 x 50", w: 9.36, h: 100, zx: 37.6, zy: 7.52 },
+            { type: "Channel", size: "CH-125 x 65", w: 13.4, h: 125, zx: 67.8, zy: 13.4 },
+            { type: "Channel", size: "CH-150 x 75", w: 18.6, h: 150, zx: 115, zy: 22.4 },
+            { type: "Channel", size: "CH-180 x 75", w: 21.4, h: 180, zx: 153, zy: 24.3 },
+            { type: "Channel", size: "CH-200 x 80", w: 24.6, h: 200, zx: 195, zy: 29.1 },
+            { type: "Channel", size: "CH-200 x 90", w: 30.3, h: 200, zx: 249, zy: 44.2 },
+            { type: "Channel", size: "CH-250 x 90", w: 34.6, h: 250, zx: 334, zy: 44.5 },
+            { type: "Channel", size: "CH-300 x 90", w: 38.1, h: 300, zx: 429, zy: 45.7 },
+            { type: "Channel", size: "CH-380 x 100", w: 54.5, h: 380, zx: 763, zy: 70.5 },
+            { type: "Channel", size: "CH-380 x 100 (Heavy)", w: 67.3, h: 380, zx: 926, zy: 87.8 },
+
+            // ================= T-Section =================
+            { type: "T-Section", size: "T-50 x 50", w: 4.70, h: 50, zx: 3.17, zy: 3.0 },
+            { type: "T-Section", size: "T-75 x 75", w: 7.00, h: 75, zx: 7.46, zy: 6.6 },
+            { type: "T-Section", size: "T-100 x 100", w: 10.65, h: 100, zx: 14.8, zy: 13.4 },
+            { type: "T-Section", size: "T-125 x 125", w: 14.80, h: 125, zx: 25.6, zy: 23.5 },
+            { type: "T-Section", size: "T-150 x 150", w: 23.39, h: 150, zx: 40.0, zy: 33.8 },
+            { type: "T-Section", size: "T-175 x 175", w: 31.57, h: 175, zx: 59.3, zy: 56.2 },
+            { type: "T-Section", size: "T-200 x 200", w: 42.06, h: 200, zx: 88.6, zy: 86.8 },
+
+            // ================= SQ (Square Box) =================
+            { type: "SQ (Square Box)", size: "SQ-50 x 50 x 2.3", w: 3.34, h: 50, zx: 6.34, zy: 6.34 },
+            { type: "SQ (Square Box)", size: "SQ-50 x 50 x 3.2", w: 4.50, h: 50, zx: 8.16, zy: 8.16 },
+            { type: "SQ (Square Box)", size: "SQ-60 x 60 x 3.2", w: 5.50, h: 60, zx: 12.30, zy: 12.30 },
+            { type: "SQ (Square Box)", size: "SQ-75 x 75 x 3.2", w: 7.01, h: 75, zx: 20.10, zy: 20.10 },
+            { type: "SQ (Square Box)", size: "SQ-75 x 75 x 4.0", w: 8.59, h: 75, zx: 24.10, zy: 24.10 },
+            { type: "SQ (Square Box)", size: "SQ-90 x 90 x 3.2", w: 8.51, h: 90, zx: 29.90, zy: 29.90 },
+            { type: "SQ (Square Box)", size: "SQ-100 x 100 x 3.2", w: 9.52, h: 100, zx: 37.50, zy: 37.50 },
+            { type: "SQ (Square Box)", size: "SQ-100 x 100 x 4.5", w: 13.10, h: 100, zx: 49.90, zy: 49.90 },
+            { type: "SQ (Square Box)", size: "SQ-100 x 100 x 6.0", w: 17.00, h: 100, zx: 62.30, zy: 62.30 },
+            { type: "SQ (Square Box)", size: "SQ-125 x 125 x 4.5", w: 16.60, h: 125, zx: 80.90, zy: 80.90 },
+            { type: "SQ (Square Box)", size: "SQ-125 x 125 x 6.0", w: 21.70, h: 125, zx: 103.0, zy: 103.0 },
+            { type: "SQ (Square Box)", size: "SQ-150 x 150 x 4.5", w: 20.10, h: 150, zx: 120.0, zy: 120.0 },
+            { type: "SQ (Square Box)", size: "SQ-150 x 150 x 6.0", w: 26.40, h: 150, zx: 153.0, zy: 153.0 },
+            { type: "SQ (Square Box)", size: "SQ-200 x 200 x 6.0", w: 35.80, h: 200, zx: 283.0, zy: 283.0 },
+            { type: "SQ (Square Box)", size: "SQ-200 x 200 x 9.0", w: 52.30, h: 200, zx: 399.0, zy: 399.0 },
+            { type: "SQ (Square Box)", size: "SQ-250 x 250 x 6.0", w: 45.20, h: 250, zx: 454.0, zy: 454.0 },
+            { type: "SQ (Square Box)", size: "SQ-250 x 250 x 9.0", w: 66.50, h: 250, zx: 647.0, zy: 647.0 },
+            { type: "SQ (Square Box)", size: "SQ-300 x 300 x 6.0", w: 54.70, h: 300, zx: 664.0, zy: 664.0 },
+            { type: "SQ (Square Box)", size: "SQ-300 x 300 x 9.0", w: 80.60, h: 300, zx: 956.0, zy: 956.0 },
+
+            // ================= REC (Rectangular Box) =================
+            { type: "REC (Rectangular Box)", size: "REC-75 x 38 x 2.3", w: 3.81, h: 75, zx: 9.23, zy: 6.30 },
+            { type: "REC (Rectangular Box)", size: "REC-100 x 50 x 3.2", w: 7.01, h: 100, zx: 22.50, zy: 15.20 },
+            { type: "REC (Rectangular Box)", size: "REC-100 x 50 x 4.5", w: 9.55, h: 100, zx: 29.30, zy: 19.50 },
+            { type: "REC (Rectangular Box)", size: "REC-125 x 50 x 3.2", w: 8.26, h: 125, zx: 31.60, zy: 18.70 },
+            { type: "REC (Rectangular Box)", size: "REC-125 x 75 x 3.2", w: 9.52, h: 125, zx: 41.10, zy: 31.10 },
+            { type: "REC (Rectangular Box)", size: "REC-150 x 50 x 3.2", w: 9.52, h: 150, zx: 44.05, zy: 22.83 },
+            { type: "REC (Rectangular Box)", size: "REC-150 x 50 x 4.5", w: 13.08, h: 150, zx: 59.80, zy: 30.11 },
+            { type: "REC (Rectangular Box)", size: "REC-150 x 75 x 4.5", w: 15.20, h: 150, zx: 75.00, zy: 52.90 },
+            { type: "REC (Rectangular Box)", size: "REC-150 x 100 x 4.5", w: 16.60, h: 150, zx: 87.70, zy: 70.40 },
+            { type: "REC (Rectangular Box)", size: "REC-200 x 100 x 4.5", w: 20.10, h: 200, zx: 131.0, zy: 90.90 },
+            { type: "REC (Rectangular Box)", size: "REC-200 x 100 x 6.0", w: 26.40, h: 200, zx: 170.0, zy: 115.0 },
+            { type: "REC (Rectangular Box)", size: "REC-200 x 100 x 9.0", w: 38.20, h: 200, zx: 235.0, zy: 156.0 }
+        ];
+
+        const sectionTypes = [
+            "WF (Wide Flange)", "H-Beam", "I-Beam", "Channel", 
+            "T-Section", "SQ (Square Box)", "REC (Rectangular Box)"
+        ];
+
+        let currentResults = [];
+        let currentAxis = 'zx';
+        let currentZReq = 0;
+
+        // --- 2. Initialize UI ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('sectionTypesContainer');
+            sectionTypes.forEach((type, index) => {
+                const id = `st_${index}`;
+                // Set default checked for first few to match image
+                const checked = index < 6 ? 'checked' : (type === "REC (Rectangular Box)" ? 'checked' : '');
+                container.innerHTML += `
+                    <div>
+                        <input type="checkbox" class="d-none section-type-checkbox" id="${id}" value="${type}" ${checked}>
+                        <label class="section-type-btn" for="${id}">
+                            <i class="fa-solid fa-check"></i> ${type}
+                        </label>
+                    </div>
+                `;
+            });
+        });
+
+        // --- 3. Calculate Logic ---
+        document.getElementById('finderForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            // Get inputs
+            const momentVal = parseFloat(document.getElementById('momentInput').value);
+            const unitMult = parseFloat(document.getElementById('momentUnit').value);
+            const fyKsc = parseFloat(document.getElementById('steelGrade').value); // 2500 or 3500
+            const stressFactor = parseFloat(document.querySelector('input[name="stressFactor"]:checked').value);
+            const axis = document.querySelector('input[name="bendingAxis"]:checked').value;
+            const limit = parseInt(document.querySelector('input[name="showLimit"]:checked').value);
+            
+            // Get selected types
+            const selectedTypes = Array.from(document.querySelectorAll('.section-type-checkbox:checked')).map(cb => cb.value);
+            if (selectedTypes.length === 0) {
+                alert("พี่บุ๋มต้องเลือก Section Types อย่างน้อย 1 ประเภทครับผม!");
+                return;
+            }
+
+            // Calculations
+            const momentKgCm = momentVal * unitMult;
+            const fbKsc = fyKsc * stressFactor; // e.g., 2500 * 0.6 = 1500 ksc
+            const zReq = momentKgCm / fbKsc;
+            
+            currentAxis = axis;
+            currentZReq = zReq;
+
+            // Display Dashboard values
+            const unitText = document.getElementById('momentUnit').options[document.getElementById('momentUnit').selectedIndex].text.split(' ')[0];
+            const knmEquivalent = (momentKgCm / 10197.16).toFixed(2);
+            document.getElementById('resMoment').innerHTML = `${momentVal} ${unitText} <br><small class="text-muted">= ${knmEquivalent} kN·m</small>`;
+            
+            const gradeText = document.getElementById('steelGrade').options[document.getElementById('steelGrade').selectedIndex].text.split(' ')[0];
+            document.getElementById('resGrade').innerText = gradeText;
+            
+            // 1500 ksc approx 147 MPa
+            const fbMpa = (fbKsc / 10.197).toFixed(1);
+            const factorText = stressFactor === 0.60 ? "0.60Fy<br>(Conservative)" : "0.66Fy<br>(Compact Section)";
+            document.getElementById('resFb').innerHTML = `${fbMpa} MPa <br><small class="text-muted">(${factorText.replace('<br>', ' ')})</small>`;
+            
+            document.getElementById('resZReq').innerHTML = `&ge; ${zReq.toLocaleString('en-US', {maximumFractionDigits:0})} cm³`;
+            document.getElementById('resAxis').innerText = axis === 'zx' ? 'X-X (Major Axis)' : 'Y-Y (Minor Axis)';
+
+            // Filter Database
+            currentResults = steelDB.filter(sec => {
+                return selectedTypes.includes(sec.type) && sec[axis] >= zReq;
+            });
+
+            document.getElementById('resCount').innerHTML = `<strong>${currentResults.length} sections</strong>`;
+
+            // Sort & Render
+            sortAndRender('weight', limit);
+            document.getElementById('resultsArea').style.display = 'block';
+            
+            // Reset active sort tab
+            document.querySelectorAll('.sort-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.sort-btn[data-sort="weight"]').classList.add('active');
+        });
+
+        // --- 4. Sorting and Rendering ---
+        document.querySelectorAll('.sort-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+                e.currentTarget.classList.add('active');
+                
+                const limit = parseInt(document.querySelector('input[name="showLimit"]:checked').value);
+                sortAndRender(e.currentTarget.dataset.sort, limit);
+            });
+        });
+
+        function sortAndRender(sortBy, limit) {
+            // Sort logic
+            if (sortBy === 'weight') {
+                currentResults.sort((a, b) => a.w - b.w); // เบาสุดขึ้นก่อน
+            } else if (sortBy === 'z') {
+                currentResults.sort((a, b) => a[currentAxis] - b[currentAxis]); // Z ใกล้เคียงสุด (น้อยสุดที่ผ่านเกณฑ์) ขึ้นก่อน
+            } else if (sortBy === 'depth') {
+                currentResults.sort((a, b) => a.h - b.h); // ความลึกน้อยสุดขึ้นก่อน
+            }
+
+            const container = document.getElementById('resultCardsContainer');
+            container.innerHTML = '';
+
+            if (currentResults.length === 0) {
+                container.innerHTML = `<div class="alert alert-warning text-center"><i class="fa-solid fa-triangle-exclamation me-2"></i>ไม่พบหน้าตัดที่รับโมเมนต์นี้ได้ในประเภทที่เลือกครับพี่</div>`;
+                return;
+            }
+
+            const showResults = currentResults.slice(0, limit);
+            
+            showResults.forEach((res, index) => {
+                const zVal = res[currentAxis];
+                const utilization = (currentZReq / zVal) * 100;
+                const safetyMargin = ((zVal - currentZReq) / currentZReq) * 100;
+                
+                const isRank1 = index === 0 && sortBy === 'weight';
+                const rankClass = isRank1 ? 'rank-1' : '';
+                const rankBadge = isRank1 ? `<span class="badge bg-warning text-dark ms-2"><i class="fa-solid fa-star me-1"></i> แนะนำ</span>` : '';
+
+                const card = document.createElement('div');
+                card.className = `result-item ${rankClass}`;
+                card.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="result-title">${res.size} ${rankBadge}</h5>
+                        </div>
+                        <span class="badge badge-type py-2 px-3">${res.type}</span>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 pe-md-4">
+                            <div class="stat-row">
+                                <span class="stat-label">น้ำหนัก:</span>
+                                <span class="stat-value">${res.w.toFixed(1)} kg/m</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Z<sub>${currentAxis.charAt(1)}</sub>:</span>
+                                <span class="stat-value">${zVal.toLocaleString()} cm³</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6 ps-md-4">
+                            <div class="stat-row">
+                                <span class="stat-label">Utilization:</span>
+                                <span class="stat-value">${utilization.toFixed(1)}% <i class="fa-solid fa-square-check text-success ms-1"></i></span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Safety Margin:</span>
+                                <span class="stat-value text-success">+${safetyMargin.toFixed(1)}%</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+    </script>
+</body>
+</html>

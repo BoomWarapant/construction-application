@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STEEL ROOF DESIGN — ออกแบบโครงสร้างหลังคาเหล็ก (AISC/ASD + ดร.มงคล)</title>
+<style>
+/* ============================================================
+   ANTHROPIC-STYLE THEME
+   ============================================================ */
+:root{
+  --bg:#F0EEE6;          /* oat / cream background */
+  --surface:#FAF9F5;     /* card surface */
+  --surface-2:#F4F2EA;
+  --ink:#1A1915;         /* near-black text */
+  --ink-soft:#55524A;    /* secondary text */
+  --ink-faint:#8A867B;   /* tertiary */
+  --line:#E0DCCF;        /* hairline */
+  --line-2:#D2CDBD;
+  --accent:#C9633F;      /* book-cloth clay/coral */
+  --accent-soft:#E8B7A4;
+  --accent-bg:#F6E7DF;
+  --ok:#3E7C4F;          /* pass green */
+  --ok-bg:#E6F0E6;
+  --no:#B8442B;          /* fail red */
+  --no-bg:#F6E1DB;
+  --warn:#9A6A14;
+  --warn-bg:#F6EBD3;
+  --blue:#3D6A8F;
+  --radius:14px;
+  --radius-sm:9px;
+  --shadow:0 1px 2px rgba(40,35,25,.05),0 4px 18px rgba(40,35,25,.06);
+  --mono:"SF Mono",ui-monospace,"Cascadia Code","JetBrains Mono",Consolas,monospace;
+  --serif:"Tiempos Text","Iowan Old Style",Georgia,"Times New Roman",serif;
+  --sans:ui-sans-serif,-apple-system,"Segoe UI","Sukhumvit Set","IBM Plex Sans Thai","Noto Sans Thai",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:15px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{font-family:var(--serif);font-weight:600;letter-spacing:-.01em;margin:0}
+a{color:var(--accent)}
+
+/* ---------- Layout ---------- */
+.app{max-width:1180px;margin:0 auto;padding:0 22px 80px}
+header.top{
+  position:sticky;top:0;z-index:40;
+  background:rgba(240,238,230,.86);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+  margin:0 -22px 0;padding:14px 22px 0;
+}
+.brand{display:flex;align-items:center;gap:13px;flex-wrap:wrap}
+.brand .logo{
+  width:38px;height:38px;border-radius:9px;flex:0 0 auto;
+  background:linear-gradient(135deg,var(--accent),#A94A2C);
+  display:flex;align-items:center;justify-content:center;color:#fff;
+  font-family:var(--serif);font-size:20px;font-weight:700;
+}
+.brand h1{font-size:20px;line-height:1.1}
+.brand .sub{font-size:12.5px;color:var(--ink-soft);font-family:var(--sans)}
+.brand .spacer{flex:1}
+.btn{
+  font-family:var(--sans);font-size:13.5px;font-weight:500;cursor:pointer;
+  border:1px solid var(--line-2);background:var(--surface);color:var(--ink);
+  padding:8px 15px;border-radius:9px;transition:.15s;display:inline-flex;align-items:center;gap:7px;
+}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{background:#A94A2C;color:#fff}
+
+/* ---------- Tabs ---------- */
+nav.tabs{display:flex;gap:2px;overflow-x:auto;margin-top:12px;padding-bottom:0}
+nav.tabs button{
+  font-family:var(--sans);font-size:13.5px;font-weight:500;white-space:nowrap;
+  border:none;background:none;color:var(--ink-soft);cursor:pointer;
+  padding:10px 14px;border-bottom:2.5px solid transparent;transition:.15s;
+}
+nav.tabs button:hover{color:var(--ink)}
+nav.tabs button.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+
+/* ---------- Cards & panels ---------- */
+.tabpane{display:none;padding-top:24px;animation:fade .25s}
+.tabpane.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.grid{display:grid;grid-template-columns:340px 1fr;gap:22px;align-items:start}
+@media(max-width:880px){.grid{grid-template-columns:1fr}}
+.card{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:20px;
+}
+.card h3{font-size:16px;margin-bottom:3px;display:flex;align-items:center;gap:8px}
+.card .card-sub{font-size:12.5px;color:var(--ink-faint);margin-bottom:16px}
+.section-title{font-size:22px;margin-bottom:4px}
+.section-desc{color:var(--ink-soft);font-size:13.5px;margin-bottom:20px;max-width:70ch}
+
+/* ---------- Inputs ---------- */
+.field{margin-bottom:12px}
+.field label{display:block;font-size:12.5px;color:var(--ink-soft);margin-bottom:4px;font-weight:500}
+.field .hint{font-size:11px;color:var(--ink-faint);font-weight:400}
+.field input,.field select{
+  width:100%;font-family:var(--sans);font-size:14px;color:var(--ink);
+  background:var(--surface-2);border:1px solid var(--line-2);border-radius:8px;
+  padding:8px 10px;transition:.15s;
+}
+.field input:focus,.field select:focus{outline:none;border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px var(--accent-bg)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.group-label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);font-weight:700;margin:18px 0 8px;font-family:var(--sans)}
+.group-label:first-child{margin-top:0}
+.inline-check{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-soft);margin-bottom:10px}
+.inline-check input{width:auto}
+
+/* ---------- Results ---------- */
+.result-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:18px;flex-wrap:wrap}
+.verdict{font-family:var(--sans);font-weight:700;font-size:14px;padding:7px 16px;border-radius:999px;display:inline-flex;align-items:center;gap:7px}
+.verdict.ok{background:var(--ok-bg);color:var(--ok)}
+.verdict.no{background:var(--no-bg);color:var(--no)}
+.member-pick{background:var(--accent-bg);border:1px solid var(--accent-soft);border-radius:10px;padding:11px 15px;font-size:14px;color:var(--ink)}
+.member-pick b{color:var(--accent);font-family:var(--mono);font-size:14px}
+
+.calc{border-top:1px solid var(--line);margin-top:6px}
+.calc-row{display:grid;grid-template-columns:1fr auto;gap:14px;padding:8px 2px;border-bottom:1px dashed var(--line);align-items:baseline}
+.calc-row .lbl{font-size:13px;color:var(--ink-soft)}
+.calc-row .lbl .sym{font-family:var(--mono);color:var(--ink);font-size:12.5px}
+.calc-row .val{font-family:var(--mono);font-size:13.5px;text-align:right;white-space:nowrap}
+.calc-row .val .unit{color:var(--ink-faint);font-size:11.5px}
+.calc-row.head{border-bottom:1px solid var(--line-2)}
+.calc-row.head .lbl{font-weight:700;color:var(--accent);font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;font-family:var(--sans)}
+.badge{font-family:var(--sans);font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;margin-left:8px}
+.badge.ok{background:var(--ok-bg);color:var(--ok)}
+.badge.no{background:var(--no-bg);color:var(--no)}
+.badge.warn{background:var(--warn-bg);color:var(--warn)}
+.formula{font-family:var(--mono);font-size:11.5px;color:var(--ink-faint);background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:2px 7px;display:inline-block;margin-top:2px}
+.note{font-size:12px;color:var(--ink-soft);background:var(--accent-bg);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:9px 12px;margin-top:14px}
+
+/* ---------- Dashboard ---------- */
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+.dash-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 17px;box-shadow:var(--shadow);cursor:pointer;transition:.15s}
+.dash-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.dash-card .dc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.dash-card .dc-name{font-family:var(--serif);font-size:16px;font-weight:600}
+.dash-card .dc-en{font-size:11px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.04em}
+.dash-card .dc-sec{font-family:var(--mono);font-size:13px;color:var(--accent);margin-top:2px}
+.dash-card .dc-ratio{font-size:12px;color:var(--ink-soft);margin-top:8px}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+.dot.ok{background:var(--ok)}.dot.no{background:var(--no)}
+
+/* ---------- Tables ---------- */
+table.tbl{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:10px}
+table.tbl th,table.tbl td{padding:6px 9px;text-align:right;border-bottom:1px solid var(--line)}
+table.tbl th{background:var(--surface-2);color:var(--ink-soft);font-weight:600;text-align:right;position:sticky;top:0}
+table.tbl td:first-child,table.tbl th:first-child{text-align:left;font-family:var(--mono);font-size:12px}
+table.tbl tr:hover td{background:var(--accent-bg)}
+.tbl-wrap{max-height:480px;overflow:auto;border:1px solid var(--line);border-radius:10px}
+
+/* ---------- CAD ---------- */
+.cad-wrap{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:8px;margin-bottom:22px}
+.cad-title{font-family:var(--serif);font-size:15px;font-weight:600;padding:10px 14px 4px;display:flex;justify-content:space-between;align-items:center}
+.cad-title .cad-scale{font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
+svg.cad{display:block;width:100%;height:auto;background:#FCFBF7;border-radius:9px}
+.cad text{font-family:var(--mono);fill:var(--ink-soft)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;padding:10px 14px;font-size:12px;color:var(--ink-soft)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:18px;height:0;border-top-width:2px;border-top-style:solid;display:inline-block}
+
+/* ---------- Verify ---------- */
+.test-summary{display:flex;gap:14px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+.test-pill{font-family:var(--mono);font-size:13px;padding:8px 16px;border-radius:10px;font-weight:600}
+.test-pill.ok{background:var(--ok-bg);color:var(--ok)}
+.test-pill.no{background:var(--no-bg);color:var(--no)}
+table.tests{width:100%;border-collapse:collapse;font-size:12.5px}
+table.tests th,table.tests td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left}
+table.tests th{background:var(--surface-2);color:var(--ink-soft);font-weight:600}
+table.tests td.num{font-family:var(--mono);text-align:right}
+table.tests .pass{color:var(--ok);font-weight:700}
+table.tests .fail{color:var(--no);font-weight:700}
+
+.foot{margin-top:30px;padding-top:18px;border-top:1px solid var(--line);font-size:12px;color:var(--ink-faint);text-align:center}
+
+/* ============================================================
+   PRINT — A4 PORTRAIT
+   ============================================================ */
+#printReport{display:none}
+@media print{
+  @page{size:A4 portrait;margin:11mm 12mm}
+  body{background:#fff;font-size:10.5px;line-height:1.4}
+  header.top,nav.tabs,.tabpane,.no-print,.btn{display:none !important}
+  .app{max-width:none;padding:0;margin:0}
+  #printReport{display:block}
+  .pr-page{page-break-after:always}
+  .pr-page:last-child{page-break-after:auto}
+  .pr-head{border-bottom:2px solid var(--ink);padding-bottom:8px;margin-bottom:12px}
+  .pr-head .pr-logo{font-family:var(--serif);font-size:18px;font-weight:700;color:var(--accent)}
+  .pr-head .pr-title{font-family:var(--serif);font-size:15px;font-weight:600}
+  .pr-meta{display:grid;grid-template-columns:1fr 1fr;gap:2px 18px;font-size:9.5px;color:#333;margin-top:6px}
+  .pr-member{border:1px solid #999;border-radius:6px;padding:9px 11px;margin-bottom:11px;page-break-inside:avoid}
+  .pr-member h4{font-size:12px;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center}
+  .pr-v-ok{color:#2c6b3f;font-weight:700;font-size:10px}
+  .pr-v-no{color:#a8341f;font-weight:700;font-size:10px}
+  .pr-tbl{width:100%;border-collapse:collapse;font-size:9px}
+  .pr-tbl td{padding:2px 5px;border-bottom:1px solid #ddd;font-family:var(--mono)}
+  .pr-tbl td:nth-child(2),.pr-tbl td:nth-child(4){text-align:right}
+  .pr-tbl td:first-child,.pr-tbl td:nth-child(3){font-family:var(--sans);color:#444}
+  .pr-cad{border:1px solid #999;border-radius:6px;padding:6px;margin-bottom:10px;page-break-inside:avoid}
+  .pr-cad svg{width:100%;height:auto}
+  .pr-foot{font-size:8px;color:#777;text-align:center;border-top:1px solid #ccc;padding-top:5px;margin-top:8px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ==================== HEADER ==================== -->
+  <header class="top">
+    <div class="brand">
+      <div class="logo">S</div>
+      <div>
+        <h1>STEEL ROOF DESIGN</h1>
+        <div class="sub">ออกแบบโครงสร้างหลังคาเหล็ก · มาตรฐาน AISC (ASD) + วสท. + ดร.มงคล จิรวัชรเดช</div>
+      </div>
+      <div class="spacer"></div>
+      <button class="btn" onclick="recalcAll()">↻ คำนวณใหม่</button>
+      <button class="btn primary" onclick="doPrint()">🖨 พิมพ์ / บันทึก PDF (A4)</button>
+    </div>
+    <nav class="tabs" id="tabs"></nav>
+  </header>
+
+  <!-- ==================== DASHBOARD ==================== -->
+  <div class="tabpane active" id="pane-dash">
+    <h2 class="section-title">ภาพรวมการออกแบบ</h2>
+    <p class="section-desc">สรุปสถานะการตรวจสอบทุกชิ้นส่วนตามมาตรฐาน ASD (หน่วยแรงที่ยอมให้) — คลิกการ์ดเพื่อเข้าไปแก้ไขรายละเอียดแต่ละชิ้นส่วน</p>
+
+    <div class="card" style="margin-bottom:22px">
+      <h3>ข้อมูลโครงการ &amp; วัสดุ</h3>
+      <div class="card-sub">ข้อมูลส่วนหัวรายการคำนวณ และคุณสมบัติวัสดุที่ใช้ร่วมกันทุกชิ้นส่วน</div>
+      <div class="field-row-3">
+        <div class="field"><label>ชื่อโครงการ (Project)</label><input id="p_project" value="โครงการตัวอย่าง — หลังคาเหล็ก"></div>
+        <div class="field"><label>เจ้าของ (Owner)</label><input id="p_owner" value="-"></div>
+        <div class="field"><label>สถานที่ (Location)</label><input id="p_loc" value="-"></div>
+        <div class="field"><label>วิศวกร (Engineer)</label><input id="p_eng" value="-"></div>
+        <div class="field"><label>เลขใบอนุญาต (License)</label><input id="p_lic" value="-"></div>
+        <div class="field"><label>วันที่ (Date)</label><input id="p_date" type="date"></div>
+      </div>
+      <div class="group-label">คุณสมบัติวัสดุ (Material Properties)</div>
+      <div class="field-row-3">
+        <div class="field"><label>fy — กำลังคราก <span class="hint">กฎกระทรวงฉบับ 6</span></label><input id="m_fy" type="number" value="2400" oninput="recalcAll()"> </div>
+        <div class="field"><label>fu — กำลังประลัย <span class="hint">มอก.116-2529</span></label><input id="m_fu" type="number" value="4000" oninput="recalcAll()"></div>
+        <div class="field"><label>Es — โมดูลัสยืดหยุ่น <span class="hint">วสท.1015-40</span></label><input id="m_es" type="number" value="2100000" oninput="recalcAll()"></div>
+      </div>
+      <div class="field-row-3">
+        <div class="field"><label>Fb = 0.6fy <span class="hint">ksc</span></label><input id="m_fb" disabled></div>
+        <div class="field"><label>Fby = 0.75fy <span class="hint">ksc</span></label><input id="m_fby" disabled></div>
+        <div class="field"><label>Fv = 0.4fy <span class="hint">ksc</span></label><input id="m_fv" disabled></div>
+      </div>
+    </div>
+
+    <div class="dash-grid" id="dashGrid"></div>
+  </div>
+
+  <!-- member panes injected here -->
+  <div id="memberPanes"></div>
+
+  <!-- ==================== CAD ==================== -->
+  <div class="tabpane" id="pane-cad">
+    <h2 class="section-title">แบบ CAD — รูปแปลน &amp; รูปตัด</h2>
+    <p class="section-desc">แบบขยายโครงหลังคาแบบปั้นหยา (Hip Roof) สร้างอัตโนมัติจากค่า geometry ที่ป้อน แสดงตำแหน่งและขนาดของทุกชิ้นส่วนพร้อมเส้นบอกระยะ</p>
+    <div class="grid">
+      <div class="card no-print">
+        <h3>ขนาดอาคาร &amp; โครงหลังคา</h3>
+        <div class="card-sub">กำหนดมิติเพื่อสร้างแบบ</div>
+        <div class="field-row">
+          <div class="field"><label>ความยาวอาคาร B <span class="hint">m.</span></label><input id="g_len" type="number" value="12" oninput="buildCAD()"></div>
+          <div class="field"><label>ความกว้างอาคาร W <span class="hint">m.</span></label><input id="g_wid" type="number" value="6.4" oninput="buildCAD()"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>ระยะราบครึ่งช่วง (run) <span class="hint">m.</span></label><input id="g_run" type="number" value="3.2" oninput="syncGeom()"></div>
+          <div class="field"><label>ความสูงจั่ว (rise) <span class="hint">m.</span></label><input id="g_rise" type="number" value="2" oninput="syncGeom()"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>ระยะห่างจันทัน <span class="hint">m.</span></label><input id="g_raft" type="number" value="1" oninput="buildCAD()"></div>
+          <div class="field"><label>ระยะห่างแป <span class="hint">m.</span></label><input id="g_purl" type="number" value="0.34" oninput="buildCAD()"></div>
+        </div>
+        <div class="field"><label>ระยะยื่นชายคา <span class="hint">m.</span></label><input id="g_eave" type="number" value="0.5" oninput="buildCAD()"></div>
+        <div class="note">มุมหลังคา θ = arctan(rise/run) = <b id="g_angle">—</b></div>
+      </div>
+      <div>
+        <div class="cad-wrap">
+          <div class="cad-title"><span>รูปแปลนโครงหลังคา (ROOF FRAMING PLAN)</span><span class="cad-scale" id="planScale">SCALE 1:100</span></div>
+          <div id="planSvg"></div>
+          <div class="legend">
+            <span><i style="border-color:#C9633F"></i> อกไก่ (Ridge)</span>
+            <span><i style="border-color:#3D6A8F"></i> ตะเฆ่สัน (Hip)</span>
+            <span><i style="border-color:#1A1915"></i> จันทัน (Rafter)</span>
+            <span><i style="border-color:#9A8C6A;border-top-style:dashed"></i> แป (Purlin)</span>
+            <span><i style="border-color:#3E7C4F"></i> อะเส (Tie Beam)</span>
+            <span>● ดั้ง (King Post)</span>
+          </div>
+        </div>
+        <div class="cad-wrap">
+          <div class="cad-title"><span>รูปตัดขวางโครงหลังคา (ROOF SECTION)</span><span class="cad-scale">SCALE 1:75</span></div>
+          <div id="sectSvg"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SECTION DATABASE ==================== -->
+  <div class="tabpane" id="pane-db">
+    <h2 class="section-title">ตารางหน้าตัดเหล็ก (Section Database)</h2>
+    <p class="section-desc">ฐานข้อมูลหน้าตัดจากไฟล์ออกแบบ — Light Lip Channel 36 ขนาด และ Rectangular Tube 27 ขนาด ใช้ในทุก dropdown เลือกเหล็ก</p>
+    <div class="card" style="margin-bottom:22px">
+      <h3>Light Lip Channel (C) — เหล็กรางน้ำพับ</h3>
+      <div class="card-sub">หน่วย: ขนาด mm · พื้นที่ cm² · I cm⁴ · S(modulus) cm³ · r cm · น้ำหนัก kg/m</div>
+      <div class="tbl-wrap"><table class="tbl" id="dbLip"></table></div>
+    </div>
+    <div class="card">
+      <h3>Rectangular Tube — เหล็กกล่องสี่เหลี่ยม</h3>
+      <div class="card-sub">หน่วย: ขนาด mm · พื้นที่ cm² · I cm⁴ · S(modulus) cm³ · r cm · น้ำหนัก kg/m</div>
+      <div class="tbl-wrap"><table class="tbl" id="dbTube"></table></div>
+    </div>
+  </div>
+
+  <!-- ==================== VERIFY ==================== -->
+  <div class="tabpane" id="pane-verify">
+    <h2 class="section-title">ทดสอบและทวนสอบ (Verification)</h2>
+    <p class="section-desc">ตรวจสอบว่า engine คำนวณตรงกับผลในไฟล์ Excel ต้นฉบับ (ออกแบบชิ้นส่วนหลังคา.xlsx) และตรงตามหลักการ ASD ทุกชิ้นส่วน — ป้อนข้อมูลชุดเดียวกับไฟล์แล้วเทียบค่าทีละรายการ</p>
+    <div class="card">
+      <div class="test-summary" id="testSummary"></div>
+      <table class="tests" id="testTable"></table>
+      <div class="note" style="margin-top:18px">เกณฑ์ผ่าน: ค่าที่คำนวณต่างจากค่าอ้างอิงในไฟล์ Excel ไม่เกิน 0.5% (relative) หรือ 0.01 (absolute สำหรับค่าน้อย ๆ) และผลตัดสิน PASS/FAIL ต้องตรงกัน</div>
+    </div>
+  </div>
+
+  <div class="foot">STEEL ROOF DESIGN · ASD method · อ้างอิง AISC, มาตรฐาน วสท., กฎกระทรวงฉบับที่ 6, มอก.116-2529 และหนังสือออกแบบโครงสร้างเหล็ก ดร.มงคล จิรวัชรเดช · เครื่องมือช่วยออกแบบ ผู้ใช้ต้องตรวจทานโดยวิศวกรผู้ได้รับใบอนุญาต</div>
+
+  <!-- ==================== PRINT REPORT (hidden until print) ==================== -->
+  <div id="printReport"></div>
+</div>
+
+<script>
+/* ============================================================
+   SECTION DATABASE  (from ออกแบบชิ้นส่วนหลังคา.xlsx)
+   Sx,Sy = section modulus (Zx,Zy);  r = radius of gyration
+   dims in mm, A in cm2, I in cm4, S in cm3, r in cm, wt in kg/m
+   ============================================================ */
+function lip(name,A,wt,Ix,Iy,rx,ry,Sx,Sy){
+  const m=name.match(/(\d+)x(\d+)x(\d+)x([\d.]+)/);
+  return {name,type:'lip',d:+m[1],b:+m[2],lip:+m[3],t:+m[4],A,wt,Ix,Iy,rx,ry,Sx,Sy};
+}
+function tube(name,d,b,t,wt,A,Ix,Iy,Sx,Sy,rx,ry){
+  return {name,type:'tube',d,b,t,wt,A,Ix,Iy,Sx,Sy,rx,ry};
+}
+const DB={
+ lip:[
+  lip('C 250x75x25x4.5',18.92,14.9,1690,129,9.44,2.62,135,23.8),
+  lip('C 200x75x25x4.5',16.67,13.1,990,121,7.61,2.69,99,23.3),
+  lip('C 200x75x25x4',14.95,11.7,895,110,7.74,2.72,89.5,21.3),
+  lip('C 200x75x25x3.2',12.13,9.52,736,92.3,7.7,2.76,73.6,17.8),
+  lip('C 200x75x20x4.5',16.22,12.7,963,109,7.71,2.6,96.3,20.6),
+  lip('C 200x75x20x4',14.55,11.4,871,100,7.74,2.62,87.1,18.9),
+  lip('C 200x75x20x3.2',11.81,9.27,716,84.1,7.79,2.67,71.6,15.8),
+  lip('C 150x75x25x4.5',14.42,11.3,501,109,5.9,2.75,66.9,22.5),
+  lip('C 150x75x25x4',12.95,10.2,455,99.8,5.93,2.78,60.6,20.6),
+  lip('C 150x75x25x3.2',10.53,8.27,375,83.6,5.97,2.82,50,17.3),
+  lip('C 150x75x20x4.5',13.97,11,489,99.2,5.92,2.66,65.2,19.8),
+  lip('C 150x75x20x4',12.55,9.85,445,91,5.95,2.69,59.3,18.2),
+  lip('C 150x75x20x3.2',10.21,8.01,366,76.4,5.99,2.74,48.9,15.3),
+  lip('C 150x65x20x4',11.75,9.22,401,63.7,5.48,2.33,53.5,14.5),
+  lip('C 150x65x20x3.2',9.567,7.51,332,53.8,5.89,2.37,44.3,12.2),
+  lip('C 150x65x20x2.3',7.012,5.5,248,41.1,5.94,2.42,33,9.37),
+  lip('C 150x50x20x4.5',11.72,9.2,368,35.7,5.6,1.75,49,10.5),
+  lip('C 150x50x20x3.2',8.607,6.76,280,28.3,5.71,1.81,37.4,8.19),
+  lip('C 150x50x20x2.3',6.322,4.96,210,21.9,5.77,1.86,28,6.33),
+  lip('C 125x50x20x4.5',10.59,8.32,238,33.5,4.74,1.78,38,10),
+  lip('C 125x50x20x4',9.548,7.5,217,33.1,4.77,1.81,34.7,9.38),
+  lip('C 125x50x20x3.2',7.807,6.13,181,26.6,4.82,1.85,29,8.02),
+  lip('C 125x50x20x2.3',5.747,4.51,137,20.6,4.88,1.89,21.9,6.22),
+  lip('C 120x60x25x4.5',11.72,9.2,252,58,4.63,2.22,41.9,15.5),
+  lip('C 120x60x25x3.2',8.287,6.51,186,40.9,4.74,2.22,31,10.5),
+  lip('C 120x60x25x2.3',6.092,4.78,140,31.3,4.79,2.27,23.3,8.1),
+  lip('C 120x40x20x3.2',7.007,5.5,144,15.3,4.53,1.48,24,5.71),
+  lip('C 100x50x20x4.5',9.469,7.43,139,30.9,3.82,1.81,27.7,9.82),
+  lip('C 100x50x20x4',8.548,6.71,127,28.7,3.85,1.83,25.4,9.13),
+  lip('C 100x50x20x3.2',7.007,5.5,107,24.5,3.9,1.87,21.3,7.81),
+  lip('C 100x50x20x2.3',5.172,4.06,80.7,19,3.95,1.92,16,6.06),
+  lip('C 90x45x15x3.2',6.367,5,76.9,18.3,3.48,1.69,17.1,6.57),
+  lip('C 90x45x15x2.3',4.712,3.7,58.6,14.2,3.53,1.74,13,5.14),
+  lip('C 75x45x15x2.3',4.137,3.25,37.1,11.8,3,1.69,9.9,4.24),
+  lip('C 75x45x15x2',3.637,2.86,33,10.5,3.01,1.7,8.79,3.76),
+  lip('C 75x35x15x2.3',3.677,2.89,31,6.58,2.91,1.34,8.28,2.98)
+ ],
+ tube:[
+  tube('Tube 50x25x2',50,25,2,2.12,2.7,8.17,2.76,3.27,2.2,1.74,1.01),
+  tube('Tube 50x25x2.3',50,25,2.3,2.44,3.1,9.31,3.1,3.72,2.48,1.68,0.96),
+  tube('Tube 50x25x3.2',50,25,3.2,3.24,4.13,11.6,3.8,4.65,3.04,1.68,0.96),
+  tube('Tube 50x25x3.6',50,25,3.6,3.48,4.44,11.7,3.86,4.7,3.09,1.63,0.93),
+  tube('Tube 75x38x2.3',75,38,2.3,3.81,4.85,34.6,12,9.23,6.3,2.67,1.57),
+  tube('Tube 75x38x3.2',75,38,3.2,5.15,5.15,45,15.4,12,8.09,2.62,1.53),
+  tube('Tube 75x45x1.6',75,45,1.6,2.88,3.67,28.4,12.9,7.56,5.75,2.78,1.88),
+  tube('Tube 75x45x2.3',75,45,2.3,4.06,5.17,38.9,17.6,10.4,7.82,2.74,1.84),
+  tube('Tube 75x45x3.2',75,45,3.2,5.5,7.01,50.8,22.8,13.5,10.1,2.69,1.8),
+  tube('Tube 100x50x2',100,50,2,4.48,5.7,74.1,25.5,14.8,10.2,3.61,2.11),
+  tube('Tube 100x50x2.3',100,50,2.3,5.14,6.55,84.8,29,17,11.6,3.6,2.1),
+  tube('Tube 100x50x3.2',100,50,3.2,7.01,8.93,112,38,22.5,15.2,3.55,2.06),
+  tube('Tube 100x50x3.6',100,50,3.6,7.72,9.84,121,40.9,24.1,16.3,3.5,2.04),
+  tube('Tube 100x50x4',100,50,4,8.59,10.95,142,46.7,28.4,18.7,3.55,2.03),
+  tube('Tube 100x50x4.5',100,50,4.5,9.55,12.17,147,48.9,29.3,19.5,3.47,2),
+  tube('Tube 125x75x2.3',125,75,2.3,6.95,8.85,192,87.5,30.6,23.3,4.65,3.14),
+  tube('Tube 125x75x3.2',125,75,3.2,9.52,12.13,257,117,41.1,31.1,4.6,3.1),
+  tube('Tube 125x75x4',125,75,4,11.7,14.95,311,141,49.7,37.5,4.56,3.07),
+  tube('Tube 125x75x4.5',125,75,4.5,13.1,16.67,342,155,54.8,41.2,4.53,3.04),
+  tube('Tube 125x75x6',125,75,6,17,21.63,428,192,68.5,51.1,4.45,2.98),
+  tube('Tube 150x50x3.2',150,50,3.2,9.63,12.13,314.92,55.71,42.61,22.61,5.16,2.17),
+  tube('Tube 150x50x4.5',150,50,4.5,13.5,17.03,423.93,75.75,53.35,29.82,5.05,2.11),
+  tube('Tube 150x50x6.3',150,50,6.3,18.77,22.84,536.98,93.65,72.76,36.87,4.93,2.03),
+  tube('Tube 200x100x4.5',200,100,4.5,20.1,25.67,1330,455,133,90.9,7.2,4.21),
+  tube('Tube 200x100x6',200,100,6,26.4,33.63,1700,577,170,115,7.12,4.14),
+  tube('Tube 200x100x6.3',200,100,6.3,27.4,34.8,1739,591,174,118,7.06,4.12)
+ ]
+};
+const ALL=[...DB.lip,...DB.tube];
+function findSec(name){return ALL.find(s=>s.name===name);}
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+const $=id=>document.getElementById(id);
+const num=id=>parseFloat($(id).value)||0;
+function f(n,d=2){ if(!isFinite(n))return '—'; return n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}); }
+function mat(){
+  const fy=num('m_fy'),fu=num('m_fu'),Es=num('m_es');
+  return {fy,fu,Es,Fb:0.6*fy,Fbx:0.6*fy,Fby:0.75*fy,Fv:0.4*fy};
+}
+function deg(r){return r*180/Math.PI;}
+function rad(d){return d*Math.PI/180;}
+
+/* render a list of calc rows into a container */
+function renderRows(rows){
+  return rows.map(r=>{
+    if(r.head) return `<div class="calc-row head"><div class="lbl">${r.head}</div><div class="val"></div></div>`;
+    const badge=r.status?`<span class="badge ${r.status}">${r.badge||(r.status==='ok'?'OK':r.status==='no'?'ไม่ผ่าน':'')}</span>`:'';
+    const unit=r.unit?` <span class="unit">${r.unit}</span>`:'';
+    const formula=r.formula?`<div class="formula">${r.formula}</div>`:'';
+    const sym=r.sym?` <span class="sym">${r.sym}</span>`:'';
+    return `<div class="calc-row"><div class="lbl">${r.lbl}${sym}${formula}</div><div class="val">${r.val!==undefined?r.val:''}${unit}${badge}</div></div>`;
+  }).join('');
+}
+
+/* ============================================================
+   MEMBER DEFINITIONS
+   ============================================================ */
+const MEMBERS=[
+ {key:'purlin', th:'แป', en:'PURLIN', icon:'⌐', defSec:'Tube 75x38x2.3'},
+ {key:'rafter', th:'จันทัน', en:'JACK RAFTER', icon:'╱', defSec:'C 150x65x20x4'},
+ {key:'tie',    th:'อะเส', en:'TIE BEAM', icon:'▭', defSec:'C 150x75x25x4.5'},
+ {key:'hip',    th:'ตะเฆ่สัน/ราง', en:'HIP RAFTER', icon:'◣', defSec:'C 150x75x25x4'},
+ {key:'ridge',  th:'อกไก่', en:'RIDGE BOARD', icon:'━', defSec:'C 75x45x15x2.3'},
+ {key:'king',   th:'ดั้ง', en:'KING POST', icon:'┃', defSec:'Tube 125x75x4'}
+];
+const results={}; // store last result per member for dashboard/print
+
+/* ---- build option list ---- */
+function secOptions(sel){
+  let h='<optgroup label="Rectangular Tube">';
+  DB.tube.forEach(s=>h+=`<option ${s.name===sel?'selected':''}>${s.name}</option>`);
+  h+='</optgroup><optgroup label="Light Lip Channel">';
+  DB.lip.forEach(s=>h+=`<option ${s.name===sel?'selected':''}>${s.name}</option>`);
+  h+='</optgroup>';
+  return h;
+}
+
+/* ============================================================
+   INPUT PANELS  (HTML per member)
+   ============================================================ */
+function panelHTML(m){
+  const common=sec=>`
+    <div class="group-label">เลือกหน้าตัดเหล็ก (Steel Section)</div>
+    <div class="field"><label>หน้าตัด</label><select id="${m.key}_sec" onchange="design_${m.key}()">${secOptions(m.defSec)}</select></div>`;
+  let body='';
+  if(m.key==='purlin') body=`
+    <div class="group-label">Geometry</div>
+    <div class="field-row">
+      <div class="field"><label>Run ระยะราบ χ <span class="hint">m.</span></label><input id="pu_run" type="number" value="3.2" oninput="design_purlin()"></div>
+      <div class="field"><label>Rise ระยะยก у <span class="hint">m.</span></label><input id="pu_rise" type="number" value="2" oninput="design_purlin()"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>ระยะห่างแป S <span class="hint">m.</span></label><input id="pu_s" type="number" value="0.34" oninput="design_purlin()"></div>
+      <div class="field"><label>ช่วงพาด = ระยะห่างจันทัน L <span class="hint">m.</span></label><input id="pu_l" type="number" value="1" oninput="design_purlin()"></div>
+    </div>
+    <div class="group-label">น้ำหนักบรรทุก (kg/m²)</div>
+    <div class="field-row">
+      <div class="field"><label>วัสดุมุง</label><input id="pu_roof" type="number" value="54" oninput="design_purlin()"></div>
+      <div class="field"><label>Superimposed DL</label><input id="pu_sdl" type="number" value="30" oninput="design_purlin()"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Roof Sarking</label><input id="pu_sark" type="number" value="6" oninput="design_purlin()"></div>
+      <div class="field"><label>อื่น ๆ</label><input id="pu_oth" type="number" value="15" oninput="design_purlin()"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Live Load (LL)</label><input id="pu_ll" type="number" value="50" oninput="design_purlin()"></div>
+      <div class="field"><label>แรงลม (line) <span class="hint">kg/m</span></label><input id="pu_wind" type="number" value="57.6" oninput="design_purlin()"></div>
+    </div>
+    <div class="inline-check"><input type="checkbox" id="pu_sag" onchange="design_purlin()"> ใช้ Sag Rod กึ่งกลางช่วง (My = Wx·L²/32)</div>
+    ${common()}`;
+  else if(m.key==='king') body=`
+    <div class="group-label">แรงและความยาว</div>
+    <div class="field"><label>Pu — แรงอัดตามแกน <span class="hint">kg (จากอกไก่+ตะเฆ่สัน+น้ำหนักดั้ง)</span></label><input id="ki_pu" type="number" value="1328.41" oninput="design_king()"></div>
+    <div class="field-row">
+      <div class="field"><label>ความสูงดั้ง L <span class="hint">m.</span></label><input id="ki_l" type="number" value="2" oninput="design_king()"></div>
+      <div class="field"><label>ค่า K (end condition)</label>
+        <select id="ki_k" onchange="design_king()">
+          <option value="0.65">Fix-Fix · K=0.65</option>
+          <option value="0.8">Fix-Hinge · K=0.80</option>
+          <option value="1" selected>Hinge-Hinge · K=1.0</option>
+          <option value="1.2">Fix-Fix(sway) · K=1.2</option>
+          <option value="2.1">Fix-Free · K=2.1</option>
+          <option value="2">Hinge-Fix(sway) · K=2.0</option>
+        </select></div>
+    </div>
+    <div class="inline-check"><input type="checkbox" id="ki_rx" onchange="design_king()"> ใช้ rx แทน r_min (ตามไฟล์ต้นฉบับ)</div>
+    ${common()}`;
+  else { // generic flexural: rafter, tie, hip, ridge
+    const dflt={rafter:{w:139.42,L:3.2,c:'direct',M:236.17,V:256.62,n:1},
+                tie:{w:470.57,L:4.5,c:'16',M:'',V:529.39,n:2},
+                hip:{w:354.2,L:5.41,c:'direct',M:561.70,V:563.36,n:2},
+                ridge:{w:298.85,L:2,c:'8',M:'',V:298.85,n:2}}[m.key];
+    body=`
+    <div class="group-label">ภาระและช่วงพาด</div>
+    <div class="field-row">
+      <div class="field"><label>w — น้ำหนักแผ่ <span class="hint">kg/m</span></label><input id="${m.key}_w" type="number" value="${dflt.w}" oninput="design_${m.key}()"></div>
+      <div class="field"><label>ช่วงพาด L <span class="hint">m.</span></label><input id="${m.key}_L" type="number" value="${dflt.L}" oninput="design_${m.key}()"></div>
+    </div>
+    <div class="field"><label>วิธีหาโมเมนต์สูงสุด</label>
+      <select id="${m.key}_mc" onchange="design_${m.key}()">
+        <option value="8" ${dflt.c==='8'?'selected':''}>คานช่วงเดียว · Mmax = wL²/8</option>
+        <option value="12" ${dflt.c==='12'?'selected':''}>ปลายยึดแน่น · Mmax = wL²/12</option>
+        <option value="16" ${dflt.c==='16'?'selected':''}>คานต่อเนื่อง · Mmax = wL²/16</option>
+        <option value="direct" ${dflt.c==='direct'?'selected':''}>ป้อน Mmax / Vmax โดยตรง</option>
+      </select></div>
+    <div class="field-row" id="${m.key}_directWrap" style="${dflt.c==='direct'?'':'display:none'}">
+      <div class="field"><label>Mmax <span class="hint">kg·m</span></label><input id="${m.key}_M" type="number" value="${dflt.M}" oninput="design_${m.key}()"></div>
+      <div class="field"><label>Vmax <span class="hint">kg</span></label><input id="${m.key}_V" type="number" value="${dflt.V}" oninput="design_${m.key}()"></div>
+    </div>
+    <div class="field"><label>จำนวนตัว (n) <span class="hint">เชิงประกอบ/แสดงในแบบ — ตรวจสอบต่อ 1 ตัว (conservative)</span></label><input id="${m.key}_n" type="number" value="${dflt.n}" oninput="design_${m.key}()"></div>
+    ${common()}`;
+  }
+  return `
+   <div class="grid">
+     <div class="card no-print">
+       <h3>${m.icon} ${m.th} <span style="font-size:12px;color:var(--ink-faint);font-family:var(--sans)">${m.en}</span></h3>
+       <div class="card-sub">ป้อนข้อมูลออกแบบและเลือกหน้าตัด</div>
+       ${body}
+     </div>
+     <div class="card"><div id="${m.key}_out"></div></div>
+   </div>`;
+}
+
+/* ============================================================
+   BUILD TABS + PANES
+   ============================================================ */
+function buildTabs(){
+  const tabs=$('tabs');
+  const items=[['dash','ภาพรวม']];
+  MEMBERS.forEach(m=>items.push([m.key,m.th]));
+  items.push(['cad','แบบ CAD'],['db','ตารางหน้าตัด'],['verify','ทดสอบ/ทวนสอบ']);
+  tabs.innerHTML=items.map((it,i)=>`<button class="${i===0?'active':''}" data-tab="${it[0]}" onclick="switchTab('${it[0]}')">${it[1]}</button>`).join('');
+  // member panes
+  $('memberPanes').innerHTML=MEMBERS.map(m=>`<div class="tabpane" id="pane-${m.key}">
+     <h2 class="section-title">${m.icon} ${m.th} — ${m.en}</h2>
+     <p class="section-desc">${memberDesc(m.key)}</p>
+     ${panelHTML(m)}
+   </div>`).join('');
+}
+function memberDesc(k){return {
+ purlin:'ออกแบบแปรับแรงดัดสองทาง (Biaxial Bending) จากแรงโน้มถ่วงและแรงลมตั้งฉากหลังคา ตรวจสอบ fb, fv, สมการ interaction และการแอ่นตัว',
+ rafter:'ออกแบบจันทันรับแรงดัดจากแปและแรงลม ตรวจสอบโมดูลัสหน้าตัด โมเมนต์ หน่วยแรง การแอ่นตัว และแรงเฉือน',
+ tie:'ออกแบบอะเสเหล็กรับน้ำหนักจากจันทันถ่ายลงเสา ตรวจสอบโมเมนต์ หน่วยแรงดัด การแอ่นตัว และแรงเฉือน',
+ hip:'ออกแบบตะเฆ่สัน/ตะเฆ่รางรับน้ำหนักรูปสามเหลี่ยมจากจันทันสองด้าน ตรวจสอบโมเมนต์ หน่วยแรง การแอ่นตัว แรงเฉือน',
+ ridge:'ออกแบบอกไก่รับน้ำหนักจากจันทันทั้งสองด้าน ถ่ายลงดั้ง ตรวจสอบโมเมนต์ หน่วยแรง และแรงเฉือน',
+ king:'ออกแบบดั้งเป็นเสารับแรงอัด ตามวิธี AISC/ASD — ตรวจสอบ Cc, อัตราส่วนความชะลูด KL/r และหน่วยแรงอัดที่ยอมให้ Fa'
+}[k];}
+
+function switchTab(t){
+  document.querySelectorAll('.tabpane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
+  $('pane-'+t).classList.add('active');
+  if(t==='cad') buildCAD();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ============================================================
+   DESIGN: PURLIN  (biaxial bending)
+   ============================================================ */
+function design_purlin(){
+  const M=mat();
+  const run=num('pu_run'),rise=num('pu_rise'),S=num('pu_s'),L=num('pu_l');
+  const sec=findSec($('purlin_sec').value);
+  const theta=Math.atan2(rise,run), th=deg(theta);
+  const purlinKgm2=sec.wt/S;
+  const sumW=num('pu_roof')+num('pu_sdl')+num('pu_sark')+num('pu_oth')+purlinKgm2+num('pu_ll');
+  const w=sumW*S;                       // kg/m gravity
+  const wind=num('pu_wind');
+  const Wy=w*Math.cos(theta)+wind;      // perpendicular incl. wind
+  const Wx=w*Math.sin(theta);           // parallel
+  const sag=$('pu_sag').checked;
+  const Mx=Wy*L*L/8;                     // kg·m
+  const My=Wx*L*L/(sag?32:8);
+  const Vy=Wy*L/2, Vx=Wx*L/2;
+  // stresses
+  const fb=Mx*100/sec.Sx + 2*My*100/sec.Sy;        // ksc (per source formula)
+  const tw=sec.t/10, tf=sec.t/10, bf=sec.b/10, d=sec.d/10;
+  const Aw=d*tw, Af=bf*tf;
+  const fv=Vx/Af + Vy/Aw;
+  // biaxial interaction (dimensionally-consistent AISC)
+  const ix=(Mx*100/sec.Sx)/M.Fbx, iy=(My*100/sec.Sy)/M.Fby, inter=ix+iy;
+  // deflection
+  const Lcm=L*100;
+  const dy=5*(Wy/100)*Math.pow(Lcm,4)/(384*M.Es*sec.Ix);
+  const dx=5*(Wx/100)*Math.pow(Lcm,4)/(384*M.Es*sec.Iy);
+  const dl=Math.sqrt(dx*dx+dy*dy);
+  const dAllow=Lcm/360;
+  // verdicts
+  const okFb=fb<=M.Fb, okFv=fv<=M.Fv, okInt=inter<=1, okDef=dl<=dAllow;
+  const okSx=sec.Sx>=Mx*100/M.Fb;
+  const pass=okFb&&okFv&&okInt&&okDef;
+  results.purlin={pass,sec:sec.name,ratio:inter,detail:`fb/Fb=${f(fb/M.Fb,2)} · interaction=${f(inter,3)} · δ/δa=${f(dl/dAllow,2)}`};
+
+  const rows=[
+   {head:'1. มุมและน้ำหนัก'},
+   {lbl:'มุมหลังคา',sym:'θ',val:f(th,2),unit:'°',formula:'arctan(rise/run)'},
+   {lbl:'น้ำหนักแปเทียบพื้นที่',val:f(purlinKgm2,2),unit:'kg/m²',formula:`${f(sec.wt,2)}/${f(S,2)}`},
+   {lbl:'รวมน้ำหนักบรรทุก',sym:'∑W',val:f(sumW,2),unit:'kg/m²'},
+   {lbl:'น้ำหนักแผ่บนแป',sym:'w',val:f(w,2),unit:'kg/m',formula:'∑W·S'},
+   {head:'2. แรงและโมเมนต์'},
+   {lbl:'แรงตั้งฉาก',sym:'Wy',val:f(Wy,2),unit:'kg/m',formula:'w·cosθ + แรงลม'},
+   {lbl:'แรงขนาน',sym:'Wx',val:f(Wx,2),unit:'kg/m',formula:'w·sinθ'},
+   {lbl:'โมเมนต์แกนหลัก',sym:'Mx',val:f(Mx,2),unit:'kg·m',formula:'Wy·L²/8'},
+   {lbl:'โมเมนต์แกนรอง',sym:'My',val:f(My,2),unit:'kg·m',formula:sag?'Wx·L²/32':'Wx·L²/8'},
+   {lbl:'แรงเฉือน',sym:'Vx, Vy',val:`${f(Vx,1)}, ${f(Vy,1)}`,unit:'kg'},
+   {head:`3. หน้าตัด — ${sec.name}`},
+   {lbl:'Section modulus',sym:'Sx, Sy',val:`${f(sec.Sx,2)}, ${f(sec.Sy,2)}`,unit:'cm³'},
+   {lbl:'โมเมนต์อินเนอร์เชีย',sym:'Ix, Iy',val:`${f(sec.Ix,1)}, ${f(sec.Iy,1)}`,unit:'cm⁴'},
+   {lbl:'Sx ต้องการ',val:f(Mx*100/M.Fb,2),unit:'cm³',status:okSx?'ok':'no',badge:okSx?'≤ Sx':'> Sx'},
+   {head:'4. ตรวจสอบหน่วยแรง'},
+   {lbl:'หน่วยแรงดัด',sym:'fb',val:f(fb,1),unit:'ksc',formula:'Mx/Sx + 2My/Sy',status:okFb?'ok':'no',badge:okFb?`< ${f(M.Fb,0)}`:`> ${f(M.Fb,0)}`},
+   {lbl:'หน่วยแรงเฉือน',sym:'fv',val:f(fv,1),unit:'ksc',formula:'Vx/Af + Vy/Aw',status:okFv?'ok':'no',badge:okFv?`< ${f(M.Fv,0)}`:`> ${f(M.Fv,0)}`},
+   {head:'5. สมการ Interaction (Biaxial, AISC/ASD)'},
+   {lbl:'fbx/Fbx + fby/Fby',val:f(inter,3),formula:`Fbx=${f(M.Fbx,0)}, Fby=${f(M.Fby,0)}`,status:okInt?'ok':'no',badge:okInt?'< 1.00':'> 1.00'},
+   {head:'6. ตรวจสอบการแอ่นตัว'},
+   {lbl:'แอ่นที่ยอมให้',sym:'Δa',val:f(dAllow,4),unit:'cm',formula:'L/360'},
+   {lbl:'แอ่นแกน y',sym:'δy',val:f(dy,4),unit:'cm',formula:'5WyL⁴/384EIx'},
+   {lbl:'แอ่นแกน x',sym:'δx',val:f(dx,4),unit:'cm',formula:'5WxL⁴/384EIy'},
+   {lbl:'แอ่นรวม',sym:'δ',val:f(dl,4),unit:'cm',formula:'√(δx²+δy²)',status:okDef?'ok':'no',badge:okDef?'< Δa':'> Δa'}
+  ];
+  renderOut('purlin',sec,pass,rows);
+}
+
+/* ============================================================
+   DESIGN: GENERIC FLEXURAL (rafter, tie, hip, ridge)
+   ============================================================ */
+function designFlex(key){
+  const M=mat();
+  const w=num(key+'_w'), L=num(key+'_L'), mc=$(key+'_mc').value, n=num(key+'_n')||1;
+  const sec=findSec($(key+'_sec').value);
+  $(key+'_directWrap').style.display = (mc==='direct')?'grid':'none';
+  let Mmax,Vmax;
+  if(mc==='direct'){ Mmax=num(key+'_M'); Vmax=num(key+'_V'); }
+  else { Mmax=w*L*L/(+mc); Vmax=w*L/2; }
+  const Sxreq=Mmax*100/M.Fb;
+  const phiMn=M.Fb*sec.Sx/100;             // kg·m allowable moment
+  const fb=Mmax*100/sec.Sx;
+  const d=sec.d/10, tw=sec.t/10;
+  const Vt=Vmax/sec.A;                      // transverse shear V/A
+  const Vh=Vmax/(d*tw);                     // longitudinal shear V/(d·tw)
+  // deflection — coefficient consistent with support condition
+  const Lcm=L*100;
+  let dmax, defAdvisory=false, defFormula;
+  if(mc==='direct'){
+    defAdvisory=true;
+    const wEq=8*Mmax/(L*L);                 // equiv UDL back-figured from Mmax (approx)
+    dmax=5*(wEq/100)*Math.pow(Lcm,4)/(384*M.Es*sec.Ix);
+    defFormula='ประมาณจาก Mmax (รูปแบบภาระจริงต้องตรวจแยก)';
+  } else {
+    const k = (mc==='8')?5:1;               // simple:5/384 · fixed/continuous:1/384
+    dmax=k*(w/100)*Math.pow(Lcm,4)/(384*M.Es*sec.Ix);
+    defFormula=(mc==='8')?'5wL⁴/384EIx':'wL⁴/384EIx';
+  }
+  const dAllow=Lcm/360;
+  const okMom=phiMn>=Mmax, okSx=sec.Sx>=Sxreq, okFb=fb<=M.Fb, okVt=Vt<=M.Fv, okVh=Vh<=M.Fv, okDef=dmax<=dAllow;
+  const pass=okMom&&okFb&&okVt&&okVh&&okSx && (defAdvisory? true : okDef);
+  results[key]={pass,sec:(n>1?n+'-':'')+sec.name,ratio:fb/M.Fb,detail:`fb/Fb=${f(fb/M.Fb,2)} · Vmax/A vs Fv · δ/δa=${f(dmax/dAllow,2)}`};
+
+  const rows=[
+   {head:'1. โมเมนต์และแรงเฉือนออกแบบ'},
+   {lbl:'โมเมนต์สูงสุด',sym:'Mmax',val:f(Mmax,2),unit:'kg·m',formula:mc==='direct'?'ป้อนโดยตรง':`wL²/${mc}`},
+   {lbl:'แรงเฉือนสูงสุด',sym:'Vmax',val:f(Vmax,1),unit:'kg'},
+   {head:'2. โมดูลัสหน้าตัด'},
+   {lbl:'Sx ต้องการ',sym:'Sxreq',val:f(Sxreq,2),unit:'cm³',formula:'Mmax/Fb'},
+   {lbl:`Sx ของ ${sec.name}`,sym:'Sx',val:f(sec.Sx,2),unit:'cm³',status:okSx?'ok':'no',badge:okSx?'≥ Sxreq':'< Sxreq'},
+   {head:'3. ตรวจสอบโมเมนต์'},
+   {lbl:'โมเมนต์ที่ยอมให้',sym:'Mn',val:f(phiMn,2),unit:'kg·m',formula:'Fb·Sx',status:okMom?'ok':'no',badge:okMom?'≥ Mmax':'< Mmax'},
+   {lbl:'หน่วยแรงดัดจริง',sym:'fb',val:f(fb,1),unit:'ksc',formula:'Mmax/Sx',status:okFb?'ok':'no',badge:okFb?`< ${f(M.Fb,0)}`:`> ${f(M.Fb,0)}`},
+   {head:'4. ตรวจสอบแรงเฉือน'},
+   {lbl:'เฉือนตามขวาง',sym:'Vt',val:f(Vt,1),unit:'ksc',formula:'V/A',status:okVt?'ok':'no',badge:okVt?`< ${f(M.Fv,0)}`:`> ${f(M.Fv,0)}`},
+   {lbl:'เฉือนตามยาว',sym:'Vh',val:f(Vh,1),unit:'ksc',formula:'V/(d·tw)',status:okVh?'ok':'no',badge:okVh?`< ${f(M.Fv,0)}`:`> ${f(M.Fv,0)}`},
+   {head:'5. ตรวจสอบการแอ่นตัว'},
+   {lbl:'แอ่นที่ยอมให้',sym:'Δa',val:f(dAllow,3),unit:'cm',formula:'L/360'},
+   {lbl:'แอ่นจริง',sym:'δ',val:f(dmax,3),unit:'cm',formula:defFormula,status:defAdvisory?(okDef?'ok':'warn'):(okDef?'ok':'no'),badge:defAdvisory?'ประมาณ':(okDef?'< Δa':'> Δa')}
+  ];
+  if(n>1) rows.push({head:`หมายเหตุ: ใช้ ${n}-${sec.name} (ตรวจสอบต่อ 1 ตัวเพื่อความปลอดภัย)`});
+  renderOut(key,sec,pass,rows,n);
+}
+function design_rafter(){designFlex('rafter');}
+function design_tie(){designFlex('tie');}
+function design_hip(){designFlex('hip');}
+function design_ridge(){designFlex('ridge');}
+
+/* ============================================================
+   DESIGN: KING POST (compression, AISC/ASD)
+   ============================================================ */
+function design_king(){
+  const M=mat();
+  const Pu=num('ki_pu'), L=num('ki_l'), K=num('ki_k');
+  const sec=findSec($('king_sec').value);
+  const useRx=$('ki_rx').checked;
+  const r=useRx? sec.rx : Math.min(sec.rx,sec.ry);
+  const Lcm=L*100;
+  const slender=K*Lcm/r;
+  const Cc=Math.sqrt(2*Math.PI*Math.PI*M.Es/M.fy);
+  let Fa,mode;
+  if(slender<=Cc){
+    const ratio=slender/Cc;
+    const FS=5/3 + 3*ratio/8 - Math.pow(ratio,3)/8;
+    Fa=(1-ratio*ratio/2)*M.fy/FS;
+    mode='เสาสั้น/ปานกลาง (KL/r ≤ Cc) — สูตร inelastic';
+  } else {
+    Fa=12*Math.PI*Math.PI*M.Es/(23*slender*slender);
+    mode='เสายาว (KL/r > Cc) — สูตร Euler';
+  }
+  const P=sec.A*Fa;
+  const okSlender=slender<=200, okCap=P>=Pu;
+  const pass=okSlender&&okCap;
+  results.king={pass,sec:sec.name,ratio:Pu/P,detail:`KL/r=${f(slender,1)} · P/Pu=${f(P/Pu,2)}`};
+
+  const rows=[
+   {head:'1. แรงและความชะลูด'},
+   {lbl:'แรงอัดออกแบบ',sym:'Pu',val:f(Pu,1),unit:'kg'},
+   {lbl:'รัศมีไจเรชัน',sym:'r',val:f(r,2),unit:'cm',formula:useRx?'ใช้ rx (ตามไฟล์)':'r_min = min(rx,ry)'},
+   {lbl:'อัตราส่วนความชะลูด',sym:'KL/r',val:f(slender,2),formula:`K=${K}, L=${f(Lcm,0)}cm`,status:okSlender?'ok':'no',badge:okSlender?'< 200':'> 200'},
+   {head:'2. หน่วยแรงอัดที่ยอมให้ (AISC/ASD)'},
+   {lbl:'ค่าวิกฤต',sym:'Cc',val:f(Cc,2),formula:'√(2π²Es/fy)'},
+   {lbl:'รูปแบบการวิบัติ',val:`<span style="font-size:11.5px">${mode}</span>`},
+   {lbl:'หน่วยแรงอัดยอมให้',sym:'Fa',val:f(Fa,1),unit:'ksc'},
+   {head:'3. ตรวจสอบกำลังรับแรงอัด'},
+   {lbl:'กำลังรับแรงอัด',sym:'P = A·Fa',val:f(P,0),unit:'kg',formula:`A=${f(sec.A,2)}cm²`,status:okCap?'ok':'no',badge:okCap?'≥ Pu':'< Pu'}
+  ];
+  renderOut('king',sec,pass,rows);
+}
+
+/* ============================================================
+   RENDER OUTPUT
+   ============================================================ */
+function renderOut(key,sec,pass,rows,n){
+  const m=MEMBERS.find(x=>x.key===key);
+  const pick=(n&&n>1?`${n}-`:'')+sec.name;
+  const html=`
+   <div class="result-head">
+     <div>
+       <div class="member-pick">เลือกใช้: <b>${pick}</b> · ${f(sec.wt,2)} kg/m</div>
+     </div>
+     <div class="verdict ${pass?'ok':'no'}">${pass?'✓ ผ่านการตรวจสอบ':'✕ ไม่ผ่าน — ต้องเพิ่มขนาด'}</div>
+   </div>
+   <div class="calc">${renderRows(rows)}</div>`;
+  $(key+'_out').innerHTML=html;
+  updateDash();
+}
+
+/* ============================================================
+   DASHBOARD
+   ============================================================ */
+function updateDash(){
+  $('dashGrid').innerHTML=MEMBERS.map(m=>{
+    const r=results[m.key];
+    if(!r) return '';
+    return `<div class="dash-card" onclick="switchTab('${m.key}')">
+       <div class="dc-top"><div><div class="dc-name">${m.icon} ${m.th}</div><div class="dc-en">${m.en}</div></div>
+       <span class="dot ${r.pass?'ok':'no'}"></span></div>
+       <div class="dc-sec">${r.sec}</div>
+       <div class="dc-ratio">${r.detail}</div>
+       <div style="margin-top:8px"><span class="verdict ${r.pass?'ok':'no'}" style="font-size:12px;padding:4px 12px">${r.pass?'ผ่าน':'ไม่ผ่าน'}</span></div>
+     </div>`;
+  }).join('');
+}
+
+/* ============================================================
+   MATERIAL DISPLAY + RECALC ALL
+   ============================================================ */
+function recalcAll(){
+  const M=mat();
+  $('m_fb').value=f(M.Fb,0); $('m_fby').value=f(M.Fby,0); $('m_fv').value=f(M.Fv,0);
+  design_purlin(); design_rafter(); design_tie(); design_hip(); design_ridge(); design_king();
+  buildCAD();
+}
+
+/* ============================================================
+   CAD DRAWINGS (SVG)
+   ============================================================ */
+function syncGeom(){ buildCAD(); }
+function buildCAD(){
+  const B=num('g_len'), W=num('g_wid'), run=num('g_run'), rise=num('g_rise');
+  const raft=num('g_raft'), purl=num('g_purl'), eave=num('g_eave');
+  const theta=Math.atan2(rise,run);
+  $('g_angle').textContent=f(deg(theta),2)+'°';
+  buildPlan(B,W,raft,eave);
+  buildSection(run,rise,purl,eave,theta);
+}
+
+function dimLine(x1,y1,x2,y2,label,off,vert){
+  // simple dimension line with ticks
+  const c='#9A867B';
+  let s=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="0.8"/>`;
+  const t=3;
+  if(vert){
+    s+=`<line x1="${x1-t}" y1="${y1}" x2="${x1+t}" y2="${y1}" stroke="${c}" stroke-width="0.8"/>`;
+    s+=`<line x1="${x2-t}" y1="${y2}" x2="${x2+t}" y2="${y2}" stroke="${c}" stroke-width="0.8"/>`;
+    s+=`<text x="${x1-5}" y="${(y1+y2)/2}" font-size="9" text-anchor="end" transform="rotate(-90 ${x1-5} ${(y1+y2)/2})">${label}</text>`;
+  }else{
+    s+=`<line x1="${x1}" y1="${y1-t}" x2="${x1}" y2="${y1+t}" stroke="${c}" stroke-width="0.8"/>`;
+    s+=`<line x1="${x2}" y1="${y2-t}" x2="${x2}" y2="${y2+t}" stroke="${c}" stroke-width="0.8"/>`;
+    s+=`<text x="${(x1+x2)/2}" y="${y1-4}" font-size="9" text-anchor="middle">${label}</text>`;
+  }
+  return s;
+}
+
+function buildPlan(B,W,raft,eave){
+  const pad=46, vw=720, scale=(vw-2*pad)/(B+2*eave);
+  const vh=(W+2*eave)*scale+2*pad+30;
+  const ox=pad+eave*scale, oy=pad+eave*scale;
+  const bx=B*scale, by=W*scale;
+  let s=`<svg class="cad" viewBox="0 0 ${vw} ${vh}">`;
+  // eave outline
+  s+=`<rect x="${pad}" y="${pad}" width="${(B+2*eave)*scale}" height="${(W+2*eave)*scale}" fill="none" stroke="#C9C2B0" stroke-width="0.8" stroke-dasharray="4 3"/>`;
+  // building wall rect (tie beams = green)
+  s+=`<rect x="${ox}" y="${oy}" width="${bx}" height="${by}" fill="#FCFBF7" stroke="#3E7C4F" stroke-width="2"/>`;
+  // ridge line (centered along length, hip roof) — ridge shorter than building by W/2 each end
+  const ridgeY=oy+by/2;
+  const ridgeX1=ox+by/2, ridgeX2=ox+bx-by/2;
+  // hip rafters (corners to ridge ends)
+  s+=`<line x1="${ox}" y1="${oy}" x2="${ridgeX1}" y2="${ridgeY}" stroke="#3D6A8F" stroke-width="1.6"/>`;
+  s+=`<line x1="${ox}" y1="${oy+by}" x2="${ridgeX1}" y2="${ridgeY}" stroke="#3D6A8F" stroke-width="1.6"/>`;
+  s+=`<line x1="${ox+bx}" y1="${oy}" x2="${ridgeX2}" y2="${ridgeY}" stroke="#3D6A8F" stroke-width="1.6"/>`;
+  s+=`<line x1="${ox+bx}" y1="${oy+by}" x2="${ridgeX2}" y2="${ridgeY}" stroke="#3D6A8F" stroke-width="1.6"/>`;
+  // common rafters (perpendicular, both slopes) at spacing
+  for(let x=raft; x<B-0.01; x+=raft){
+    const px=ox+x*scale;
+    if(px>ridgeX1+2 && px<ridgeX2-2){
+      s+=`<line x1="${px}" y1="${oy}" x2="${px}" y2="${ridgeY}" stroke="#1A1915" stroke-width="0.7"/>`;
+      s+=`<line x1="${px}" y1="${oy+by}" x2="${px}" y2="${ridgeY}" stroke="#1A1915" stroke-width="0.7"/>`;
+    }
+  }
+  // purlins (parallel to ridge) on each slope - a few representative lines
+  const nPur=Math.max(2,Math.round((W/2)/ (num('g_purl')||0.34) /3));
+  for(let i=1;i<=3;i++){
+    const yy=oy+by/2 - (by/2)*i/4;
+    s+=`<line x1="${ridgeX1}" y1="${yy}" x2="${ridgeX2}" y2="${yy}" stroke="#9A8C6A" stroke-width="0.6" stroke-dasharray="6 3"/>`;
+    const yy2=oy+by/2 + (by/2)*i/4;
+    s+=`<line x1="${ridgeX1}" y1="${yy2}" x2="${ridgeX2}" y2="${yy2}" stroke="#9A8C6A" stroke-width="0.6" stroke-dasharray="6 3"/>`;
+  }
+  // ridge on top
+  s+=`<line x1="${ridgeX1}" y1="${ridgeY}" x2="${ridgeX2}" y2="${ridgeY}" stroke="#C9633F" stroke-width="2.4"/>`;
+  // king posts at ridge ends
+  s+=`<circle cx="${ridgeX1}" cy="${ridgeY}" r="3.5" fill="#1A1915"/><circle cx="${ridgeX2}" cy="${ridgeY}" r="3.5" fill="#1A1915"/>`;
+  // dimensions
+  s+=dimLine(ox,oy+by+22,ox+bx,oy+by+22,`B = ${f(B,2)} m.`,0,false);
+  s+=dimLine(ox-22,oy,ox-22,oy+by,`W = ${f(W,2)} m.`,0,true);
+  // title block label
+  s+=`<text x="${ox}" y="${vh-8}" font-size="9" fill="#8A867B">ระยะจันทัน @ ${f(raft,2)} m. · ชายคา ${f(eave,2)} m. · หลังคาปั้นหยา</text>`;
+  s+=`</svg>`;
+  $('planSvg').innerHTML=s;
+}
+
+function buildSection(run,rise,purl,eave,theta){
+  const pad=48, vw=720;
+  const span=2*run, totW=span+2*eave*Math.cos(theta);
+  const scale=(vw-2*pad)/totW;
+  const apexH=rise+ (eave*Math.sin(theta));
+  const vh=(rise)*scale+2*pad+60;
+  const baseY=pad+rise*scale+18;
+  const cx=vw/2;
+  const ridgeX=cx, ridgeY=baseY-rise*scale;
+  const leftX=cx-run*scale, rightX=cx+run*scale;
+  // eave points (overhang continues slope downward)
+  const ex=eave*Math.cos(theta)*scale, ey=eave*Math.sin(theta)*scale;
+  let s=`<svg class="cad" viewBox="0 0 ${vw} ${vh}">`;
+  // ground/tie beam
+  s+=`<line x1="${leftX-ex}" y1="${baseY}" x2="${rightX+ex}" y2="${baseY}" stroke="#3E7C4F" stroke-width="2.4"/>`;
+  s+=`<text x="${cx}" y="${baseY+15}" font-size="9" text-anchor="middle" fill="#3E7C4F">อะเส (TIE BEAM)</text>`;
+  // rafters incl overhang
+  s+=`<line x1="${leftX-ex}" y1="${baseY+ey}" x2="${ridgeX}" y2="${ridgeY}" stroke="#1A1915" stroke-width="2"/>`;
+  s+=`<line x1="${rightX+ex}" y1="${baseY+ey}" x2="${ridgeX}" y2="${ridgeY}" stroke="#1A1915" stroke-width="2"/>`;
+  // king post
+  s+=`<line x1="${ridgeX}" y1="${ridgeY}" x2="${ridgeX}" y2="${baseY}" stroke="#C9633F" stroke-width="2.4"/>`;
+  s+=`<text x="${ridgeX+6}" y="${(ridgeY+baseY)/2}" font-size="9" fill="#C9633F">ดั้ง</text>`;
+  // ridge marker
+  s+=`<circle cx="${ridgeX}" cy="${ridgeY}" r="4" fill="#C9633F"/><text x="${ridgeX}" y="${ridgeY-8}" font-size="9" text-anchor="middle" fill="#C9633F">อกไก่</text>`;
+  // purlins as dots along right rafter
+  const Lslope=Math.sqrt(run*run+rise*rise);
+  const nP=Math.floor(Lslope/purl);
+  for(let i=1;i<nP;i++){
+    const tfrac=i*purl/Lslope;
+    const rx=cx+(run*scale)*tfrac, ry=baseY-(rise*scale)*tfrac;
+    const lx=cx-(run*scale)*tfrac;
+    s+=`<circle cx="${rx}" cy="${ry}" r="1.8" fill="#9A8C6A"/>`;
+    s+=`<circle cx="${lx}" cy="${ry}" r="1.8" fill="#9A8C6A"/>`;
+  }
+  s+=`<text x="${(cx+rightX)/2+8}" y="${(baseY+ridgeY)/2-6}" font-size="8.5" fill="#9A8C6A">แป @ ${f(purl,2)}m.</text>`;
+  // angle arc
+  s+=`<path d="M ${leftX-ex+28} ${baseY+ey} A 28 28 0 0 0 ${leftX-ex+28*Math.cos(theta)} ${baseY+ey-28*Math.sin(theta)}" fill="none" stroke="#9A867B" stroke-width="0.8"/>`;
+  s+=`<text x="${leftX-ex+34}" y="${baseY+ey-8}" font-size="9" fill="#55524A">θ=${f(deg(theta),1)}°</text>`;
+  // dimensions
+  s+=dimLine(leftX,baseY+34,rightX,baseY+34,`span = ${f(span,2)} m.`,0,false);
+  s+=dimLine(rightX+ex+22,baseY,rightX+ex+22,ridgeY,`rise = ${f(rise,2)} m.`,0,true);
+  s+=`</svg>`;
+  $('sectSvg').innerHTML=s;
+}
+
+/* ============================================================
+   SECTION DB TABLES
+   ============================================================ */
+function buildDBtables(){
+  const hdr=`<tr><th>หน้าตัด</th><th>A</th><th>w</th><th>Ix</th><th>Iy</th><th>Sx</th><th>Sy</th><th>rx</th><th>ry</th></tr>`;
+  const row=s=>`<tr><td>${s.name}</td><td>${f(s.A,2)}</td><td>${f(s.wt,2)}</td><td>${f(s.Ix,1)}</td><td>${f(s.Iy,1)}</td><td>${f(s.Sx,2)}</td><td>${f(s.Sy,2)}</td><td>${f(s.rx,2)}</td><td>${f(s.ry,2)}</td></tr>`;
+  $('dbLip').innerHTML=hdr+DB.lip.map(row).join('');
+  $('dbTube').innerHTML=hdr+DB.tube.map(row).join('');
+}
+
+/* ============================================================
+   VERIFICATION  vs  ออกแบบชิ้นส่วนหลังคา.xlsx
+   ============================================================ */
+function approx(a,b){ if(Math.abs(b)<1) return Math.abs(a-b)<0.02; return Math.abs(a-b)/Math.abs(b)<=0.005; }
+function runTests(){
+  const M={fy:2400,fu:4000,Es:2100000,Fb:1440,Fbx:1440,Fby:1800,Fv:960};
+  const T=[];
+  const add=(member,item,calc,ref,unit)=>T.push({member,item,calc,ref,unit,pass:approx(calc,ref)});
+
+  // ---- PURLIN (sheet แป) ----
+  const run=3.2,rise=2,S=0.34,L=1,wind=57.6;
+  const secP=findSec('Tube 75x38x2.3');
+  const theta=Math.atan2(rise,run);
+  const sumW=54+30+6+15+(secP.wt/S)+50;
+  const w=sumW*S;
+  const Wy=w*Math.cos(theta)+wind, Wx=w*Math.sin(theta);
+  const Mx=Wy*L*L/8, My=Wx*L*L/8;
+  const fb=Mx*100/secP.Sx+2*My*100/secP.Sy;
+  const Lcm=L*100;
+  const dy=5*(Wy/100)*Math.pow(Lcm,4)/(384*M.Es*secP.Ix);
+  const dx=5*(Wx/100)*Math.pow(Lcm,4)/(384*M.Es*secP.Iy);
+  const dl=Math.sqrt(dx*dx+dy*dy);
+  add('แป','∑Wcg',sumW,166.206,'kg/m²');
+  add('แป','w = ∑W·S',w,56.51,'kg/m');
+  add('แป','Wy',Wy,105.532,'kg/m');
+  add('แป','Wx',Wx,29.932,'kg/m');
+  add('แป','Mx',Mx,13.19,'kg·m');
+  add('แป','My',My,3.74,'kg·m');
+  add('แป','fb',fb,261.63,'ksc');
+  add('แป','δy',dy,0.018912,'cm');
+  add('แป','δx',dx,0.015466,'cm');
+  add('แป','δ รวม',dl,0.024430,'cm');
+  add('แป','Δ allow=L/360',Lcm/360,0.27778,'cm');
+
+  // ---- RAFTER (จันทัน) : Mmax 236.17, V 256.62, C150x65x20x4 ----
+  let sec=findSec('C 150x65x20x4'), Mm=236.171;
+  add('จันทัน','Sxreq=Mmax/Fb',Mm*100/M.Fb,16.401,'cm³');
+  add('จันทัน','φMn=Fb·Sx',M.Fb*sec.Sx/100,770.4,'kg·m');
+  add('จันทัน','fb=Mmax/Sx',Mm*100/sec.Sx,441.44,'ksc');
+
+  // ---- TIE BEAM (อะเส) wL²/16, C150x75x25x4.5 ----
+  sec=findSec('C 150x75x25x4.5'); const wT=470.5654574622238, LT=4.5;
+  const MmT=wT*LT*LT/16;
+  add('อะเส','Mmax=wL²/16',MmT,595.559,'kg·m');
+  add('อะเส','Sxreq',MmT*100/M.Fb,41.358,'cm³');
+  add('อะเส','φMn=Fb·Sx',M.Fb*sec.Sx/100,963.36,'kg·m');
+  add('อะเส','fb',MmT*100/sec.Sx,890.22,'ksc');
+  const VT=529.3861396450018;
+  add('อะเส','Vt=V/A',VT/sec.A,36.712,'ksc');
+  add('อะเส','Vh=V/(d·tw)',VT/((sec.d/10)*(sec.t/10)),78.428,'ksc');
+
+  // ---- HIP (ตะเฆ่สัน) Mmax 561.70, V 563.36, C150x75x25x4 ----
+  sec=findSec('C 150x75x25x4'); Mm=561.701;
+  add('ตะเฆ่สัน','Sxreq',Mm*100/M.Fb,39.007,'cm³');
+  add('ตะเฆ่สัน','φMn=Fb·Sx',M.Fb*sec.Sx/100,872.64,'kg·m');
+  add('ตะเฆ่สัน','fb',Mm*100/sec.Sx,926.90,'ksc');
+  const VH=563.3561218114604;
+  add('ตะเฆ่สัน','Vt=V/A',VH/sec.A,43.502,'ksc');
+  add('ตะเฆ่สัน','Vh',VH/((sec.d/10)*(sec.t/10)),93.893,'ksc');
+
+  // ---- RIDGE (อกไก่) wL²/8, C75x45x15x2.3 → must FAIL ----
+  sec=findSec('C 75x45x15x2.3'); const wR=298.8513501135688, LR=2;
+  const MmR=wR*LR*LR/8;
+  add('อกไก่','Mmax=wL²/8',MmR,149.426,'kg·m');
+  add('อกไก่','Sxreq',MmR*100/M.Fb,10.377,'cm³');
+  add('อกไก่','φMn=Fb·Sx',M.Fb*sec.Sx/100,142.56,'kg·m');
+  add('อกไก่','fb',MmR*100/sec.Sx,1509.35,'ksc');
+  T.push({member:'อกไก่',item:'ผลตัดสิน (fb>Fb → ไม่ผ่าน)',calc:(MmR*100/sec.Sx>M.Fb)?'ไม่ผ่าน':'ผ่าน',ref:'ไม่ผ่าน',unit:'',pass:(MmR*100/sec.Sx>M.Fb),txt:true});
+
+  // ---- KING POST (ดั้ง) Tube125x75x4, KL/r=43.86 (rx), Pu 1328.41 ----
+  sec=findSec('Tube 125x75x4');
+  const slender=200/sec.rx;  // K=1, L=200, r=rx=4.56
+  const Cc=Math.sqrt(2*Math.PI*Math.PI*M.Es/M.fy);
+  const ratio=slender/Cc;
+  const FS=5/3+3*ratio/8-Math.pow(ratio,3)/8;
+  const Fa=(1-ratio*ratio/2)*M.fy/FS;
+  const P=sec.A*Fa;
+  add('ดั้ง','KL/r (rx)',slender,43.860,'');
+  add('ดั้ง','Cc',Cc,131.422,'');
+  add('ดั้ง','Fa',Fa,1268.12,'ksc');
+  add('ดั้ง','P=A·Fa',P,18958.4,'kg');
+  T.push({member:'ดั้ง',item:'ผลตัดสิน (P>Pu → ผ่าน)',calc:(P>1328.41)?'ผ่าน':'ไม่ผ่าน',ref:'ผ่าน',unit:'',pass:(P>1328.41),txt:true});
+
+  // render
+  const npass=T.filter(t=>t.pass).length;
+  const allPass=npass===T.length;
+  $('testSummary').innerHTML=`
+    <span class="test-pill ${allPass?'ok':'no'}">${allPass?'✓ ผ่านทั้งหมด':'✕ มีรายการไม่ผ่าน'} : ${npass}/${T.length}</span>
+    <span style="font-size:13px;color:var(--ink-soft)">ทดสอบ ${T.length} รายการเทียบกับไฟล์ Excel ต้นฉบับ</span>`;
+  $('testTable').innerHTML=`<tr><th>ชิ้นส่วน</th><th>รายการ</th><th>คำนวณได้</th><th>ค่าอ้างอิง (xlsx)</th><th>หน่วย</th><th>ผล</th></tr>`+
+    T.map(t=>`<tr><td>${t.member}</td><td>${t.item}</td><td class="num">${t.txt?t.calc:f(t.calc, Math.abs(t.ref)<1?5:2)}</td><td class="num">${t.txt?t.ref:f(t.ref,Math.abs(t.ref)<1?5:2)}</td><td>${t.unit}</td><td class="${t.pass?'pass':'fail'}">${t.pass?'✓ PASS':'✕ FAIL'}</td></tr>`).join('');
+}
+
+/* ============================================================
+   PRINT REPORT (A4)
+   ============================================================ */
+function doPrint(){ buildPrint(); window.print(); }
+function buildPrint(){
+  const get=id=>$(id).value;
+  const M=mat();
+  const head=`<div class="pr-head">
+     <div style="display:flex;justify-content:space-between;align-items:flex-start">
+       <div><div class="pr-logo">STEEL ROOF DESIGN</div><div class="pr-title">รายการคำนวณออกแบบโครงสร้างหลังคาเหล็ก (ASD)</div></div>
+       <div style="text-align:right;font-size:9px;color:#555">AISC / วสท. / ดร.มงคล<br>fy=${f(M.fy,0)} · Fb=${f(M.Fb,0)} · Fv=${f(M.Fv,0)} ksc</div>
+     </div>
+     <div class="pr-meta">
+       <div><b>Project:</b> ${get('p_project')}</div><div><b>Engineer:</b> ${get('p_eng')}</div>
+       <div><b>Owner:</b> ${get('p_owner')}</div><div><b>License:</b> ${get('p_lic')}</div>
+       <div><b>Location:</b> ${get('p_loc')}</div><div><b>Date:</b> ${get('p_date')||'-'}</div>
+     </div></div>`;
+  // member blocks: pull from rendered out
+  let blocks='';
+  MEMBERS.forEach(m=>{
+    const r=results[m.key]; if(!r)return;
+    const out=$(m.key+'_out');
+    // extract rows text
+    const rows=[...out.querySelectorAll('.calc-row')].filter(x=>!x.classList.contains('head')).map(x=>{
+      const l=(x.querySelector('.lbl').textContent||'').replace(/\s+/g,' ').trim();
+      const v=(x.querySelector('.val').textContent||'').replace(/\s+/g,' ').trim();
+      return [l,v];
+    });
+    let tbl='<table class="pr-tbl">';
+    for(let i=0;i<rows.length;i+=2){
+      const a=rows[i], b=rows[i+1]||['',''];
+      tbl+=`<tr><td>${a[0]}</td><td>${a[1]}</td><td>${b[0]}</td><td>${b[1]}</td></tr>`;
+    }
+    tbl+='</table>';
+    blocks+=`<div class="pr-member"><h4>${m.icon} ${m.th} (${m.en}) — ${r.sec}
+       <span class="${r.pass?'pr-v-ok':'pr-v-no'}">${r.pass?'✓ ผ่าน':'✕ ไม่ผ่าน'}</span></h4>${tbl}</div>`;
+  });
+  // CAD page
+  const cad=`<div class="pr-page">${head}<h4 style="font-size:13px;margin:6px 0">แบบโครงหลังคา (CAD)</h4>
+     <div class="pr-cad"><div style="font-size:10px;font-weight:600;margin-bottom:3px">รูปแปลนโครงหลังคา (ROOF FRAMING PLAN)</div>${$('planSvg').innerHTML}</div>
+     <div class="pr-cad"><div style="font-size:10px;font-weight:600;margin-bottom:3px">รูปตัดขวาง (ROOF SECTION)</div>${$('sectSvg').innerHTML}</div>
+     <div class="pr-foot">เครื่องมือช่วยออกแบบ — ต้องตรวจทานและรับรองโดยวิศวกรผู้ได้รับใบอนุญาต</div></div>`;
+  $('printReport').innerHTML=`
+     <div class="pr-page">${head}${blocks}
+       <div class="pr-foot">รายการคำนวณตามวิธีหน่วยแรงที่ยอมให้ (ASD) · อ้างอิง AISC, วสท., กฎกระทรวงฉบับที่ 6, มอก.116-2529, ดร.มงคล จิรวัชรเดช</div></div>
+     ${cad}`;
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+window.addEventListener('DOMContentLoaded',()=>{
+  $('p_date').value=new Date().toISOString().slice(0,10);
+  buildTabs();
+  buildDBtables();
+  recalcAll();
+  runTests();
+});
+</script>
+</body>
+</html>

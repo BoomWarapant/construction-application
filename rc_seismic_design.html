@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RC Seismic Dashboard | ผู้ช่วยออกแบบอาคาร คสล. ต้านแผ่นดินไหว (ไม่เกิน 4 ชั้น)</title>
+<!--
+  RC SEISMIC PRELIMINARY DESIGN DASHBOARD
+  ------------------------------------------------------------------
+  แอปไฟล์เดียว (HTML+CSS+JS) สำหรับวิเคราะห์/ตรวจสอบเบื้องต้น
+  อาคารคอนกรีตเสริมเหล็ก (คสล.) ไม่เกิน 4 ชั้น ที่ต้องพิจารณาแรงแผ่นดินไหว
+  อ้างอิงแนวทาง: มยผ.1301/1302-61, กฎกระทรวงแผ่นดินไหว พ.ศ.2564
+  *** เป็นการวิเคราะห์เบื้องต้น (Preliminary) เท่านั้น ไม่ใช่รายการคำนวณขั้นสุดท้าย ***
+-->
+<style>
+/* ============================================================
+   THEME VARIABLES — Anthropic warm & clean
+   ============================================================ */
+:root{
+  --ivory:#faf7f2;
+  --paper:#ffffff;
+  --warm-gray:#6b6358;
+  --warm-gray-light:#9b9286;
+  --soft-brown:#8a6f52;
+  --muted-orange:#c8714a;
+  --muted-orange-soft:#e4a784;
+  --ink:#2b2620;
+  --line:#e7e0d6;
+  --line-strong:#d6cdc0;
+  --bg-soft:#f3ede4;
+  /* status colors */
+  --ok:#5b8c5a;          --ok-bg:#eaf2e9;
+  --warn:#c9991f;        --warn-bg:#fbf3da;
+  --risk:#c8714a;        --risk-bg:#f8e8df;
+  --crit:#b3402f;        --crit-bg:#f7e1dc;
+  --info:#5a7d99;        --info-bg:#e7eef4;
+  --shadow:0 1px 3px rgba(43,38,32,.06),0 4px 16px rgba(43,38,32,.05);
+  --radius:14px;
+  --radius-sm:9px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:"Segoe UI","Sarabun","Tahoma",system-ui,sans-serif;
+  background:var(--ivory);
+  color:var(--ink);
+  line-height:1.55;
+  font-size:15px;
+}
+/* ============================================================ LAYOUT */
+.app{display:flex;min-height:100vh}
+/* Sidebar */
+.sidebar{
+  width:248px;flex-shrink:0;
+  background:linear-gradient(180deg,#fdfbf7,#f5efe6);
+  border-right:1px solid var(--line);
+  padding:20px 14px;position:sticky;top:0;height:100vh;overflow-y:auto;
+}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 8px 16px;border-bottom:1px solid var(--line);margin-bottom:14px}
+.brand .logo{
+  width:38px;height:38px;border-radius:10px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--muted-orange),var(--soft-brown));
+  display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:17px;
+}
+.brand h1{font-size:15px;font-weight:700;color:var(--ink);line-height:1.25}
+.brand small{font-size:11px;color:var(--warm-gray-light);font-weight:400}
+.nav a{
+  display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius-sm);
+  color:var(--warm-gray);text-decoration:none;font-size:13.5px;font-weight:500;margin-bottom:2px;
+  cursor:pointer;transition:.15s;
+}
+.nav a:hover{background:var(--bg-soft);color:var(--ink)}
+.nav a.active{background:var(--muted-orange);color:#fff;box-shadow:var(--shadow)}
+.nav a .ic{width:20px;text-align:center;font-size:14px}
+.nav .grp{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--warm-gray-light);padding:12px 12px 4px;font-weight:700}
+
+/* Main */
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{
+  background:var(--paper);border-bottom:1px solid var(--line);
+  padding:14px 28px;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  position:sticky;top:0;z-index:30;
+}
+.topbar h2{font-size:16px;font-weight:700}
+.topbar .sub{font-size:12px;color:var(--warm-gray-light)}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap}
+.content{padding:24px 28px 60px;max-width:1240px;width:100%}
+
+/* ============================================================ BUTTONS */
+.btn{
+  border:1px solid var(--line-strong);background:var(--paper);color:var(--ink);
+  padding:8px 14px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;
+  display:inline-flex;align-items:center;gap:6px;transition:.15s;font-family:inherit;
+}
+.btn:hover{background:var(--bg-soft);border-color:var(--warm-gray-light)}
+.btn.primary{background:var(--muted-orange);border-color:var(--muted-orange);color:#fff}
+.btn.primary:hover{background:#b35f3a}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--warm-gray)}
+.btn.ghost:hover{background:var(--bg-soft)}
+
+/* ============================================================ CARDS / SECTIONS */
+.section{display:none;animation:fade .25s ease}
+.section.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.section-head{margin-bottom:16px}
+.section-head h3{font-size:20px;font-weight:700}
+.section-head p{font-size:13px;color:var(--warm-gray);margin-top:3px}
+
+.card{
+  background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);
+  padding:20px 22px;box-shadow:var(--shadow);margin-bottom:18px;
+}
+.card h4{font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.card h4 .tag{font-size:11px;font-weight:600;color:var(--warm-gray-light);margin-left:auto}
+.grid{display:grid;gap:14px 18px}
+.grid.c2{grid-template-columns:repeat(2,1fr)}
+.grid.c3{grid-template-columns:repeat(3,1fr)}
+.grid.c4{grid-template-columns:repeat(4,1fr)}
+
+/* Form fields */
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:12.5px;font-weight:600;color:var(--warm-gray)}
+.field .hint{font-size:11px;color:var(--warm-gray-light);font-weight:400}
+.field input,.field select,.field textarea{
+  border:1px solid var(--line-strong);border-radius:8px;padding:8px 10px;font-size:13.5px;
+  font-family:inherit;color:var(--ink);background:var(--paper);transition:.15s;width:100%;
+}
+.field input:focus,.field select:focus,.field textarea:focus{
+  outline:none;border-color:var(--muted-orange);box-shadow:0 0 0 3px rgba(200,113,74,.12)
+}
+.field input[readonly]{background:var(--bg-soft);color:var(--warm-gray);font-weight:600}
+.field textarea{resize:vertical;min-height:62px}
+.inline-unit{position:relative}
+.inline-unit .u{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--warm-gray-light);pointer-events:none}
+
+/* ============================================================ DASHBOARD CARDS */
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:18px}
+.kpi{
+  background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:15px 16px;
+  box-shadow:var(--shadow);position:relative;overflow:hidden;
+}
+.kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--muted-orange-soft)}
+.kpi .k-label{font-size:11.5px;color:var(--warm-gray-light);font-weight:600;margin-bottom:6px}
+.kpi .k-val{font-size:23px;font-weight:700;line-height:1.1}
+.kpi .k-unit{font-size:12px;color:var(--warm-gray-light);font-weight:500}
+.kpi.status-ok::before{background:var(--ok)}
+.kpi.status-warn::before{background:var(--warn)}
+.kpi.status-risk::before{background:var(--risk)}
+.kpi.status-crit::before{background:var(--crit)}
+
+/* ============================================================ BADGES */
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;
+  padding:3px 10px;border-radius:20px;white-space:nowrap}
+.badge::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.9}
+.b-ok{color:var(--ok);background:var(--ok-bg)}
+.b-warn{color:var(--warn);background:var(--warn-bg)}
+.b-risk{color:var(--risk);background:var(--risk-bg)}
+.b-crit{color:var(--crit);background:var(--crit-bg)}
+.b-info{color:var(--info);background:var(--info-bg)}
+.b-muted{color:var(--warm-gray);background:var(--bg-soft)}
+
+/* ============================================================ TABLES */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line)}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--warm-gray-light);font-weight:700;background:var(--bg-soft)}
+tbody tr:hover{background:#fcfaf6}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius-sm)}
+
+/* ============================================================ BAR CHART (div based) */
+.chart{display:flex;align-items:flex-end;gap:14px;height:200px;padding:10px 4px 0;border-bottom:2px solid var(--line-strong)}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;height:100%}
+.bar{width:60%;max-width:60px;background:linear-gradient(180deg,var(--muted-orange),var(--soft-brown));
+  border-radius:6px 6px 0 0;min-height:3px;transition:height .4s ease;position:relative}
+.bar.alt{background:linear-gradient(180deg,#7d97aa,#5a7d99)}
+.bar .bv{position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:700;white-space:nowrap}
+.bar-col .bl{font-size:11.5px;color:var(--warm-gray);font-weight:600}
+
+/* ============================================================ CHECKLIST */
+.checklist .chk-item{display:flex;align-items:flex-start;gap:10px;padding:8px 4px;border-bottom:1px solid var(--line)}
+.checklist .chk-item:last-child{border-bottom:none}
+.checklist input[type=checkbox]{width:18px;height:18px;margin-top:1px;accent-color:var(--muted-orange);cursor:pointer;flex-shrink:0}
+.checklist label{font-size:13.5px;cursor:pointer;color:var(--ink)}
+.progress{height:9px;background:var(--bg-soft);border-radius:20px;overflow:hidden;margin:6px 0}
+.progress > div{height:100%;background:linear-gradient(90deg,var(--muted-orange),var(--soft-brown));border-radius:20px;transition:width .4s}
+.prog-label{display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:var(--warm-gray)}
+
+/* ============================================================ LOAD PATH DIAGRAM */
+.flow{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px;padding:8px 0}
+.flow .node{background:var(--bg-soft);border:1.5px solid var(--line-strong);border-radius:10px;
+  padding:12px 16px;text-align:center;font-size:13px;font-weight:600;min-width:96px}
+.flow .node .ico{font-size:20px;display:block;margin-bottom:3px}
+.flow .arrow{color:var(--muted-orange);font-size:22px;font-weight:700}
+
+/* ============================================================ RISK MATRIX */
+.matrix{display:grid;grid-template-columns:auto repeat(3,1fr);gap:4px;font-size:12px}
+.matrix .mh{font-weight:700;color:var(--warm-gray);text-align:center;padding:6px;font-size:11px}
+.matrix .ml{font-weight:700;color:var(--warm-gray);padding:6px;display:flex;align-items:center}
+.matrix .cell{padding:14px 6px;border-radius:8px;text-align:center;font-weight:600;color:#fff;font-size:11.5px;position:relative}
+.matrix .cell.active{outline:3px solid var(--ink);outline-offset:-1px;box-shadow:0 0 0 4px rgba(43,38,32,.15)}
+.m-low{background:#7aa86f}.m-mod{background:#d9b53f}.m-high{background:#d08a4e}.m-crit{background:#bd4a39}
+
+/* ============================================================ ALERTS */
+.alert{display:flex;gap:10px;padding:11px 14px;border-radius:var(--radius-sm);font-size:13px;margin-bottom:9px;border:1px solid transparent}
+.alert .ai{font-size:16px;flex-shrink:0}
+.a-warn{background:var(--warn-bg);border-color:#e6d49a;color:#7a5e10}
+.a-risk{background:var(--risk-bg);border-color:#e8c4ad;color:#8a4426}
+.a-crit{background:var(--crit-bg);border-color:#e6b3a8;color:#8a2c1e}
+.a-ok{background:var(--ok-bg);border-color:#bcd6ba;color:#3c5e3b}
+.a-info{background:var(--info-bg);border-color:#bcd0de;color:#3c5972}
+.empty{color:var(--warm-gray-light);font-size:13px;font-style:italic;padding:8px 0}
+
+/* Disclaimer banner */
+.disclaimer{background:#fff7ef;border:1px solid #ecd3bd;border-left:4px solid var(--muted-orange);
+  border-radius:var(--radius-sm);padding:12px 16px;font-size:12.5px;color:#7a5238;margin-bottom:18px;display:flex;gap:10px}
+.disclaimer b{color:#62402a}
+
+/* score ring */
+.score-ring{display:flex;align-items:center;gap:18px}
+.ring{width:96px;height:96px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  background:conic-gradient(var(--muted-orange) var(--p),var(--bg-soft) 0)}
+.ring .inner{width:74px;height:74px;border-radius:50%;background:var(--paper);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring .inner b{font-size:22px}.ring .inner small{font-size:10px;color:var(--warm-gray-light)}
+
+.rec-list li{margin:0 0 8px 18px;font-size:13px}
+.divider{height:1px;background:var(--line);margin:16px 0}
+.muted{color:var(--warm-gray-light)}
+.tiny{font-size:11.5px}
+.row-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+
+/* ============================================================ REPORT */
+#report-output{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:30px 34px;box-shadow:var(--shadow)}
+#report-output h2{font-size:21px;border-bottom:2px solid var(--muted-orange);padding-bottom:8px;margin-bottom:4px}
+#report-output h3{font-size:15px;margin:20px 0 8px;color:var(--soft-brown);border-left:3px solid var(--muted-orange);padding-left:8px}
+.rep-meta{font-size:12px;color:var(--warm-gray-light);margin-bottom:6px}
+.rep-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:4px 24px;font-size:13px}
+.rep-grid div{display:flex;justify-content:space-between;border-bottom:1px dotted var(--line);padding:4px 0}
+.rep-grid div span:last-child{font-weight:600}
+
+/* ============================================================ RESPONSIVE */
+@media(max-width:980px){
+  .sidebar{width:62px;padding:16px 8px}
+  .brand h1,.brand small,.nav a span.txt,.nav .grp{display:none}
+  .nav a{justify-content:center}
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .grid.c3,.grid.c4{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:620px){
+  .grid.c2,.grid.c3,.grid.c4{grid-template-columns:1fr}
+  .kpi-grid{grid-template-columns:1fr}
+  .content{padding:16px}
+  .rep-grid{grid-template-columns:1fr}
+}
+
+/* ============================================================ PRINT */
+@media print{
+  @page{size:A4 portrait;margin:12mm}
+  .sidebar,.topbar,.toolbar,.no-print{display:none!important}
+  html,body{background:#fff;font-size:10.5px;line-height:1.4}
+  .app,.main{display:block}
+  .content{padding:0;max-width:100%;width:100%}
+  .section{display:none!important}
+  #section-report{display:block!important}
+  #report-print-area,#report-print-area *{visibility:visible}
+  #report-output{box-shadow:none;border:none;padding:0;width:100%}
+  #report-output h2{font-size:16px;margin-bottom:2px}
+  #report-output h3{font-size:12px;margin:10px 0 4px}
+  .rep-grid{grid-template-columns:repeat(2,1fr);gap:2px 16px;font-size:10px}
+  .rep-grid div{padding:2px 0}
+  .table-wrap{overflow:visible;border:none}
+  table{font-size:9.5px}
+  th,td{padding:4px 6px}
+  #report-output,.disclaimer{break-inside:avoid}
+  .disclaimer{font-size:9px;padding:8px 10px}
+  .rec-list li{font-size:9.5px;margin-bottom:3px}
+  h2,h3{break-after:avoid}
+  tr,img{break-inside:avoid}
+  a{color:inherit;text-decoration:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ====================== SIDEBAR ====================== -->
+  <aside class="sidebar no-print">
+    <div class="brand">
+      <div class="logo">คส</div>
+      <div>
+        <h1>RC Seismic</h1>
+        <small>ผู้ช่วยออกแบบเบื้องต้น</small>
+      </div>
+    </div>
+    <nav class="nav" id="nav">
+      <div class="grp">ข้อมูลนำเข้า</div>
+      <a data-sec="project" class="active"><span class="ic">📋</span><span class="txt">1. ข้อมูลโครงการ</span></a>
+      <a data-sec="criteria"><span class="ic">📐</span><span class="txt">2. เกณฑ์ออกแบบ/วัสดุ</span></a>
+      <a data-sec="loads"><span class="ic">⚖️</span><span class="txt">3. น้ำหนักบรรทุก</span></a>
+      <a data-sec="seismic"><span class="ic">🌐</span><span class="txt">4. แรงแผ่นดินไหว</span></a>
+      <a data-sec="system"><span class="ic">🏗️</span><span class="txt">5. ระบบโครงสร้าง</span></a>
+      <div class="grp">วิเคราะห์ & ตรวจสอบ</div>
+      <a data-sec="dashboard"><span class="ic">📊</span><span class="txt">6. Analysis Dashboard</span></a>
+      <a data-sec="member"><span class="ic">✅</span><span class="txt">7. องค์อาคาร คสล.</span></a>
+      <a data-sec="detailing"><span class="ic">🔩</span><span class="txt">8. Seismic Detailing</span></a>
+      <a data-sec="foundation"><span class="ic">🧱</span><span class="txt">9. ฐานราก</span></a>
+      <a data-sec="risk"><span class="ic">⚠️</span><span class="txt">10. ความเสี่ยง & เตือน</span></a>
+      <div class="grp">ผลลัพธ์</div>
+      <a data-sec="report"><span class="ic">📄</span><span class="txt">11. รายงานสรุป</span></a>
+    </nav>
+  </aside>
+
+  <!-- ====================== MAIN ====================== -->
+  <div class="main">
+    <header class="topbar no-print">
+      <div>
+        <h2 id="top-title">ข้อมูลโครงการ</h2>
+        <div class="sub">Preliminary Seismic Design Dashboard · อาคาร คสล. ไม่เกิน 4 ชั้น</div>
+      </div>
+      <div class="toolbar">
+        <button class="btn primary" onclick="analyze()">▶ วิเคราะห์ผล</button>
+        <button class="btn" onclick="goto('report');generateReport()">📄 สร้างรายงาน</button>
+        <button class="btn" onclick="window.print()">🖨️ Print / PDF</button>
+        <button class="btn ghost" onclick="resetAll()">↺ Reset</button>
+      </div>
+    </header>
+
+    <main class="content">
+      <div class="disclaimer no-print">
+        <span>⚠️</span>
+        <div><b>ข้อจำกัดความรับผิดชอบ:</b> ผลลัพธ์ทั้งหมดเป็นเพียงการวิเคราะห์เบื้องต้น (Preliminary Analysis / Conceptual)
+        เพื่อช่วยจัดทำ Checklist และตรวจประเด็นสำคัญเท่านั้น <b>มิใช่รายการคำนวณโครงสร้างขั้นสุดท้าย</b>
+        การออกแบบจริงต้องเป็นไปตาม มยผ.1301/1302-61, มาตรฐานคอนกรีตเสริมเหล็ก, กฎกระทรวงควบคุมอาคารและกฎหมายแผ่นดินไหว พ.ศ.2564
+        และ<b>ต้องผ่านการตรวจสอบลงนามโดยวิศวกรโยธาผู้ได้รับใบอนุญาต (สามัญ/วุฒิวิศวกร)</b> ก่อนนำไปก่อสร้างจริง</div>
+      </div>
+
+      <!-- ============ 1. PROJECT ============ -->
+      <section class="section active" id="section-project">
+        <div class="section-head"><h3>1. ข้อมูลโครงการ</h3><p>กรอกข้อมูลพื้นฐานของอาคาร — ความสูงรวมและพื้นที่รวมจะคำนวณอัตโนมัติ</p></div>
+        <div class="card">
+          <h4>⚡ โหลดค่าตัวอย่างจากรายการคำนวณ</h4>
+          <div class="grid c2">
+            <div class="field"><label>เลือกอาคารตัวอย่าง (preset)</label>
+              <select id="preset" onchange="applyPreset()">
+                <option value="">— กรอกเอง (Custom) —</option>
+                <option value="A">อาคาร A (W=947.8 ตัน, H=11.95 ม.)</option>
+                <option value="B">อาคาร B (W=941.3 ตัน, H=11.95 ม.)</option>
+                <option value="C">อาคาร C (W=645.6 ตัน, H=11.95 ม.)</option>
+                <option value="D">อาคาร D (W=853.7 ตัน, H=11.95 ม.)</option>
+                <option value="H">อาคาร H (W=162.0 ตัน, H=3.00 ม.)</option>
+                <option value="K">อาคาร K (W=443.0 ตัน, H=11.95 ม.)</option>
+              </select></div>
+          </div>
+        </div>
+        <div class="card">
+          <h4>📋 รายละเอียดโครงการ</h4>
+          <div class="grid c3">
+            <div class="field"><label>ชื่อโครงการ</label><input id="p_name" value="อาคารพักอาศัย 4 ชั้น ตัวอย่าง"></div>
+            <div class="field"><label>ที่ตั้งโครงการ</label><input id="p_loc" value="อ.เมือง จ.เชียงใหม่"></div>
+            <div class="field"><label>ประเภทอาคาร</label><input id="p_type" value="อาคาร คสล. หล่อในที่"></div>
+            <div class="field"><label>ประเภทการใช้งาน</label>
+              <select id="p_use">
+                <option>บ้านพักอาศัย</option>
+                <option selected>อาคารอยู่อาศัยรวม</option>
+                <option>อาคารสำนักงาน</option>
+                <option>อาคารพาณิชย์</option>
+                <option>โรงเรียน/สถานศึกษา</option>
+                <option>อาคารสาธารณะ/ชุมนุมคน</option>
+                <option>โรงพยาบาล/อาคารจำเป็นต่อภัยพิบัติ</option>
+              </select>
+            </div>
+            <div class="field"><label>จำนวนชั้น <span class="hint">(สูงสุด 4 ชั้น)</span></label><input type="number" id="p_floors" value="4" min="1" max="8" step="1"></div>
+            <div class="field"><label>ความสูงต่อชั้น (m)</label><input type="number" id="p_h" value="3.20" step="0.1"></div>
+            <div class="field"><label>ความสูงรวมอาคาร (m)</label><input id="p_htot" readonly></div>
+            <div class="field"><label>พื้นที่ต่อชั้น (m²)</label><input type="number" id="p_area" value="280" step="1"></div>
+            <div class="field"><label>พื้นที่รวมอาคาร (m²)</label><input id="p_areatot" readonly></div>
+            <div class="field"><label>ระบบโครงสร้างหลัก</label>
+              <select id="p_struct">
+                <option selected>Moment Resisting Frame (โครงข้อแข็ง)</option>
+                <option>Shear Wall System (ผนังรับแรงเฉือน)</option>
+                <option>Dual System (ผสม)</option>
+                <option>Beam-Column Frame</option>
+                <option>Flat Slab with Frame</option>
+                <option>Slab-Beam-Column System</option>
+              </select>
+            </div>
+            <div class="field"><label>มีรายงานเจาะสำรวจดิน (Soil Report)?</label>
+              <select id="p_soil"><option value="yes">มี</option><option value="no" selected>ยังไม่มี</option></select>
+            </div>
+          </div>
+          <div class="field" style="margin-top:14px"><label>หมายเหตุโครงการ</label><textarea id="p_note">อาคารตัวอย่างสำหรับสาธิตการใช้งาน Dashboard</textarea></div>
+        </div>
+      </section>
+
+      <!-- ============ 2. CRITERIA / MATERIAL ============ -->
+      <section class="section" id="section-criteria">
+        <div class="section-head"><h3>2. เกณฑ์การออกแบบ & วัสดุ</h3><p>กำหนดคุณสมบัติวัสดุและเกณฑ์อ้างอิงมาตรฐาน</p></div>
+        <div class="card">
+          <h4>🧪 คุณสมบัติวัสดุ</h4>
+          <div class="grid c3">
+            <div class="field"><label>กำลังอัดคอนกรีต f'c (ksc)</label><input type="number" id="m_fc" value="280"></div>
+            <div class="field"><label>กำลังครากเหล็ก fy (ksc)</label><input type="number" id="m_fy" value="4000"></div>
+            <div class="field"><label>หน่วยน้ำหนักคอนกรีต (t/m³)</label><input type="number" id="m_uc" value="2.40" step="0.01"></div>
+            <div class="field"><label>ระยะหุ้มคอนกรีต Cover (cm)</label><input type="number" id="m_cover" value="2.5" step="0.5"></div>
+            <div class="field"><label>น้ำหนักวัสดุปิดผิว (kg/m²)</label><input type="number" id="m_finish" value="120"></div>
+            <div class="field"><label>หน่วยน้ำหนักผนัง (kg/m²)</label><input type="number" id="m_wall" value="180"></div>
+          </div>
+        </div>
+        <div class="card">
+          <h4>📐 เกณฑ์อ้างอิง</h4>
+          <div class="grid c2">
+            <div class="field"><label>มาตรฐานออกแบบแผ่นดินไหว</label>
+              <select id="c_std"><option selected>มยผ.1301/1302-61</option><option>มยผ.1302-52</option><option>กฎกระทรวง พ.ศ.2564</option></select></div>
+            <div class="field"><label>มาตรฐานคอนกรีตเสริมเหล็ก</label>
+              <select id="c_rc"><option selected>วิธีกำลัง (SDM/USD)</option><option>วิธีหน่วยแรงใช้งาน (WSD)</option></select></div>
+            <div class="field"><label>ระดับความเหนียวของโครงสร้าง</label>
+              <select id="c_duct"><option>โครงสร้างความเหนียวจำกัด (IMRF)</option><option selected>ความเหนียวปานกลาง (Intermediate)</option><option>ความเหนียวพิเศษ (Special)</option></select></div>
+            <div class="field"><label>ขอบเขตจำกัดการเซ (Drift Limit)</label>
+              <select id="c_drift"><option value="0.005">0.005 (เข้มงวด)</option><option value="0.010">0.010 (อาคารทั่วไป)</option><option value="0.020" selected>0.020 (มยผ. โครงข้อแข็ง)</option><option value="0.025">0.025</option></select></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 3. LOADS ============ -->
+      <section class="section" id="section-loads">
+        <div class="section-head"><h3>3. ข้อมูลน้ำหนักบรรทุก</h3><p>กรอกน้ำหนักบรรทุกแนวดิ่งและแรงด้านข้าง พร้อม Load Combination</p></div>
+        <div class="card">
+          <h4>⚖️ น้ำหนักบรรทุก (kg/m²)</h4>
+          <div class="grid c4">
+            <div class="field"><label>Dead Load (พื้น คสล.)</label><input type="number" id="l_dl" value="360"></div>
+            <div class="field"><label>Superimposed DL</label><input type="number" id="l_sdl" value="500"></div>
+            <div class="field"><label>Live Load</label><input type="number" id="l_ll" value="300"></div>
+            <div class="field"><label>Roof Load</label><input type="number" id="l_roof" value="100"></div>
+            <div class="field"><label>Wall Load (เฉลี่ย)</label><input type="number" id="l_wallload" value="120"></div>
+            <div class="field"><label>Wind Load (kg/m²)</label><input type="number" id="l_wind" value="80"></div>
+          </div>
+        </div>
+        <div class="card">
+          <h4>🧮 Load Combination</h4>
+          <div class="grid c2">
+            <div class="field"><label>Combination สำหรับ Gravity</label>
+              <input id="l_combg" value="1.4DL + 1.7LL"></div>
+            <div class="field"><label>Combination สำหรับ Seismic</label>
+              <input id="l_combe" value="1.2DL + 1.0LL ± 1.0E"></div>
+          </div>
+          <div class="alert a-info" style="margin-top:12px"><span class="ai">ℹ️</span>
+            <div>Mass Source สำหรับแผ่นดินไหวโดยทั่วไปใช้ <b>Dead Load + Superimposed DL + สัดส่วน Live Load</b> (มยผ. ใช้ 100%DL ; LL บางส่วนตามการใช้งาน)</div></div>
+        </div>
+      </section>
+
+      <!-- ============ 4. SEISMIC ============ -->
+      <section class="section" id="section-seismic">
+        <div class="section-head"><h3>4. ข้อมูลแรงแผ่นดินไหว</h3><p>วิธีออกแบบสเปกตรัมการตอบสนอง (Response Spectrum) ตาม มยผ.1302-61 / ASCE 7-10 — เหมือนรายการคำนวณ Star 8</p></div>
+        <div class="card">
+          <h4>🌐 ความเร่งตอบสนองเชิงสเปกตรัมตามที่ตั้ง (Mapped) <span class="tag">มยผ.1302-61</span></h4>
+          <div class="grid c2" style="margin-bottom:14px">
+            <div class="field"><label>จังหวัด <span class="hint">(เลือกเพื่อดึง Ss, S1 อัตโนมัติ)</span></label>
+              <select id="s_prov" onchange="onProvChange()"></select></div>
+            <div class="field"><label>อำเภอ</label>
+              <select id="s_amphoe" onchange="onAmphoeChange()"></select></div>
+          </div>
+          <div class="grid c3">
+            <div class="field"><label>Ss / Sas (g) <span class="hint">ที่คาบสั้น</span></label><input type="number" id="s_ss" value="0.927" step="0.001"></div>
+            <div class="field"><label>S1 / Sa1 (g) <span class="hint">ที่คาบ 1 วินาที</span></label><input type="number" id="s_s1" value="0.236" step="0.001"></div>
+            <div class="field"><label>ประเภทชั้นดิน (Site Class)</label>
+              <select id="s_site"><option>A — หินแข็งมาก</option><option>B — หินแข็ง</option><option>C — ดินแน่น/หินอ่อน</option><option selected>D — ดินแข็งปานกลาง</option><option>E — ดินอ่อน</option><option>F — ดินพิเศษ ต้องวิเคราะห์เฉพาะ</option></select></div>
+          </div>
+          <div class="alert a-info" style="margin-top:12px"><span class="ai">ℹ️</span>
+            <div>เลือก <b>จังหวัด/อำเภอ</b> แล้วโปรแกรมจะดึงค่า Ss, S1 ตาม <b>มยผ.1302-61 ตารางที่ 1</b> ให้อัตโนมัติ (พิมพ์ทับแก้เองได้) — ค่าตั้งต้น อ.สารภี จ.เชียงใหม่ = 0.927 / 0.236</div></div>
+        </div>
+        <div class="card">
+          <h4>📐 ค่าความเร่งตอบสนองเชิงสเปกตรัมสำหรับออกแบบ (คำนวณอัตโนมัติ)</h4>
+          <div class="grid c4">
+            <div class="field"><label>Fa <span class="hint">(จาก Site Class)</span></label><input id="s_fa" readonly></div>
+            <div class="field"><label>Fv <span class="hint">(จาก Site Class)</span></label><input id="s_fv" readonly></div>
+            <div class="field"><label>Sms = Fa·Ss (g)</label><input id="s_sms" readonly></div>
+            <div class="field"><label>Sm1 = Fv·S1 (g)</label><input id="s_sm1" readonly></div>
+            <div class="field"><label>Sds = ⅔·Sms (g)</label><input id="s_sds" readonly></div>
+            <div class="field"><label>Sd1 = ⅔·Sm1 (g)</label><input id="s_sd1" readonly></div>
+            <div class="field"><label>T0 = 0.2·Ts (s)</label><input id="s_t0" readonly></div>
+            <div class="field"><label>Ts = Sd1/Sds (s)</label><input id="s_ts" readonly></div>
+          </div>
+        </div>
+        <div class="card">
+          <h4>🏗️ ตัวประกอบโครงสร้าง & คาบการสั่น <span class="tag">default คำนวณอัตโนมัติ · แก้ไขได้</span></h4>
+          <div class="alert a-info" style="margin-bottom:12px"><span class="ai">ℹ️</span>
+            <div>ค่า <b>Ie, R, Ω₀, Cd, Ct, x</b> โปรแกรม<b>ตั้งให้อัตโนมัติ</b>ตามประเภทการใช้งานอาคาร / ระบบรับแรง / ระดับความเหนียว (มยผ. ตารางที่ 6 และ 9) — พิมพ์ทับเพื่อแก้เองได้ &nbsp;<button class="btn ghost" style="padding:3px 10px;font-size:12px" onclick="resetFactors()">↺ คืนค่าอัตโนมัติ</button></div></div>
+          <div class="grid c4">
+            <div class="field"><label>Importance Factor (Ie)</label><input type="number" id="s_I" value="1.0" step="0.05"></div>
+            <div class="field"><label>Response Modification (R)</label><input type="number" id="s_R" value="5.0" step="0.5">
+              <span class="hint">RC IMRF ≈ 5</span></div>
+            <div class="field"><label>Overstrength (Ω₀)</label><input type="number" id="s_omega" value="2.5" step="0.5"></div>
+            <div class="field"><label>Deflection Ampl. (Cd)</label><input type="number" id="s_cd" value="4.5" step="0.5"></div>
+            <div class="field"><label>Ct (สปส.คาบ)</label><input type="number" id="s_ct" value="0.02" step="0.001"><span class="hint">T = Ct·H^x</span></div>
+            <div class="field"><label>x (เลขชี้กำลัง)</label><input type="number" id="s_x" value="1.0" step="0.05"></div>
+            <div class="field"><label>คาบการสั่น T1 (s) <span class="hint">(เว้นว่าง=ใช้ Ct·H^x)</span></label><input type="number" id="s_T1" placeholder="auto" step="0.001"></div>
+            <div class="field"><label>สัดส่วน Live load ใน Mass (%)</label><input type="number" id="s_llmass" value="25" step="5"></div>
+          </div>
+          <div class="divider"></div>
+          <div class="grid c3">
+            <div class="field"><label>Drift Limit – Ultimate (ratio)</label><input type="number" id="s_driftlim" value="0.020" step="0.001"><span class="hint">มยผ. = 0.02·hsx</span></div>
+            <div class="field"><label>Drift Limit – Service</label><input id="s_driftserv" value="H/500" readonly></div>
+            <div class="field"><label>น้ำหนักอาคารรวม W (ตัน) <span class="hint">(เว้นว่าง=คำนวณอัตโนมัติ)</span></label><input type="number" id="s_W" placeholder="auto"></div>
+          </div>
+        </div>
+        <div class="card">
+          <h4>🔻 ความไม่สม่ำเสมอของอาคาร (Irregularity)</h4>
+          <div class="grid c3">
+            <div class="field"><label>Soft Story (ชั้นอ่อน)</label><select id="ir_soft"><option value="no" selected>ไม่มี</option><option value="yes">มี</option></select></div>
+            <div class="field"><label>Weak Story (ชั้นกำลังต่ำ)</label><select id="ir_weak"><option value="no" selected>ไม่มี</option><option value="yes">มี</option></select></div>
+            <div class="field"><label>Torsional Irregularity</label><select id="ir_tor"><option value="no" selected>ไม่มี</option><option value="yes">มี</option></select></div>
+            <div class="field"><label>Vertical Irregularity</label><select id="ir_vert"><option value="no" selected>ไม่มี</option><option value="yes">มี</option></select></div>
+            <div class="field"><label>Horizontal Irregularity</label><select id="ir_horz"><option value="no" selected>ไม่มี</option><option value="yes">มี</option></select></div>
+            <div class="field"><label>ชั้นล่างเปิดโล่ง (เสี่ยง Soft Story)</label><select id="ir_open"><option value="no" selected>ไม่มี</option><option value="yes">มี</option></select></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 5. STRUCTURAL SYSTEM ============ -->
+      <section class="section" id="section-system">
+        <div class="section-head"><h3>5. ระบบโครงสร้าง & Load Path</h3><p>เลือกระบบรับแรงและฐานราก พร้อมยืนยันแนวทางการถ่ายแรง</p></div>
+        <div class="card">
+          <h4>🏗️ ระบบรับแรง</h4>
+          <div class="grid c2">
+            <div class="field"><label>ระบบรับแรงด้านข้าง (Lateral System)</label>
+              <select id="sy_lat">
+                <option>Moment Resisting Frame</option>
+                <option>Shear Wall System</option>
+                <option>Dual System (Frame + Shear Wall)</option>
+                <option>Beam-Column Frame</option>
+                <option>Flat Slab with Frame</option>
+                <option>Slab-Beam-Column System</option>
+              </select></div>
+            <div class="field"><label>ระบบฐานราก (Foundation System)</label>
+              <select id="sy_found">
+                <option>Isolated Footing (ฐานแผ่เดี่ยว)</option>
+                <option>Combined Footing</option>
+                <option>Mat Foundation</option>
+                <option selected>Pile Foundation (เสาเข็ม)</option>
+                <option>Pile Cap with Tie Beam</option>
+              </select></div>
+            <div class="field"><label>มี Tie Beam เชื่อมฐานราก?</label>
+              <select id="sy_tie"><option value="yes" selected>มี</option><option value="no">ไม่มี</option></select></div>
+            <div class="field"><label>ยืนยัน Load Path ต่อเนื่อง?</label>
+              <select id="sy_path"><option value="yes" selected>ยืนยันแล้ว</option><option value="no">ยังไม่ได้ตรวจ</option></select></div>
+          </div>
+        </div>
+        <div class="card">
+          <h4>🔁 แนวทางการถ่ายแรง (Load Path)</h4>
+          <div class="flow">
+            <div class="node"><span class="ico">▦</span>พื้น<br>Slab</div>
+            <div class="arrow">→</div>
+            <div class="node"><span class="ico">▬</span>คาน<br>Beam</div>
+            <div class="arrow">→</div>
+            <div class="node"><span class="ico">▮</span>เสา / ผนังรับแรงเฉือน<br>Column / Wall</div>
+            <div class="arrow">→</div>
+            <div class="node"><span class="ico">▣</span>ฐานราก<br>Foundation</div>
+            <div class="arrow">→</div>
+            <div class="node"><span class="ico">▢</span>ดิน<br>Soil</div>
+          </div>
+          <p class="tiny muted" style="text-align:center;margin-top:8px">แรงโน้มถ่วงและแรงด้านข้างต้องถ่ายลงสู่ดินอย่างต่อเนื่อง ไม่ขาดช่วง (Continuous Load Path)</p>
+        </div>
+      </section>
+
+      <!-- ============ 6. DASHBOARD ============ -->
+      <section class="section" id="section-dashboard">
+        <div class="section-head"><h3>6. Analysis Dashboard</h3><p>ผลวิเคราะห์เบื้องต้น — กด "▶ วิเคราะห์ผล" เพื่ออัปเดตทุกครั้งที่แก้ค่า</p></div>
+        <div class="kpi-grid" id="kpi-grid"></div>
+
+        <div class="grid c2">
+          <div class="card">
+            <h4>📈 Story Shear (ตัน)</h4>
+            <div class="chart" id="chart-shear"></div>
+          </div>
+          <div class="card">
+            <h4>📉 Story Drift Ratio</h4>
+            <div class="chart" id="chart-drift"></div>
+          </div>
+        </div>
+
+        <div class="grid c2">
+          <div class="card">
+            <h4>🎯 Risk Matrix</h4>
+            <div class="matrix" id="risk-matrix"></div>
+            <p class="tiny muted" style="margin-top:10px">แกนนอน = โอกาส/ความไม่สม่ำเสมอ · แกนตั้ง = ผลกระทบจากความรุนแรงแผ่นดินไหว/ชั้นดิน</p>
+          </div>
+          <div class="card">
+            <h4>🧭 Design Readiness Score</h4>
+            <div class="score-ring">
+              <div class="ring" id="ring" style="--p:0deg"><div class="inner"><b id="ring-val">0%</b><small>ความพร้อม</small></div></div>
+              <div>
+                <div id="readiness-badge"></div>
+                <p class="tiny muted" style="margin-top:8px">คำนวณจาก: ความครบของ Checklist ทั้ง 7 หมวด + การผ่านเกณฑ์ความเสี่ยง</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid c2">
+          <div class="card"><h4>📥 ตารางสรุป Input</h4><div class="table-wrap"><table id="tbl-input"></table></div></div>
+          <div class="card"><h4>📤 ตารางผลวิเคราะห์เบื้องต้น</h4><div class="table-wrap"><table id="tbl-output"></table></div></div>
+        </div>
+
+        <div class="card">
+          <h4>💡 คำแนะนำอัตโนมัติ (Recommendations)</h4>
+          <ul class="rec-list" id="rec-list"></ul>
+        </div>
+      </section>
+
+      <!-- ============ 7. MEMBER CHECKLIST ============ -->
+      <section class="section" id="section-member">
+        <div class="section-head"><h3>7. Checklist องค์อาคาร คสล. & ข้อมูลตั้งต้น/แรง</h3><p>ติ๊กรายการที่ตรวจสอบแล้ว ระบบจะคำนวณ % ความพร้อมแต่ละหมวด</p></div>
+        <div id="cl-group-1"></div>
+        <div id="cl-group-2"></div>
+        <div id="cl-group-3"></div>
+        <div id="cl-group-4"></div>
+      </section>
+
+      <!-- ============ 8. SEISMIC DETAILING ============ -->
+      <section class="section" id="section-detailing">
+        <div class="section-head"><h3>8. Checklist รายละเอียดเหล็กเสริมต้านแผ่นดินไหว</h3><p>การให้รายละเอียดเพื่อความเหนียว (Ductile Detailing) ตาม มยผ.1301/1302-61</p></div>
+        <div id="cl-group-5"></div>
+      </section>
+
+      <!-- ============ 9. FOUNDATION ============ -->
+      <section class="section" id="section-foundation">
+        <div class="section-head"><h3>9. Checklist ฐานราก & เอกสารออกแบบ</h3><p>ตรวจสอบกำลังรับน้ำหนัก การถ่ายแรงด้านข้าง และความครบของเอกสาร</p></div>
+        <div id="cl-group-6"></div>
+        <div id="cl-group-7"></div>
+      </section>
+
+      <!-- ============ 10. RISK ============ -->
+      <section class="section" id="section-risk">
+        <div class="section-head"><h3>10. ความเสี่ยง & คำเตือน</h3><p>สรุประดับความเสี่ยงรวมและรายการที่ต้องตรวจสอบเป็นพิเศษ</p></div>
+        <div class="card">
+          <h4>🚦 ระดับความเสี่ยงรวม (Overall Seismic Risk)</h4>
+          <div id="risk-overall"></div>
+        </div>
+        <div class="card"><h4>⛔ Critical Issues</h4><div id="list-crit"></div></div>
+        <div class="card"><h4>⚠️ Warnings</h4><div id="list-warn"></div></div>
+        <div class="card"><h4>✔️ รายการที่ผ่านเบื้องต้น</h4><div id="list-ok"></div></div>
+      </section>
+
+      <!-- ============ 11. REPORT ============ -->
+      <section class="section" id="section-report">
+        <div class="section-head no-print"><h3>11. รายงานสรุป</h3><p>กดสร้างรายงาน แล้วใช้ปุ่ม Print เพื่อบันทึกเป็น PDF</p></div>
+        <div class="row-actions no-print">
+          <button class="btn primary" onclick="generateReport()">🔄 สร้าง/อัปเดตรายงาน</button>
+          <button class="btn" onclick="window.print()">🖨️ Print / Export PDF</button>
+        </div>
+        <div id="report-print-area">
+          <div id="report-output"><p class="empty">กดปุ่ม "สร้าง/อัปเดตรายงาน" เพื่อแสดงรายงานสรุปภาษาไทย</p></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   UTILITIES
+   ============================================================ */
+const $=id=>document.getElementById(id);
+const val=id=>{const e=$(id);return e?e.value:''};
+const num=id=>{const v=parseFloat(val(id));return isNaN(v)?0:v};
+const fmt=(n,d=2)=>isNaN(n)?'-':Number(n).toLocaleString('th-TH',{minimumFractionDigits:d,maximumFractionDigits:d});
+const fmt0=n=>fmt(n,0);
+
+/* ============================================================
+   CHECKLIST DEFINITIONS (7 หมวด ตาม spec)
+   ============================================================ */
+const CHECKLISTS={
+  1:{title:'Checklist ข้อมูลตั้งต้น',icon:'📁',target:'cl-group-1',items:[
+    'มีแบบสถาปัตยกรรม','มีผัง Grid Line','มีข้อมูลระดับอาคาร','มี Soil Report',
+    'มีข้อมูลการใช้งานอาคาร','มีข้อมูลวัสดุ','มี Design Criteria','มีข้อกำหนดกฎหมาย/มาตรฐานที่เกี่ยวข้อง']},
+  2:{title:'Checklist การวิเคราะห์แรง',icon:'⚖️',target:'cl-group-2',items:[
+    'ตรวจสอบ Dead Load','ตรวจสอบ Live Load','ตรวจสอบ Wall Load','ตรวจสอบ Roof Load',
+    'ตรวจสอบ Wind Load','ตรวจสอบ Earthquake Load','ตรวจสอบ Load Combination','ตรวจสอบ Mass Source',
+    'ตรวจสอบ Base Shear','ตรวจสอบ Story Shear','ตรวจสอบ Story Drift']},
+  3:{title:'Checklist ระบบโครงสร้าง',icon:'🏗️',target:'cl-group-3',items:[
+    'ระบบรับแรงแนวดิ่งชัดเจน','ระบบรับแรงด้านข้างชัดเจน','Load Path ต่อเนื่อง','Column Layout เหมาะสม',
+    'Beam Layout เหมาะสม','Slab System เหมาะสม','มี Shear Wall/Frame เพียงพอ',
+    'ไม่มี Soft Story','ไม่มี Weak Story','ไม่มี Torsional Irregularity รุนแรง']},
+  4:{title:'Checklist องค์อาคาร คสล.',icon:'✅',target:'cl-group-4',items:[
+    'Slab Design','Beam Design','Column Design','Shear Wall Design','Stair Design','Foundation Design',
+    'Punching Shear','Beam-Column Joint','Development Length','Lap Splice','Confinement Reinforcement']},
+  5:{title:'Checklist รายละเอียดเหล็กเสริมต้านแผ่นดินไหว',icon:'🔩',target:'cl-group-5',items:[
+    'Ductile Detailing','Strong Column Weak Beam','Special Transverse Reinforcement','Column Tie Spacing',
+    'Beam Stirrup Spacing','Plastic Hinge Region','Joint Shear Reinforcement','Anchorage','Seismic Hook (ขอ 135°)',
+    'Lap Splice ไม่อยู่ในบริเวณ Plastic Hinge','Confinement Zone เพียงพอ']},
+  6:{title:'Checklist ฐานราก',icon:'🧱',target:'cl-group-6',items:[
+    'Soil Bearing Capacity','Pile Capacity','Mat Foundation','Isolated Footing','Pile Cap','Tie Beam',
+    'Uplift Check','Lateral Load Transfer','Settlement Check','Foundation Seismic Force',
+    'ฐานรากรับแรงแนวดิ่งและด้านข้างได้','ระบบฐานรากต่อเนื่องกับโครงสร้างด้านบน']},
+  7:{title:'Checklist เอกสารออกแบบ',icon:'📄',target:'cl-group-7',items:[
+    'Design Criteria','Structural Calculation Report','Analysis Output','Structural Drawings',
+    'Rebar Detail Drawings','Foundation Drawings','General Notes','Material Specification',
+    'Inspection Requirement','Construction Sequence','Drawing Coordination กับสถาปัตย์/MEP']},
+};
+
+/* Build checklist UI */
+function buildChecklists(){
+  Object.keys(CHECKLISTS).forEach(k=>{
+    const c=CHECKLISTS[k];const host=$(c.target);if(!host)return;
+    let h=`<div class="card"><h4>${c.icon} ${k}. ${c.title}
+      <span class="tag" id="cl-tag-${k}">0/${c.items.length}</span></h4>
+      <div class="prog-label"><span>ความพร้อม</span><span id="cl-pct-${k}">0%</span></div>
+      <div class="progress"><div id="cl-bar-${k}" style="width:0%"></div></div>
+      <div class="checklist">`;
+    c.items.forEach((it,i)=>{
+      h+=`<div class="chk-item"><input type="checkbox" id="cl-${k}-${i}" onchange="updateChecklist()">
+          <label for="cl-${k}-${i}">${it}</label></div>`;
+    });
+    h+=`</div></div>`;host.innerHTML=h;
+  });
+}
+
+function checklistProgress(k){
+  const c=CHECKLISTS[k];let done=0;
+  c.items.forEach((_,i)=>{if($(`cl-${k}-${i}`)&&$(`cl-${k}-${i}`).checked)done++;});
+  return{done,total:c.items.length,pct:Math.round(done/c.items.length*100)};
+}
+function updateChecklist(){
+  let totalDone=0,totalAll=0;
+  Object.keys(CHECKLISTS).forEach(k=>{
+    const p=checklistProgress(k);totalDone+=p.done;totalAll+=p.total;
+    if($(`cl-bar-${k}`)){$(`cl-bar-${k}`).style.width=p.pct+'%';
+      $(`cl-pct-${k}`).textContent=p.pct+'%';
+      $(`cl-tag-${k}`).textContent=`${p.done}/${p.total}`;}
+  });
+  return totalAll?Math.round(totalDone/totalAll*100):0;
+}
+
+/* ============================================================
+   CORE ANALYSIS
+   ============================================================ */
+/* ============================================================
+   SITE COEFFICIENT TABLES (มยผ.1302-61 / ASCE 7-10)
+   ============================================================ */
+// Fa: rows = site class, cols at Ss = [0.25,0.50,0.75,1.00,1.25]
+const FA_TABLE={
+  A:[0.8,0.8,0.8,0.8,0.8], B:[1.0,1.0,1.0,1.0,1.0],
+  C:[1.2,1.2,1.1,1.0,1.0], D:[1.6,1.4,1.2,1.1,1.0], E:[2.5,1.7,1.2,0.9,0.9]
+};
+const FA_X=[0.25,0.50,0.75,1.00,1.25];
+// Fv: rows = site class, cols at S1 = [0.1,0.2,0.3,0.4,0.5]
+const FV_TABLE={
+  A:[0.8,0.8,0.8,0.8,0.8], B:[1.0,1.0,1.0,1.0,1.0],
+  C:[1.7,1.6,1.5,1.4,1.3], D:[2.4,2.0,1.8,1.6,1.5], E:[3.5,3.2,2.8,2.4,2.4]
+};
+const FV_X=[0.1,0.2,0.3,0.4,0.5];
+// linear interpolation on a table row (clamped at ends), ปัดทศนิยม 1 ตำแหน่งตามแนวเอกสาร
+function interpCoef(xs,ys,x){
+  if(x<=xs[0])return ys[0];
+  if(x>=xs[xs.length-1])return ys[ys.length-1];
+  for(let i=0;i<xs.length-1;i++){
+    if(x>=xs[i]&&x<=xs[i+1]){
+      const t=(x-xs[i])/(xs[i+1]-xs[i]);
+      return ys[i]+t*(ys[i+1]-ys[i]);
+    }
+  }
+  return ys[ys.length-1];
+}
+function siteCoef(site,Ss,S1){
+  if(site==='F')return{Fa:NaN,Fv:NaN}; // ต้องวิเคราะห์เฉพาะพื้นที่
+  const fa=interpCoef(FA_X,(FA_TABLE[site]||FA_TABLE.D),Ss);
+  const fv=interpCoef(FV_X,(FV_TABLE[site]||FV_TABLE.D),S1);
+  // ปัดทศนิยม 1 ตำแหน่ง (ตรงกับรายการคำนวณ Star 8: Site D → Fa=1.1, Fv=1.9)
+  return{Fa:Math.round(fa*10)/10, Fv:Math.round(fv*10)/10};
+}
+// ค่าความเร่งตอบสนองสเปกตรัมออกแบบ Sa(T) ตามมยผ.1302-61
+function designSa(T,Sds,Sd1,T0,Ts,TL){
+  if(T<=0)return 0.4*Sds;
+  if(T<T0)return Sds*(0.4+0.6*T/T0);
+  if(T<=Ts)return Sds;
+  if(T<=TL)return Sd1/T;
+  return Sd1*TL/(T*T);
+}
+
+/* ============================================================
+   ค่า Ss, S1 รายอำเภอ ตาม มยผ.1302-61 ตารางที่ 1
+   (ที่มา: Seismic_DPT_1301_1302-61_up1.pdf ตารางที่ 1 หน้า 55-65)
+   *** จังหวัดเชียงใหม่ ถอดและตรวจสอบด้วยมือแล้ว (anchor: สารภี = 0.927/0.236
+       ตรงกับรายการคำนวณ Star 8) — จังหวัดอื่นยังไม่ใส่เพราะต้อง verify ก่อน
+       เพื่อกันค่าแผ่นดินไหวผิด เลือก "— อื่นๆ —" เพื่อกรอก Ss/S1 เองได้ ***
+   [Ss, S1]
+   ============================================================ */
+const SITE_SS_S1={
+  'เชียงใหม่':{
+    'จอมทอง':[0.993,0.243],'เชียงดาว':[1.019,0.266],'ไชยปราการ':[1.018,0.263],
+    'ดอยสะเก็ด':[0.934,0.237],'ดอยหล่อ':[0.910,0.225],'ฝาง':[1.080,0.282],
+    'พร้าว':[0.953,0.239],'เมืองเชียงใหม่':[0.963,0.248],'แม่แตง':[0.991,0.242],
+    'แม่ริม':[0.992,0.260],'แม่วาง':[0.936,0.243],'แม่อาย':[1.080,0.317],
+    'เวียงแหง':[1.032,0.274],'สะเมิง':[0.967,0.258],'สันกำแพง':[0.926,0.230],
+    'สันทราย':[0.973,0.251],'สันป่าตอง':[0.938,0.244],'สารภี':[0.927,0.236],
+    'หางดง':[0.931,0.243],'อมก๋อย':[0.857,0.244],'ฮอด':[0.849,0.237]
+  }
+};
+const SITE_OTHER='— อื่นๆ (กรอก Ss/S1 เอง) —';
+
+function populateProvinces(){
+  const ps=$('s_prov'); if(!ps)return;
+  let h='';
+  Object.keys(SITE_SS_S1).forEach(p=>{h+=`<option value="${p}">${p}</option>`;});
+  h+=`<option value="${SITE_OTHER}">${SITE_OTHER}</option>`;
+  ps.innerHTML=h;
+}
+function populateAmphoes(prov){
+  const as=$('s_amphoe'); if(!as)return;
+  const data=SITE_SS_S1[prov];
+  if(!data){ as.innerHTML=`<option value="">— ระบุ Ss/S1 เอง —</option>`; as.disabled=true; return; }
+  as.disabled=false;
+  as.innerHTML=Object.keys(data).map(a=>`<option value="${a}">${a}</option>`).join('');
+}
+function fillSsS1(prov,amphoe){
+  const data=SITE_SS_S1[prov]; if(!data)return;
+  const v=data[amphoe]; if(!v)return;
+  $('s_ss').value=v[0]; $('s_s1').value=v[1];
+}
+function onProvChange(){
+  const prov=val('s_prov');
+  populateAmphoes(prov);
+  if(SITE_SS_S1[prov]){ onAmphoeChange(); }
+  else { autoCompute(); analyze(); }
+}
+function onAmphoeChange(){
+  fillSsS1(val('s_prov'),val('s_amphoe'));
+  autoCompute(); analyze();
+}
+
+/* ============================================================
+   ตัวประกอบโครงสร้างอัตโนมัติ (default คำนวณให้ · user แก้ทับได้)
+   อิง มยผ.1302-61 ตารางที่ 6 (Ie) และตารางที่ 9 (R, Ω₀, Cd)
+   ============================================================ */
+const FACTOR_IDS=['s_I','s_R','s_omega','s_cd','s_ct','s_x'];
+const USE_I={
+  'บ้านพักอาศัย':1.0,'อาคารอยู่อาศัยรวม':1.0,'อาคารสำนักงาน':1.0,'อาคารพาณิชย์':1.0,
+  'โรงเรียน/สถานศึกษา':1.25,'อาคารสาธารณะ/ชุมนุมคน':1.25,'โรงพยาบาล/อาคารจำเป็นต่อภัยพิบัติ':1.5
+};
+function ductKey(){
+  const d=val('c_duct')||'';
+  if(d.indexOf('พิเศษ')>=0)return 'special';
+  if(d.indexOf('ปานกลาง')>=0||d.indexOf('Intermediate')>=0)return 'inter';
+  return 'limited';
+}
+function autoFactorValues(){
+  const lat=val('sy_lat')||val('p_struct')||'';
+  const isWall=lat.indexOf('Shear Wall')>=0;
+  const dk=ductKey();
+  let R,Cd,W0;
+  if(isWall){ // คสล. ผนังรับแรงเฉือน
+    if(dk==='special'){R=6;Cd=5;W0=2.5;} else {R=5;Cd=4.5;W0=2.5;}
+  } else {     // คสล. โครงต้านแรงดัด (moment frame)
+    if(dk==='special'){R=8;Cd=5.5;W0=3;}
+    else if(dk==='inter'){R=5;Cd=4.5;W0=3;}
+    else {R=3;Cd=2.5;W0=3;}
+  }
+  const Ie=USE_I[val('p_use')]||1.0;
+  // คสล. T = 0.02H -> Ct=0.02, x=1.0 ; ระบบผนังรับแรงเฉือน x=0.75
+  return {Ie,R,Cd,W0,Ct:0.02,x:isWall?0.75:1.0};
+}
+function autoFactors(){
+  const f=autoFactorValues();
+  const set=(id,v)=>{const e=$(id);if(e&&e.dataset.touched!=='1')e.value=v;};
+  set('s_I',f.Ie);set('s_R',f.R);set('s_omega',f.W0);
+  set('s_cd',f.Cd);set('s_ct',f.Ct);set('s_x',f.x);
+}
+function resetFactors(){
+  FACTOR_IDS.forEach(id=>{if($(id))$(id).dataset.touched='';});
+  autoFactors(); analyze();
+}
+
+/* ============================================================
+   BUILDING PRESETS — STAR AVENUE 8 (จากรายการคำนวณ .docx)
+   ============================================================ */
+const PRESETS={
+  A:{name:'อาคาร A',floors:4,h:2.9875,W:947.8,T1:0.239,
+     docService:19.59,docServLimit:23.9,docUlt:0.018},
+  B:{name:'อาคาร B',floors:4,h:2.9875,W:941.3,T1:0.239,
+     docService:15.68,docServLimit:23.9,docUlt:0.018},
+  C:{name:'อาคาร C',floors:4,h:2.9875,W:645.6,T1:0.239,
+     docService:18.32,docServLimit:23.9,docUlt:0.018},
+  D:{name:'อาคาร D',floors:4,h:2.9875,W:853.7,T1:0.239,
+     docService:16.93,docServLimit:23.9,docUlt:0.018},
+  H:{name:'อาคาร H',floors:1,h:3.00,W:162.0,T1:0.06,
+     docService:3.12,docServLimit:6.00,docUlt:0.006},
+  K:{name:'อาคาร K',floors:4,h:2.9875,W:443.0,T1:0.239,
+     docService:14.44,docServLimit:23.9,docUlt:0.015}
+};
+let DOC_REF=null; // เก็บค่าอ้างอิงจากเอกสารของ preset ที่เลือก
+function applyPreset(){
+  const key=val('preset');
+  if(!key){DOC_REF=null;analyze();return;}
+  const p=PRESETS[key];if(!p)return;
+  $('p_name').value=p.name;
+  $('p_loc').value='ต.ท่าวังตาล อ.สารภี จ.เชียงใหม่';
+  $('p_type').value='อาคารพาณิชย์ คสล. หล่อในที่';
+  $('p_use').value='อาคารพาณิชย์';
+  $('p_floors').value=p.floors;
+  $('p_h').value=p.h;
+  $('s_W').value=p.W;
+  $('s_T1').value=p.T1;
+  // ที่ตั้งตามเอกสาร Star 8 = อ.สารภี จ.เชียงใหม่ -> ดึง Ss/S1 จาก มยผ.1302-61 ตารางที่ 1
+  $('s_prov').value='เชียงใหม่'; populateAmphoes('เชียงใหม่');
+  $('s_amphoe').value='สารภี'; fillSsS1('เชียงใหม่','สารภี');
+  $('s_site').value='D — ดินแข็งปานกลาง';
+  DOC_REF={building:key,...p};
+  autoCompute();
+  analyze();
+}
+
+function autoCompute(){
+  // ตั้งตัวประกอบโครงสร้างอัตโนมัติก่อน (ข้ามช่องที่ user แก้เอง)
+  autoFactors();
+  // ความสูงรวม & พื้นที่รวม คำนวณอัตโนมัติ
+  const floors=num('p_floors'),h=num('p_h'),area=num('p_area');
+  $('p_htot').value=fmt(floors*h,2);
+  $('p_areatot').value=fmt0(floors*area);
+  // อัปเดตค่าสเปกตรัมที่คำนวณอัตโนมัติในหน้า 4
+  const sp=calcSpectrum(floors*h);
+  if($('s_fa')) $('s_fa').value = isNaN(sp.Fa)?'— (Site F)':fmt(sp.Fa,2);
+  if($('s_fv')) $('s_fv').value = isNaN(sp.Fv)?'— (Site F)':fmt(sp.Fv,2);
+  if($('s_sms'))$('s_sms').value=fmt(sp.Sms,3);
+  if($('s_sm1'))$('s_sm1').value=fmt(sp.Sm1,3);
+  if($('s_sds'))$('s_sds').value=fmt(sp.Sds,3);
+  if($('s_sd1'))$('s_sd1').value=fmt(sp.Sd1,3);
+  if($('s_t0')) $('s_t0').value =fmt(sp.T0,3);
+  if($('s_ts')) $('s_ts').value =fmt(sp.Ts,3);
+}
+
+// คำนวณพารามิเตอร์สเปกตรัม (แยกเพื่อใช้ทั้ง autoCompute และ calcSeismic)
+function calcSpectrum(htot){
+  const Ss=num('s_ss'), S1=num('s_s1');
+  const site=val('s_site')[0]||'D';
+  const {Fa,Fv}=siteCoef(site,Ss,S1);
+  const Sms=Fa*Ss, Sm1=Fv*S1;
+  const Sds=2/3*Sms, Sd1=2/3*Sm1;
+  const Ts=Sds>0?Sd1/Sds:0, T0=0.2*Ts, TL=8.0;
+  // คาบการสั่น: ใช้ค่า T1 ที่กรอก (จาก modal/เอกสาร) ถ้ามี มิฉะนั้นใช้ Ta = Ct·H^x
+  const Ct=num('s_ct')||0.02, x=num('s_x')||1.0;
+  const Ta=Ct*Math.pow(Math.max(htot,0.01),x);
+  let T=num('s_T1'); if(!T||T<=0){T=Ta;}
+  // มยผ.: ถ้า T (modal) > 1.5·Ta ให้ใช้ 1.5·Ta
+  const Tused=Math.min(T,1.5*Ta);
+  const Sa=designSa(Tused,Sds,Sd1,T0,Ts,TL);
+  return{Ss,S1,site,Fa,Fv,Sms,Sm1,Sds,Sd1,Ts,T0,TL,Ta,T,Tused,Sa};
+}
+
+function calcSeismic(){
+  const floors=Math.max(1,Math.round(num('p_floors')));
+  const h=num('p_h'), area=num('p_area');
+  const htot=floors*h, areaTot=floors*area;
+
+  // น้ำหนักเฉลี่ยต่อ m2 (ตัน/m2) สำหรับประมาณ seismic weight
+  const dl=num('l_dl'),sdl=num('l_sdl'),ll=num('l_ll'),wall=num('l_wallload');
+  const llFrac=num('s_llmass')/100;
+  const wPerArea=(dl+sdl+wall+ll*llFrac)/1000; // ton/m2
+  let W=num('s_W'), Wauto=false;
+  if(!W||W<=0){W=wPerArea*areaTot;Wauto=true;} // ตัน รวมทุกชั้น (ประมาณ)
+
+  const I=num('s_I'), R=num('s_R'), Cd=num('s_cd');
+  const sp=calcSpectrum(htot);
+
+  // Seismic Response Coefficient Cs = Sa / (R/Ie)  (มยผ.1302-61 / ASCE 7)
+  let Cs=sp.Sa/(R/I);
+  const CsMax=sp.Tused>sp.Ts ? sp.Sd1/(sp.Tused*(R/I)) : Infinity;
+  Cs=Math.min(Cs,CsMax);
+  const CsMin=Math.max(0.01, sp.S1>=0.6 ? 0.5*sp.S1/(R/I) : 0);
+  Cs=Math.max(Cs,CsMin);
+
+  // Base shear (ton)
+  const V=Cs*W;
+
+  // การกระจายแรงตามแนวดิ่ง: Fx = V·wx·hx^k / Σ(wi·hi^k)
+  let k=1.0;
+  if(sp.Tused>2.5)k=2.0; else if(sp.Tused>0.5)k=1.0+(sp.Tused-0.5)/2.0;
+  const wiPerFloor=W/floors;
+  let sumwh=0;const hi=[];
+  for(let i=1;i<=floors;i++){hi.push(i*h);sumwh+=wiPerFloor*Math.pow(i*h,k);}
+  const Fx=hi.map(hh=>V*(wiPerFloor*Math.pow(hh,k))/sumwh);
+  const storyShear=[];let acc=0;
+  for(let i=floors-1;i>=0;i--){acc+=Fx[i];storyShear[i]=acc;}
+
+  // ประมาณการเคลื่อนตัวด้านข้าง (preliminary) ด้วยแบบจำลอง SDOF
+  // δ_design(elastic,reduced) = Cs·g·(T/2π)²  ; δ_inelastic = Cd·δ/Ie  (equal-displacement)
+  const g=9.81;
+  const deltaDesign=Cs*g*Math.pow(sp.Tused/(2*Math.PI),2); // m (ที่แรงออกแบบลดด้วย R)
+  const deltaInelastic=Cd*deltaDesign/I; // m (การเคลื่อนตัวจริงโดยประมาณ)
+  const roofDispMm=deltaInelastic*1000; // mm
+  const driftRatio=htot>0?deltaInelastic/htot:0; // ratio รวมเฉลี่ย (ultimate)
+  // กระจาย drift รายชั้นตามสัดส่วน story shear (โดยประมาณ ฐานเซมากสุด)
+  const maxShear=Math.max(...storyShear,1);
+  const drifts=storyShear.map(s=>driftRatio*(s/maxShear));
+  // ระยะเคลื่อนตัว Service (โดยประมาณ = elastic ไม่ขยายด้วย Cd, ที่ระดับใช้งาน)
+  const serviceDispMm=deltaDesign*1000*(R/I)*0.7;
+
+  return{floors,h,htot,area,areaTot,W,Wauto,V,Cs,CsMax,CsMin,I,R,Cd,Fx,storyShear,
+    drifts,driftRatio,roofDispMm,serviceDispMm,wPerArea,k,
+    Ss:sp.Ss,S1:sp.S1,site:sp.site,Fa:sp.Fa,Fv:sp.Fv,Sms:sp.Sms,Sm1:sp.Sm1,
+    Sds:sp.Sds,Sd1:sp.Sd1,Ts:sp.Ts,T0:sp.T0,Ta:sp.Ta,T:sp.T,Tused:sp.Tused,Sa:sp.Sa};
+}
+
+/* RISK & WARNING ENGINE */
+function evalRisk(S){
+  const warnings=[],crits=[],oks=[],recs=[];
+  let riskScore=0; // 0..สูง
+
+  const site=val('s_site')[0]; // A..F
+  // อนุมานระดับความรุนแรงจาก Sds (มยผ.): <0.167 ต่ำ, 0.167–0.50 ปานกลาง, >0.50 สูง
+  const zone = S.Sds>0.50?'high':S.Sds>=0.167?'mod':'low';
+  const driftLim=num('s_driftlim');
+  const soil=val('p_soil');
+
+  // จำนวนชั้น
+  if(S.floors>4){crits.push('จำนวนชั้น ('+S.floors+') เกิน 4 ชั้น — เกินขอบเขตการวิเคราะห์ของแอปนี้ ต้องใช้การวิเคราะห์ระดับสูงกว่า');riskScore+=3;}
+  else oks.push('จำนวนชั้นอยู่ในขอบเขต (≤ 4 ชั้น)');
+
+  // Soil report
+  if(soil==='no'){warnings.push('ยังไม่มีรายงานเจาะสำรวจดิน (Soil Report) — ควรจัดทำก่อนสรุประบบฐานรากและ Site Class');riskScore+=1;recs.push('ควรจัดทำ Soil Report ก่อนสรุประบบฐานรากและยืนยัน Site Class');}
+  else oks.push('มีรายงานเจาะสำรวจดิน (Soil Report)');
+
+  // Site class D/E/F
+  if(site==='D'||site==='E'){warnings.push('Site Class '+site+' (ดินอ่อน) เพิ่มการขยายแรงแผ่นดินไหว — ควรเพิ่มความระมัดระวังและตรวจสอบ amplification');riskScore+=2;}
+  if(site==='F'){crits.push('Site Class F — ต้องวิเคราะห์ตอบสนองชั้นดินเฉพาะพื้นที่ (Site-specific) ไม่สามารถใช้ค่ามาตรฐานทั่วไป');riskScore+=2;}
+
+  // Zone
+  if(zone==='high'){riskScore+=2;}
+  else if(zone==='mod'){riskScore+=1;}
+
+  // Story Drift (Ultimate) — ค่าประมาณจาก SDOF เทียบ 0.02·hsx
+  let driftStatus,driftBadge;
+  const dr=S.driftRatio;
+  if(dr>driftLim){crits.push('Story Drift ประมาณ ('+fmt(dr,4)+') เกินขอบเขต ('+fmt(driftLim,3)+') — Critical Review Required, ควรเพิ่มความแข็งแกร่งด้านข้าง');riskScore+=3;driftStatus='เกินเกณฑ์';driftBadge='crit';recs.push('ควรเพิ่ม Shear Wall หรือเพิ่มขนาดเสา/คาน เพื่อลด Story Drift ให้อยู่ในเกณฑ์');}
+  else if(dr>driftLim*0.85){warnings.push('Story Drift ประมาณ ('+fmt(dr,4)+') ใกล้ขอบเขต ('+fmt(driftLim,3)+') — ควรตรวจสอบเพิ่มเติม');driftStatus='ใกล้เกณฑ์';driftBadge='warn';riskScore+=1;}
+  else{oks.push('Story Drift ประมาณ ('+fmt(dr,4)+') อยู่ในเกณฑ์ Ultimate ('+fmt(driftLim,3)+'·hsx)');driftStatus='ผ่านเบื้องต้น';driftBadge='ok';}
+
+  // Service drift (ระยะเคลื่อนที่ชั้นหลังคา) เทียบ H/500
+  const servLimitMm=S.htot*1000/500;
+  if(S.serviceDispMm>servLimitMm){warnings.push('ระยะเคลื่อนตัว Service ประมาณ ('+fmt(S.serviceDispMm,2)+' มม.) เกิน H/500 ('+fmt(servLimitMm,2)+' มม.)');riskScore+=2;}
+  else{oks.push('ระยะเคลื่อนตัว Service ประมาณ ('+fmt(S.serviceDispMm,2)+' มม.) < H/500 ('+fmt(servLimitMm,2)+' มม.)');}
+
+  // เทียบกับค่าจริงจากเอกสาร ETABS (ถ้าเลือก preset)
+  if(typeof DOC_REF!=='undefined' && DOC_REF){
+    oks.push('ค่าอ้างอิงจากเอกสาร ETABS ('+DOC_REF.building+'): Service '+DOC_REF.docService+' มม. < H/500 ('+DOC_REF.docServLimit+' มม.) / Ultimate '+DOC_REF.docUlt+'·hsx < 0.02·hsx — ผ่านตามเอกสาร');
+  }
+
+  // Irregularities
+  const soft=val('ir_soft')==='yes'||val('ir_open')==='yes';
+  const weak=val('ir_weak')==='yes';
+  const tor=val('ir_tor')==='yes';
+  const vert=val('ir_vert')==='yes';
+  const horz=val('ir_horz')==='yes';
+  if(soft){crits.push('ตรวจพบความเสี่ยง Soft Story (ชั้นอ่อน/ชั้นล่างเปิดโล่ง) — High Risk ต้องเสริมความแข็งแกร่งชั้นนั้นเป็นพิเศษ');riskScore+=3;recs.push('ควรตรวจสอบ Soft Story โดยเฉพาะชั้นล่างที่เปิดโล่ง — พิจารณาเพิ่ม Shear Wall/Bracing');}
+  if(weak){crits.push('ตรวจพบความเสี่ยง Weak Story (ชั้นกำลังต่ำ) — High Risk');riskScore+=3;recs.push('ควรเพิ่มกำลังรับแรงของชั้นที่อ่อนแอ (Weak Story)');}
+  if(tor){warnings.push('ตรวจพบ Torsional Irregularity — ควรจัดวางระบบรับแรงให้สมมาตรและตรวจผลบิด');riskScore+=2;recs.push('ควรจัดผังระบบรับแรงด้านข้างให้สมมาตรเพื่อลด Torsional Irregularity');}
+  if(vert){warnings.push('ตรวจพบ Vertical Irregularity — ควรตรวจสอบความต่อเนื่องของระบบรับแรงในแนวดิ่ง');riskScore+=1;}
+  if(horz){warnings.push('ตรวจพบ Horizontal Irregularity — ควรตรวจสอบ Diaphragm และการกระจายแรง');riskScore+=1;}
+  let irrStatus = (soft||weak)?'เสี่ยงสูง':(tor||vert||horz)?'ควรตรวจสอบ':'ไม่พบนัยสำคัญ';
+  let irrBadge=(soft||weak)?'crit':(tor||vert||horz)?'warn':'ok';
+
+  // Structural system suitability
+  const lat=val('sy_lat');
+  if(lat.indexOf('Flat Slab')>=0 && (val('s_R')>=5) ){
+    warnings.push('เลือก Flat Slab — ระบบนี้มี lateral stiffness ต่ำ ควรเพิ่ม Shear Wall ช่วยรับแรงด้านข้าง');riskScore+=2;
+    recs.push('ระบบ Flat Slab ควรเพิ่ม Shear Wall เพื่อเพิ่ม lateral stiffness และควบคุม Drift');
+  }
+  if(lat.indexOf('Flat Slab')>=0){recs.push('ระบบ Flat Slab ต้องตรวจสอบ Punching Shear ที่หัวเสาอย่างละเอียด');}
+
+  // Foundation vs soil
+  const found=val('sy_found');
+  if((found.indexOf('Pile')>=0) && val('sy_tie')==='no'){
+    warnings.push('ระบบฐานรากเสาเข็มแต่ไม่มี Tie Beam — ควรเพิ่ม Tie Beam เพื่อถ่ายแรงด้านข้างและยึดรั้งหัวเสาเข็ม');riskScore+=2;
+    recs.push('ควรเพิ่ม Tie Beam เชื่อมระหว่างฐานราก/Pile Cap เพื่อถ่ายแรงด้านข้างและลด differential settlement');
+  }
+  if(soil==='no'){recs.push('ระบบฐานราก '+found+' ควรยืนยันด้วย Soil Report ก่อน (กำลังรับแรงแบกทาน/กำลังเสาเข็ม)');}
+
+  // Load path
+  if(val('sy_path')==='no'){warnings.push('ยังไม่ได้ยืนยัน Load Path ต่อเนื่อง — ควรตรวจสอบเส้นทางถ่ายแรงให้ครบ Slab→Beam→Column/Wall→Foundation→Soil');riskScore+=1;}
+  else oks.push('ยืนยัน Load Path ต่อเนื่องแล้ว');
+
+  // Base shear sanity
+  if(S.Cs<0.02){warnings.push('Seismic Coefficient (Cs='+fmt(S.Cs,3)+') ค่อนข้างต่ำ — ควรตรวจสอบกับ Spectral Acceleration/โซนพื้นที่จริง');}
+
+  // Generic recommendations (เพิ่มเสมอเชิงแนะนำ)
+  recs.push('ควรตรวจสอบ Beam-Column Joint และ Strong Column–Weak Beam เป็นพิเศษ');
+  recs.push('ควรหลีกเลี่ยง Lap Splice ในบริเวณ Plastic Hinge และให้ Ductile Detailing ตามมาตรฐาน');
+  recs.push('ควรประสานช่องเปิดงาน MEP ที่กระทบคาน พื้น และผนังรับแรงเฉือน');
+
+  // Map riskScore -> level
+  let level,levelBadge;
+  if(crits.length>0 || riskScore>=8){level='Critical Review Required';levelBadge='crit';}
+  else if(riskScore>=5){level='High Risk';levelBadge='risk';}
+  else if(riskScore>=2){level='Moderate Risk';levelBadge='warn';}
+  else{level='Low Risk';levelBadge='ok';}
+
+  // foundation risk
+  let foundRisk='ต่ำ',foundBadge='ok';
+  if(soil==='no'){foundRisk='ควรตรวจสอบ';foundBadge='warn';}
+  if((found.indexOf('Pile')>=0)&&val('sy_tie')==='no'){foundRisk='สูง';foundBadge='risk';}
+  if(site==='F'){foundRisk='สูง';foundBadge='risk';}
+
+  return{warnings,crits,oks,recs,riskScore,level,levelBadge,
+    driftStatus,driftBadge,irrStatus,irrBadge,foundRisk,foundBadge,site,zone};
+}
+
+/* ============================================================
+   RENDERING
+   ============================================================ */
+let STATE={};
+
+function analyze(){
+  autoCompute();
+  const S=calcSeismic();
+  const R=evalRisk(S);
+  const clPct=updateChecklist();
+
+  // Readiness score = avg(checklist, riskFactor)
+  const riskFactor=Math.max(0,100-R.riskScore*9);
+  const readiness=Math.round(clPct*0.6 + riskFactor*0.4);
+
+  STATE={S,R,clPct,readiness};
+
+  renderKPI(S,R,readiness);
+  renderCharts(S);
+  renderRiskMatrix(R);
+  renderReadiness(readiness,R);
+  renderInputTable(S);
+  renderOutputTable(S);
+  renderRecs(R);
+  renderRiskSection(R);
+}
+
+function renderKPI(S,R,readiness){
+  const cards=[
+    {l:'จำนวนชั้น',v:S.floors,u:'ชั้น',st:S.floors>4?'crit':'ok'},
+    {l:'ความสูงรวม',v:fmt(S.htot,2),u:'m',st:'ok'},
+    {l:'Seismic Weight (W)',v:fmt(S.W,1),u:'ตัน',st:'ok'},
+    {l:'คาบ T (ใช้คำนวณ)',v:fmt(S.Tused,3),u:'s',st:'ok'},
+    {l:'Sds',v:fmt(S.Sds,3),u:'g',st:'ok'},
+    {l:'Sa (ออกแบบ)',v:fmt(S.Sa,3),u:'g',st:'ok'},
+    {l:'Cs = V/W',v:fmt(S.Cs,3),u:'',st:'ok'},
+    {l:'Base Shear (V)',v:fmt(S.V,2),u:'ตัน',st:'ok'},
+    {l:'Drift Status',v:R.driftStatus,u:'',st:R.driftBadge},
+    {l:'Irregularity',v:R.irrStatus,u:'',st:R.irrBadge},
+    {l:'Foundation Risk',v:R.foundRisk,u:'',st:R.foundBadge},
+    {l:'Overall Risk',v:R.level,u:'',st:R.levelBadge},
+    {l:'Readiness Score',v:readiness+'%',u:'',st:readiness>=75?'ok':readiness>=50?'warn':'risk'},
+  ];
+  $('kpi-grid').innerHTML=cards.map(c=>`
+    <div class="kpi status-${c.st==='ok'?'ok':c.st==='warn'?'warn':c.st==='risk'?'risk':'crit'}">
+      <div class="k-label">${c.l}</div>
+      <div class="k-val" style="font-size:${String(c.v).length>10?'15px':'20px'}">${c.v} <span class="k-unit">${c.u}</span></div>
+    </div>`).join('');
+}
+
+function renderCharts(S){
+  // Story shear chart
+  const maxS=Math.max(...S.storyShear,1);
+  let h='';
+  for(let i=S.floors-1;i>=0;i--){
+    const pct=S.storyShear[i]/maxS*100;
+    h+=`<div class="bar-col"><div class="bar" style="height:${pct}%"><span class="bv">${fmt(S.storyShear[i],1)}</span></div><span class="bl">ชั้น ${i+1}</span></div>`;
+  }
+  $('chart-shear').innerHTML=h;
+
+  // Drift chart
+  const maxD=Math.max(...S.drifts,num('s_driftlim'),0.001);
+  let d='';
+  for(let i=S.floors-1;i>=0;i--){
+    const pct=S.drifts[i]/maxD*100;
+    const over=S.drifts[i]>num('s_driftlim');
+    d+=`<div class="bar-col"><div class="bar ${over?'':'alt'}" style="height:${pct}%;${over?'background:linear-gradient(180deg,#bd4a39,#8a2c1e)':''}"><span class="bv">${fmt(S.drifts[i],4)}</span></div><span class="bl">ชั้น ${i+1}</span></div>`;
+  }
+  $('chart-drift').innerHTML=d;
+}
+
+function renderRiskMatrix(R){
+  // likelihood (irregularity) x impact (zone/site)
+  const likeIdx = R.irrBadge==='crit'?2:R.irrBadge==='warn'?1:0; // 0 low,1 mod,2 high
+  let impIdx=0;
+  if(R.zone==='high')impIdx=2;else if(R.zone==='mod')impIdx=1;
+  if(R.site==='D'||R.site==='E')impIdx=Math.min(2,impIdx+1);
+  if(R.site==='F')impIdx=2;
+
+  const labels=['ต่ำ','ปานกลาง','สูง'];
+  const classFor=(r,c)=>{const s=r+c;return s>=4?'m-crit':s>=3?'m-high':s>=1?'m-mod':'m-low';};
+  let html=`<div class="mh"></div><div class="mh">ผลกระทบ ต่ำ</div><div class="mh">ปานกลาง</div><div class="mh">สูง</div>`;
+  // rows = likelihood high->low
+  for(let r=2;r>=0;r--){
+    html+=`<div class="ml">โอกาส ${labels[r]}</div>`;
+    for(let c=0;c<=2;c++){
+      const active=(r===likeIdx && c===impIdx)?'active':'';
+      const lbl=classFor(r,c)==='m-crit'?'วิกฤต':classFor(r,c)==='m-high'?'สูง':classFor(r,c)==='m-mod'?'ปานกลาง':'ต่ำ';
+      html+=`<div class="cell ${classFor(r,c)} ${active}">${lbl}</div>`;
+    }
+  }
+  $('risk-matrix').innerHTML=html;
+}
+
+function renderReadiness(readiness,R){
+  $('ring').style.setProperty('--p',(readiness*3.6)+'deg');
+  $('ring-val').textContent=readiness+'%';
+  let b,t;
+  if(readiness>=80){b='b-ok';t='พร้อมระดับดี — ตรวจสอบรายละเอียดขั้นถัดไป';}
+  else if(readiness>=60){b='b-warn';t='พร้อมปานกลาง — ยังมีรายการต้องเติม';}
+  else if(readiness>=40){b='b-risk';t='ความพร้อมต่ำ — เร่งเติมข้อมูล/Checklist';}
+  else{b='b-crit';t='ยังไม่พร้อม — ข้อมูลไม่เพียงพอ';}
+  $('readiness-badge').innerHTML=`<span class="badge ${b}">${t}</span>`;
+}
+
+function renderInputTable(S){
+  const rows=[
+    ['ชื่อโครงการ',val('p_name')],
+    ['ที่ตั้ง',val('p_loc')],
+    ['การใช้งาน',val('p_use')],
+    ['จำนวนชั้น / สูงต่อชั้น',S.floors+' ชั้น / '+fmt(S.h,2)+' m'],
+    ['พื้นที่ต่อชั้น',fmt0(S.area)+' m²'],
+    ["f'c / fy",val('m_fc')+' / '+val('m_fy')+' ksc'],
+    ['ระบบรับแรงด้านข้าง',val('sy_lat')],
+    ['ระบบฐานราก',val('sy_found')],
+    ['Site Class',val('s_site')],
+    ['Ss / S1 (g)',fmt(S.Ss,3)+' / '+fmt(S.S1,3)],
+    ['Fa / Fv',fmt(S.Fa,2)+' / '+fmt(S.Fv,2)],
+    ['Sds / Sd1 (g)',fmt(S.Sds,3)+' / '+fmt(S.Sd1,3)],
+    ['Importance / R / Cd',val('s_I')+' / '+val('s_R')+' / '+val('s_cd')],
+    ['คาบ T (Ta / ใช้คำนวณ)',fmt(S.Ta,3)+' / '+fmt(S.Tused,3)+' s'],
+    ['Sa (ออกแบบ) / Cs',fmt(S.Sa,3)+'g / '+fmt(S.Cs,3)],
+    ['Soil Report',val('p_soil')==='yes'?'มี':'ยังไม่มี'],
+  ];
+  $('tbl-input').innerHTML='<tbody>'+rows.map(r=>`<tr><td>${r[0]}</td><td style="text-align:right;font-weight:600">${r[1]}</td></tr>`).join('')+'</tbody>';
+}
+
+function renderOutputTable(S){
+  let rows=`<thead><tr><th>ชั้น</th><th class="num">Fx (ตัน)</th><th class="num">Story Shear (ตัน)</th><th class="num">Drift Ratio</th><th>สถานะ Drift</th></tr></thead><tbody>`;
+  const lim=num('s_driftlim');
+  for(let i=S.floors-1;i>=0;i--){
+    const over=S.drifts[i]>lim;
+    rows+=`<tr><td>ชั้น ${i+1}</td><td class="num">${fmt(S.Fx[i],2)}</td><td class="num">${fmt(S.storyShear[i],2)}</td>
+      <td class="num">${fmt(S.drifts[i],4)}</td>
+      <td><span class="badge ${over?'b-crit':'b-ok'}">${over?'เกินเกณฑ์':'ผ่านเบื้องต้น'}</span></td></tr>`;
+  }
+  rows+=`</tbody><tfoot><tr><td><b>รวม / Base</b></td><td class="num"><b>${fmt(S.V,2)}</b></td><td class="num"><b>${fmt(S.V,2)}</b></td><td class="num">-</td><td>-</td></tr></tfoot>`;
+  $('tbl-output').innerHTML=rows;
+}
+
+function renderRecs(R){
+  if(!R.recs.length){$('rec-list').innerHTML='<li class="empty">ไม่มีคำแนะนำเพิ่มเติม</li>';return;}
+  $('rec-list').innerHTML=R.recs.map(r=>`<li>${r}</li>`).join('');
+}
+
+function renderRiskSection(R){
+  $('risk-overall').innerHTML=`
+    <div class="score-ring">
+      <span class="badge b-${R.levelBadge==='ok'?'ok':R.levelBadge==='warn'?'warn':R.levelBadge==='risk'?'risk':'crit'}" style="font-size:15px;padding:8px 18px">${R.level}</span>
+      <span class="muted tiny">Risk Score เชิงสัมพัทธ์: ${R.riskScore}</span>
+    </div>`;
+  const mk=(arr,cls,ic,empty)=>arr.length?arr.map(x=>`<div class="alert ${cls}"><span class="ai">${ic}</span><div>${x}</div></div>`).join(''):`<p class="empty">${empty}</p>`;
+  $('list-crit').innerHTML=mk(R.crits,'a-crit','⛔','ไม่พบประเด็นวิกฤต');
+  $('list-warn').innerHTML=mk(R.warnings,'a-warn','⚠️','ไม่พบคำเตือน');
+  $('list-ok').innerHTML=mk(R.oks,'a-ok','✔️','—');
+}
+
+/* ============================================================
+   REPORT GENERATION
+   ============================================================ */
+function generateReport(){
+  analyze();
+  const S=STATE.S,R=STATE.R;
+  const today=new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
+
+  // checklist summary
+  let clRows='';
+  Object.keys(CHECKLISTS).forEach(k=>{const p=checklistProgress(k);
+    clRows+=`<div><span>${k}. ${CHECKLISTS[k].title}</span><span>${p.done}/${p.total} (${p.pct}%)</span></div>`;});
+
+  const g=(a,b)=>`<div><span>${a}</span><span>${b}</span></div>`;
+
+  let html=`
+    <h2>รายงานสรุปการวิเคราะห์เบื้องต้น (Preliminary Seismic Report)</h2>
+    <div class="rep-meta">จัดทำโดย RC Seismic Dashboard · วันที่ ${today} · ${val('c_std')||'มยผ.1301/1302-61'}</div>
+
+    <h3>1. ข้อมูลโครงการ</h3>
+    <div class="rep-grid">
+      ${g('ชื่อโครงการ',val('p_name'))}${g('ที่ตั้ง',val('p_loc'))}
+      ${g('ประเภทอาคาร',val('p_type'))}${g('การใช้งาน',val('p_use'))}
+      ${g('จำนวนชั้น',S.floors+' ชั้น')}${g('ความสูงรวม',fmt(S.htot,2)+' m')}
+      ${g('พื้นที่ต่อชั้น',fmt0(S.area)+' m²')}${g('พื้นที่รวม',fmt0(S.areaTot)+' m²')}
+    </div>
+
+    <h3>2. เกณฑ์การออกแบบ & วัสดุ</h3>
+    <div class="rep-grid">
+      ${g("f'c",val('m_fc')+' ksc')}${g('fy',val('m_fy')+' ksc')}
+      ${g('Cover',val('m_cover')+' cm')}${g('มาตรฐาน RC',val('c_rc'))}
+      ${g('ระดับความเหนียว',val('c_duct'))}${g('Drift Limit',val('s_driftlim'))}
+    </div>
+
+    <h3>3. ระบบโครงสร้าง</h3>
+    <div class="rep-grid">
+      ${g('ระบบรับแรงด้านข้าง',val('sy_lat'))}${g('ระบบฐานราก',val('sy_found'))}
+      ${g('Tie Beam',val('sy_tie')==='yes'?'มี':'ไม่มี')}${g('Load Path ต่อเนื่อง',val('sy_path')==='yes'?'ยืนยันแล้ว':'ยังไม่ตรวจ')}
+    </div>
+
+    <h3>4. พารามิเตอร์แผ่นดินไหว (มยผ.1302-61 / ASCE 7-10)</h3>
+    <div class="rep-grid">
+      ${g('Ss / S1 (g)',fmt(S.Ss,3)+' / '+fmt(S.S1,3))}${g('Site Class',val('s_site'))}
+      ${g('Fa / Fv',fmt(S.Fa,2)+' / '+fmt(S.Fv,2))}${g('Sms / Sm1 (g)',fmt(S.Sms,3)+' / '+fmt(S.Sm1,3))}
+      ${g('Sds / Sd1 (g)',fmt(S.Sds,3)+' / '+fmt(S.Sd1,3))}${g('T0 / Ts (s)',fmt(S.T0,3)+' / '+fmt(S.Ts,3))}
+      ${g('Importance (Ie)',val('s_I'))}${g('R / Ω₀ / Cd',val('s_R')+' / '+val('s_omega')+' / '+val('s_cd'))}
+      ${g('คาบ Ta / T ใช้คำนวณ (s)',fmt(S.Ta,3)+' / '+fmt(S.Tused,3))}${g('Sa (ออกแบบ) / Cs',fmt(S.Sa,3)+'g / '+fmt(S.Cs,3))}
+    </div>
+
+    <h3>5. ผลวิเคราะห์เบื้องต้น</h3>
+    <div class="rep-grid">
+      ${g('Seismic Weight (W)',fmt(S.W,1)+' ตัน')}${g('Base Shear V = Cs·W',fmt(S.V,2)+' ตัน')}
+      ${g('Drift Ultimate ประมาณ',fmt(S.driftRatio,4)+' (จำกัด '+fmt(num('s_driftlim'),3)+'·hsx)')}${g('Drift Status',R.driftStatus)}
+      ${g('ระยะเคลื่อนตัว Service ประมาณ',fmt(S.serviceDispMm,2)+' มม. (จำกัด H/500 = '+fmt(S.htot*1000/500,2)+' มม.)')}${g('Irregularity',R.irrStatus)}
+      ${g('Foundation Risk',R.foundRisk)}${g('Readiness Score',STATE.readiness+'%')}
+    </div>
+    ${(typeof DOC_REF!=='undefined'&&DOC_REF)?`<div class="alert a-info" style="margin-top:8px"><span class="ai">📑</span><div><b>เทียบค่าจริงจากเอกสาร ETABS (อาคาร ${DOC_REF.building}):</b> Service ${DOC_REF.docService} มม. &lt; H/500 (${DOC_REF.docServLimit} มม.) · Ultimate ${DOC_REF.docUlt}·hsx &lt; 0.02·hsx — ผ่านตามรายการคำนวณ <br><span class="tiny muted">หมายเหตุ: ค่าในแอปเป็นการประมาณแบบ SDOF จึงอาจต่างจากผล Finite Element (ETABS) ของเอกสาร</span></div></div>`:''}
+    <div class="table-wrap" style="margin-top:10px">
+      <table><thead><tr><th>ชั้น</th><th class="num">Fx (ตัน)</th><th class="num">Story Shear (ตัน)</th><th class="num">Drift</th></tr></thead><tbody>
+      ${(()=>{let r='';for(let i=S.floors-1;i>=0;i--){r+=`<tr><td>ชั้น ${i+1}</td><td class="num">${fmt(S.Fx[i],2)}</td><td class="num">${fmt(S.storyShear[i],2)}</td><td class="num">${fmt(S.drifts[i],4)}</td></tr>`;}return r;})()}
+      </tbody></table>
+    </div>
+
+    <h3>6. ความพร้อมของ Checklist</h3>
+    <div class="rep-grid">${clRows}</div>
+    <div style="margin-top:6px"><b>ความพร้อมรวม (Checklist): ${STATE.clPct}%</b></div>
+
+    <h3>7. ระดับความเสี่ยงรวม</h3>
+    <p><span class="badge b-${R.levelBadge==='ok'?'ok':R.levelBadge==='warn'?'warn':R.levelBadge==='risk'?'risk':'crit'}" style="font-size:14px;padding:6px 16px">${R.level}</span></p>
+
+    <h3>8. ประเด็นวิกฤต & คำเตือน</h3>
+    ${R.crits.length?'<b style="color:#b3402f">Critical:</b><ul class="rec-list">'+R.crits.map(c=>`<li>${c}</li>`).join('')+'</ul>':'<p class="muted">ไม่พบประเด็นวิกฤต</p>'}
+    ${R.warnings.length?'<b style="color:#c9991f">Warnings:</b><ul class="rec-list">'+R.warnings.map(c=>`<li>${c}</li>`).join('')+'</ul>':'<p class="muted">ไม่พบคำเตือน</p>'}
+
+    <h3>9. ข้อแนะนำทางวิศวกรรม</h3>
+    <ul class="rec-list">${R.recs.map(c=>`<li>${c}</li>`).join('')}</ul>
+
+    <h3>10. หมายเหตุสำคัญ</h3>
+    <div class="disclaimer" style="margin-top:8px">
+      <span>⚠️</span>
+      <div>รายงานนี้เป็น <b>การวิเคราะห์เบื้องต้น (Preliminary / Conceptual)</b> เพื่อช่วยจัดทำ Checklist และตรวจประเด็นสำคัญเท่านั้น
+      ผลลัพธ์ <b>มิใช่รายการคำนวณโครงสร้างขั้นสุดท้าย</b> และไม่อาจสรุปได้ว่า "ปลอดภัยแน่นอน"
+      การออกแบบจริงต้องเป็นไปตาม มยผ.1301/1302-61, มาตรฐานคอนกรีตเสริมเหล็ก, กฎกระทรวงควบคุมอาคารและกฎหมายแผ่นดินไหว พ.ศ.2564
+      และ<b>ต้องผ่านการตรวจสอบและลงนามโดยวิศวกรโยธาผู้ได้รับใบอนุญาต (สามัญวิศวกร/วุฒิวิศวกร)</b> ก่อนนำไปก่อสร้างจริง</div>
+    </div>
+    <p class="rep-meta" style="margin-top:16px">ผู้จัดทำ ____________________ &nbsp;&nbsp; ผู้ตรวจสอบ (วิศวกรผู้ได้รับใบอนุญาต) ____________________ &nbsp;&nbsp; วันที่ __________</p>
+  `;
+  $('report-output').innerHTML=html;
+}
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+const TITLES={project:'ข้อมูลโครงการ',criteria:'เกณฑ์ออกแบบ & วัสดุ',loads:'น้ำหนักบรรทุก',
+  seismic:'แรงแผ่นดินไหว',system:'ระบบโครงสร้าง',dashboard:'Analysis Dashboard',
+  member:'องค์อาคาร คสล.',detailing:'Seismic Detailing',foundation:'ฐานราก',risk:'ความเสี่ยง & คำเตือน',report:'รายงานสรุป'};
+function goto(sec){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  $('section-'+sec).classList.add('active');
+  document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('active',a.dataset.sec===sec));
+  $('top-title').textContent=TITLES[sec]||'';
+  if(sec==='dashboard'||sec==='risk')analyze();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.querySelectorAll('#nav a').forEach(a=>a.addEventListener('click',()=>goto(a.dataset.sec)));
+
+/* ============================================================
+   RESET
+   ============================================================ */
+function resetAll(){
+  if(!confirm('ต้องการคืนค่าเริ่มต้นทั้งหมด? ข้อมูลที่กรอกจะถูกล้าง'))return;
+  location.reload();
+}
+
+/* ============================================================
+   LIVE UPDATE — ทุก input เปลี่ยนค่าแล้ววิเคราะห์ใหม่อัตโนมัติ
+   ============================================================ */
+function bindLive(){
+  document.querySelectorAll('input,select,textarea').forEach(el=>{
+    if(el.type==='checkbox')return; // checkbox handled by updateChecklist
+    el.addEventListener('input',()=>{
+      // ถ้า user แก้ช่องตัวประกอบเอง -> ทำเครื่องหมายไม่ให้ auto ทับ
+      if(FACTOR_IDS.indexOf(el.id)>=0) el.dataset.touched='1';
+      autoCompute();
+      // อัปเดต dashboard เฉพาะถ้ากำลังดู section ที่เกี่ยว
+      const active=document.querySelector('.section.active');
+      if(active&&(active.id==='section-dashboard'||active.id==='section-risk'))analyze();
+    });
+  });
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+buildChecklists();
+// ตั้งค่า dropdown ที่ตั้ง + ค่าตั้งต้น อ.สารภี จ.เชียงใหม่ (ดึง Ss/S1 จาก มยผ.1302-61)
+populateProvinces();
+$('s_prov').value='เชียงใหม่'; populateAmphoes('เชียงใหม่');
+$('s_amphoe').value='สารภี'; fillSsS1('เชียงใหม่','สารภี');
+bindLive();
+autoCompute();
+analyze();
+</script>
+</body>
+</html>

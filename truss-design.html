@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2D Truss Designer — โปรแกรมออกแบบโครงถัก</title>
+<style>
+:root{
+  --bg:#FAF9F5; --panel:#FFFFFF; --ink:#1A1915; --ink2:#6B6862;
+  --line:#E6E2D6; --line2:#D6D1C4; --clay:#C9633F; --clay-soft:#F3E3D8;
+  --tension:#C0392B; --comp:#2C5AA0; --zero:#9A968C;
+  --ok:#2E7D52; --warn:#C9633F; --bad:#C0392B;
+  --r:10px; --shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.04);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI","Helvetica Neue",sans-serif;
+  background:var(--bg); color:var(--ink); font-size:14px; line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{font-weight:600; letter-spacing:-.01em; margin:0}
+.app{max-width:1340px; margin:0 auto; padding:24px 24px 80px}
+header.top{display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:20px; flex-wrap:wrap}
+header.top .brand{display:flex; align-items:center; gap:12px}
+header.top .logo{width:38px;height:38px;border-radius:9px;background:var(--clay);
+  display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px}
+header.top h1{font-size:21px}
+header.top .sub{color:var(--ink2);font-size:12.5px;margin-top:2px}
+.btn{font:inherit;border:1px solid var(--line2);background:var(--panel);color:var(--ink);
+  padding:9px 16px;border-radius:9px;cursor:pointer;font-weight:550;transition:.12s;white-space:nowrap}
+.btn:hover{border-color:var(--clay);color:var(--clay)}
+.btn.primary{background:var(--clay);border-color:var(--clay);color:#fff}
+.btn.primary:hover{background:#b5552f;color:#fff}
+.layout{display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start}
+@media(max-width:980px){.layout{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.card .hd{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
+.card .hd h2{font-size:14px}
+.card .hd .tag{margin-left:auto;font-size:11px;color:var(--ink2);background:var(--bg);
+  border:1px solid var(--line);padding:2px 8px;border-radius:20px}
+.card .bd{padding:16px 18px}
+.field{margin-bottom:13px}
+.field:last-child{margin-bottom:0}
+label{display:block;font-size:12px;font-weight:550;color:var(--ink2);margin-bottom:5px}
+input,select{width:100%;font:inherit;font-size:13.5px;padding:8px 10px;border:1px solid var(--line2);
+  border-radius:8px;background:#fff;color:var(--ink);transition:.12s}
+input:focus,select:focus{outline:none;border-color:var(--clay);box-shadow:0 0 0 3px var(--clay-soft)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.hint{font-size:11px;color:var(--ink2);margin-top:4px;line-height:1.4}
+.sec-title{font-size:11px;font-weight:650;text-transform:uppercase;letter-spacing:.06em;
+  color:var(--clay);margin:18px 0 10px;padding-top:14px;border-top:1px dashed var(--line2)}
+.sec-title:first-child{margin-top:0;padding-top:0;border-top:none}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{text-align:right;padding:6px 9px;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--ink2);font-size:11px;text-transform:uppercase;letter-spacing:.03em;background:var(--bg)}
+tbody tr:hover{background:#fcfbf7}
+.pill{display:inline-block;font-size:11px;font-weight:600;padding:1px 8px;border-radius:20px}
+.pill.t{background:#fbe9e7;color:var(--tension)}
+.pill.c{background:#e8eefb;color:var(--comp)}
+.pill.z{background:#f0efe9;color:var(--zero)}
+.diagram-wrap{position:relative;background:
+  linear-gradient(0deg,transparent 23px,#f1efe7 24px),
+  linear-gradient(90deg,transparent 23px,#f1efe7 24px);
+  background-size:24px 24px;background-color:#fcfbf8;border-radius:8px;border:1px solid var(--line);overflow:hidden}
+svg{display:block;width:100%;height:auto}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--ink2);margin-top:10px}
+.legend i{display:inline-block;width:18px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
+.grid-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.dgroup{border:1px solid var(--line);border-radius:9px;padding:14px;background:#fff}
+.dgroup h3{font-size:13.5px;display:flex;align-items:center;gap:7px;margin-bottom:4px}
+.dgroup .dot{width:9px;height:9px;border-radius:50%}
+.dgroup .meta{font-size:11.5px;color:var(--ink2);margin-bottom:10px}
+.opt{display:flex;align-items:center;gap:8px;padding:7px 9px;border:1px solid var(--line);border-radius:7px;
+  margin-bottom:6px;cursor:pointer;font-size:12.5px;transition:.12s}
+.opt:hover{border-color:var(--clay)}
+.opt.sel{border-color:var(--clay);background:var(--clay-soft)}
+.opt .nm{font-weight:600;flex:1}
+.opt .ut{font-size:11px;font-weight:600}
+.ut.ok{color:var(--ok)} .ut.warn{color:var(--warn)} .ut.bad{color:var(--bad)}
+.kpi{display:flex;gap:18px;flex-wrap:wrap;margin-top:4px}
+.kpi .k{font-size:12px;color:var(--ink2)}
+.kpi .k b{display:block;font-size:17px;color:var(--ink);font-weight:650;margin-top:1px}
+.note{background:var(--clay-soft);border:1px solid #e8c9b6;border-radius:8px;padding:10px 12px;font-size:12px;color:#7a3d22;margin-bottom:14px}
+.mini-btn{font:inherit;font-size:12px;border:1px solid var(--line2);background:#fff;border-radius:6px;padding:4px 9px;cursor:pointer}
+.mini-btn:hover{border-color:var(--clay);color:var(--clay)}
+.pl-row{display:grid;grid-template-columns:1.6fr 1fr 1fr auto;gap:6px;margin-bottom:6px;align-items:center}
+.pl-row select,.pl-row input{padding:6px 8px;font-size:12.5px}
+.del{border:none;background:#f6ece8;color:var(--clay);border-radius:6px;width:28px;height:30px;cursor:pointer;font-size:15px}
+.del:hover{background:#f0ddd4}
+.print-only{display:none}
+.stack>*{margin-bottom:20px}
+.stack>*:last-child{margin-bottom:0}
+@media print{
+  @page{size:A4 portrait;margin:11mm 12mm}
+  body{background:#fff;font-size:10px}
+  .app{max-width:none;padding:0}
+  .no-print{display:none!important}
+  .print-only{display:block}
+  .layout{display:block}
+  .card{box-shadow:none;border:1px solid #ccc;break-inside:avoid;margin-bottom:10px}
+  .card .hd{padding:7px 11px}
+  .card .bd{padding:10px 11px}
+  .grid-cards{grid-template-columns:1fr 1fr}
+  .dgroup{break-inside:avoid}
+  table{font-size:9px}
+  th,td{padding:3px 6px}
+  .diagram-wrap{background:#fff;border:1px solid #ccc}
+  h1{font-size:16px}
+  .page-break{break-before:page}
+  .opt:not(.sel){display:none}
+  .opt.sel{border-color:#999;background:#f3f3f3}
+  .mini-btn,.del,.pl-row .del{display:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="top no-print">
+    <div class="brand">
+      <div class="logo">▲</div>
+      <div>
+        <h1>2D Truss Designer</h1>
+        <div class="sub">วิเคราะห์และออกแบบโครงถักเหล็ก · Method of Joints · ASD (AISC)</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn" onclick="loadExample()">ตัวอย่าง</button>
+      <button class="btn primary" onclick="window.print()">🖨 พิมพ์ A4</button>
+    </div>
+  </header>
+
+  <!-- Print header -->
+  <div class="print-only" style="margin-bottom:10px;border-bottom:2px solid #333;padding-bottom:6px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end">
+      <div><b style="font-size:15px" id="pTitle">รายงานการออกแบบโครงถักเหล็ก</b>
+        <div style="font-size:10px;color:#555">2D Truss Analysis &amp; Design Report — Method of Joints / ASD (AISC)</div></div>
+      <div style="text-align:right;font-size:10px;color:#555" id="pMeta"></div>
+    </div>
+  </div>
+
+  <div class="layout">
+
+    <!-- ============ CONTROLS ============ -->
+    <aside class="card no-print">
+      <div class="hd"><h2>ข้อมูลนำเข้า</h2><span class="tag">Input</span></div>
+      <div class="bd">
+
+        <div class="sec-title">โครงการ</div>
+        <div class="field"><label>ชื่อโครงการ</label><input id="projName" value="โครงหลังคาเหล็ก อาคาร A"></div>
+        <div class="row2">
+          <div class="field"><label>ออกแบบโดย</label><input id="projBy" value="วิศวกร"></div>
+          <div class="field"><label>วันที่</label><input id="projDate" type="date"></div>
+        </div>
+
+        <div class="sec-title">รูปทรงโครงถัก</div>
+        <div class="field">
+          <label>รูปแบบ Truss</label>
+          <select id="ttype">
+            <optgroup label="Parallel chord (คานขนาน)">
+              <option value="pratt">Pratt Truss</option>
+              <option value="howe">Howe Truss</option>
+              <option value="warren">Warren Truss</option>
+            </optgroup>
+            <optgroup label="Pitched / Gable (จั่ว)">
+              <option value="pratt_roof" selected>Pratt Roof (จั่ว)</option>
+              <option value="howe_roof">Howe Roof (จั่ว)</option>
+              <option value="fink">Fink Truss</option>
+              <option value="kingpost">King Post</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="row2">
+          <div class="field"><label>ความกว้าง L (m)</label><input id="span" type="number" value="12" min="1" step="0.5"></div>
+          <div class="field"><label>ความสูง H (m)</label><input id="height" type="number" value="3" min="0.3" step="0.1"></div>
+        </div>
+        <div class="field"><label>จำนวนช่อง (Panels, เลขคู่)</label><input id="panels" type="number" value="8" min="2" max="20" step="2">
+          <div class="hint">ใช้กับ Parallel / Pratt-Howe Roof · (Fink &amp; King Post กำหนดรูปทรงคงที่)</div></div>
+
+        <div class="sec-title">วัสดุเหล็ก</div>
+        <div class="row2">
+          <div class="field"><label>เกรดเหล็ก (Fy)</label>
+            <select id="grade">
+              <option value="245" selected>SS400 — Fy 245 MPa</option>
+              <option value="235">SR24/A36 — Fy 235</option>
+              <option value="325">SM490 — Fy 325</option>
+              <option value="400">SS540 — Fy 400</option>
+            </select></div>
+          <div class="field"><label>E (MPa)</label><input id="emod" type="number" value="200000" step="1000"></div>
+        </div>
+        <div class="field"><label>ชนิดหน้าตัดเหล็ก</label>
+          <select id="sectype">
+            <option value="shs" selected>เหล็กกล่องสี่เหลี่ยมจัตุรัส (SHS)</option>
+            <option value="rhs">เหล็กกล่องสี่เหลี่ยมผืนผ้า (RHS)</option>
+            <option value="chs">เหล็กแป๊บกลม (CHS)</option>
+          </select>
+          <div class="hint">เปลี่ยนชนิดหน้าตัดแล้วโปรแกรมจะแนะนำขนาดใหม่ให้อัตโนมัติ</div>
+        </div>
+
+        <div class="sec-title">น้ำหนักบรรทุก</div>
+        <div class="field"><label>Uniform load บน Top chord, w (kg/m)</label>
+          <input id="udl" type="number" value="800" step="50">
+          <div class="hint">กระจายเป็นแรงลงที่ joint ตามความยาว member (tributary)</div></div>
+
+        <div class="field">
+          <label>Point load รายจุด (kg · ลง = ค่าลบ)</label>
+          <div id="plRows"></div>
+          <button class="mini-btn" onclick="addPL()">+ เพิ่มแรงที่ joint</button>
+        </div>
+
+        <div style="margin-top:18px">
+          <button class="btn primary" style="width:100%" onclick="run()">⚙ วิเคราะห์ &amp; ออกแบบ</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ============ RESULTS ============ -->
+    <main class="stack">
+
+      <section class="card" id="propCard">
+        <div class="hd"><h2>ตรวจสอบสัดส่วนความสูง / ความกว้าง</h2><span class="tag">Proportion check</span></div>
+        <div class="bd"><div id="propBody"></div></div>
+      </section>
+
+      <section class="card">
+        <div class="hd"><h2>แผนภาพโครงถัก &amp; แรงในชิ้นส่วน</h2><span class="tag" id="diagTag">Diagram</span></div>
+        <div class="bd">
+          <div class="diagram-wrap"><svg id="svg" viewBox="0 0 900 460" preserveAspectRatio="xMidYMid meet"></svg></div>
+          <div class="legend">
+            <span><i style="background:var(--tension)"></i>แรงดึง (Tension)</span>
+            <span><i style="background:var(--comp)"></i>แรงอัด (Compression)</span>
+            <span><i style="background:var(--zero)"></i>Zero member</span>
+            <span style="margin-left:auto" id="reactTxt"></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="hd"><h2>การออกแบบหน้าตัด &amp; ขนาดเหล็กที่แนะนำ</h2><span class="tag" id="secTag">Design · SHS</span></div>
+        <div class="bd">
+          <div class="note">
+            ออกแบบด้วยวิธี <b>ASD (AISC)</b> · แรงดึงอนุญาต Ft = 0.6Fy · แรงอัดคิดการโก่งเดาะ (Euler/AISC) K=1.0 ·
+            หน้าตัด<span id="secTypeNote">เหล็กกล่องสี่เหลี่ยมจัตุรัส (SHS)</span> · เลือกได้อย่างน้อย 3 ขนาดต่อกลุ่ม
+          </div>
+          <div class="kpi" id="kpiBar"></div>
+          <div class="grid-cards" id="designCards" style="margin-top:14px"></div>
+        </div>
+      </section>
+
+      <section class="card page-break">
+        <div class="hd"><h2>ตารางแรงในชิ้นส่วน (Member Forces)</h2><span class="tag" id="memTag"></span></div>
+        <div class="bd" style="max-height:none;overflow:auto">
+          <table id="memTable">
+            <thead><tr>
+              <th>Member</th><th>กลุ่ม</th><th>Node i–j</th><th>ยาว (m)</th><th>แรง (kg)</th><th>ชนิด</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   SECTION DATABASE — Square Hollow Section (SHS) เหล็กกล่อง
+   ============================================================ */
+const SHS = [[25,1.6],[25,2.3],[32,1.6],[32,2.3],[38,1.6],[38,2.3],[38,3.2],
+ [50,1.6],[50,2.3],[50,3.2],[50,4.0],
+ [75,2.3],[75,3.2],[75,4.0],[75,4.5],
+ [100,2.3],[100,3.2],[100,4.0],[100,4.5],[100,6.0],
+ [125,3.2],[125,4.0],[125,4.5],[125,6.0],
+ [150,3.2],[150,4.5],[150,6.0],[150,9.0]
+].map(([b,t])=>{
+  const bi=b-2*t, A=b*b-bi*bi, I=(Math.pow(b,4)-Math.pow(bi,4))/12, r=Math.sqrt(I/A);
+  return {name:`□${b}×${b}×${t}`, b, t, A, I, r, w:A*7850/1e6}; // A mm², w kg/m
+});
+
+/* เหล็กกล่องสี่เหลี่ยมผืนผ้า — Rectangular Hollow Section (RHS) : [H, B, t]
+   r ใช้แกนอ่อน (r_min) เพื่อคิดการโก่งเดาะแบบ conservative */
+const RHS = [[50,25,1.6],[50,25,2.3],[50,30,2.3],[50,30,3.2],
+ [75,45,2.3],[75,45,3.2],[75,45,4.0],
+ [100,50,2.3],[100,50,3.2],[100,50,4.0],
+ [125,75,3.2],[125,75,4.0],[125,75,4.5],
+ [150,75,3.2],[150,75,4.5],[150,75,6.0],
+ [150,100,4.5],[150,100,6.0],
+ [200,100,4.5],[200,100,6.0],[200,100,9.0]
+].map(([H,B,t])=>{
+  const hi=H-2*t, bi=B-2*t, A=H*B-hi*bi;
+  const Ix=(B*Math.pow(H,3)-bi*Math.pow(hi,3))/12, Iy=(H*Math.pow(B,3)-hi*Math.pow(bi,3))/12;
+  const I=Math.min(Ix,Iy), r=Math.sqrt(I/A);
+  return {name:`▭${H}×${B}×${t}`, b:H, t, A, I, r, w:A*7850/1e6};
+});
+
+/* เหล็กแป๊บกลม — Circular Hollow Section (CHS) : [D(เส้นผ่านศูนย์กลางนอก), t] */
+const CHS = [[21.7,2.0],[27.2,2.0],[27.2,2.3],[34.0,2.3],[34.0,3.2],
+ [42.7,2.3],[42.7,3.2],[48.6,2.3],[48.6,3.2],[48.6,4.0],
+ [60.5,2.3],[60.5,3.2],[60.5,4.0],
+ [76.3,2.8],[76.3,3.2],[76.3,4.0],
+ [89.1,2.8],[89.1,3.2],[89.1,4.0],
+ [101.6,3.2],[101.6,4.0],[101.6,5.0],
+ [114.3,3.2],[114.3,4.5],[114.3,6.0],
+ [139.8,4.0],[139.8,4.5],[139.8,6.0],
+ [165.2,4.5],[165.2,6.0],[165.2,7.1]
+].map(([D,t])=>{
+  const di=D-2*t, A=Math.PI/4*(D*D-di*di);
+  const I=Math.PI/64*(Math.pow(D,4)-Math.pow(di,4)), r=Math.sqrt(I/A);
+  return {name:`Ø${D}×${t}`, b:D, t, A, I, r, w:A*7850/1e6};
+});
+
+const SECTYPES={
+  shs:{label:'เหล็กกล่องสี่เหลี่ยมจัตุรัส (SHS)', list:SHS},
+  rhs:{label:'เหล็กกล่องสี่เหลี่ยมผืนผ้า (RHS)', list:RHS},
+  chs:{label:'เหล็กแป๊บกลม (CHS)', list:CHS},
+};
+
+/* ============================================================
+   GEOMETRY GENERATORS  -> {nodes:[{x,y}], members:[{i,j,role}], pin, roller}
+   role: top | bottom | vertical | diagonal
+   ============================================================ */
+function genTruss(type, L, H, n){
+  if(n%2!==0) n++;
+  if(type==='fink')      return genFink(L,H);
+  if(type==='kingpost')  return genKingPost(L,H);
+  if(type==='pratt_roof'||type==='howe_roof') return genGable(type,L,H,n);
+  return genParallel(type,L,H,n);
+}
+
+function genParallel(type,L,H,n){
+  const p=L/n, nodes=[], M=[];
+  // bottom 0..n  (index i), top n+1..2n+1 (index n+1+i)
+  for(let i=0;i<=n;i++) nodes.push({x:i*p,y:0});
+  for(let i=0;i<=n;i++) nodes.push({x:i*p,y:H});
+  const B=i=>i, T=i=>n+1+i;
+  for(let i=0;i<n;i++) M.push({i:B(i),j:B(i+1),role:'bottom'});
+  for(let i=0;i<n;i++) M.push({i:T(i),j:T(i+1),role:'top'});
+  for(let i=0;i<=n;i++) M.push({i:B(i),j:T(i),role:'vertical'});
+  for(let i=0;i<n;i++){
+    let a,b;
+    if(type==='warren'){ if(i%2===0){a=B(i);b=T(i+1);}else{a=T(i);b=B(i+1);} }
+    else if(type==='howe'){ if(i<n/2){a=B(i);b=T(i+1);}else{a=T(i);b=B(i+1);} }
+    else { if(i<n/2){a=T(i);b=B(i+1);}else{a=B(i);b=T(i+1);} } // pratt
+    M.push({i:a,j:b,role:'diagonal'});
+  }
+  return {nodes,members:M,pin:B(0),roller:B(n)};
+}
+
+function genGable(type,L,H,n){
+  const p=L/n, half=L/2, nodes=[], M=[];
+  for(let i=0;i<=n;i++) nodes.push({x:i*p,y:0});            // bottom 0..n
+  const topIdx=[];                                           // top interior 1..n-1
+  for(let i=1;i<n;i++){ const x=i*p; const y=H*(1-Math.abs(x-half)/half); nodes.push({x,y}); topIdx[i]=nodes.length-1; }
+  const B=i=>i, T=i=>topIdx[i];
+  for(let i=0;i<n;i++) M.push({i:B(i),j:B(i+1),role:'bottom'});
+  // rafter
+  M.push({i:B(0),j:T(1),role:'top'});
+  for(let i=1;i<n-1;i++) M.push({i:T(i),j:T(i+1),role:'top'});
+  M.push({i:T(n-1),j:B(n),role:'top'});
+  for(let i=1;i<n;i++) M.push({i:B(i),j:T(i),role:'vertical'});
+  for(let i=1;i<n-1;i++){
+    let a,b;
+    if(type==='howe_roof'){ if(i<n/2){a=B(i);b=T(i+1);}else{a=T(i);b=B(i+1);} }
+    else { if(i<n/2){a=T(i);b=B(i+1);}else{a=B(i);b=T(i+1);} }
+    M.push({i:a,j:b,role:'diagonal'});
+  }
+  return {nodes,members:M,pin:B(0),roller:B(n)};
+}
+
+function genFink(L,H){
+  const nodes=[{x:0,y:0},{x:L/2,y:0},{x:L,y:0},{x:L/2,y:H},{x:L/4,y:H/2},{x:3*L/4,y:H/2}];
+  const Lt=0,C=1,R=2,P=3,a=4,b=5;
+  const M=[
+    {i:Lt,j:a,role:'top'},{i:a,j:P,role:'top'},{i:P,j:b,role:'top'},{i:b,j:R,role:'top'},
+    {i:Lt,j:C,role:'bottom'},{i:C,j:R,role:'bottom'},
+    {i:a,j:C,role:'diagonal'},{i:b,j:C,role:'diagonal'},
+    {i:P,j:C,role:'vertical'}
+  ];
+  return {nodes,members:M,pin:Lt,roller:R};
+}
+
+function genKingPost(L,H){
+  const nodes=[{x:0,y:0},{x:L/2,y:0},{x:L,y:0},{x:L/2,y:H}];
+  const M=[
+    {i:0,j:3,role:'top'},{i:3,j:2,role:'top'},
+    {i:0,j:1,role:'bottom'},{i:1,j:2,role:'bottom'},
+    {i:3,j:1,role:'vertical'}
+  ];
+  return {nodes,members:M,pin:0,roller:2};
+}
+
+/* ============================================================
+   LOADS
+   ============================================================ */
+function buildLoads(model, udl, pointLoads){
+  const F = model.nodes.map(()=>({x:0,y:0}));
+  // uniform load on top chord members -> joint loads (downward)
+  if(udl){
+    for(const m of model.members){
+      if(m.role!=='top') continue;
+      const a=model.nodes[m.i], b=model.nodes[m.j];
+      const len=Math.hypot(b.x-a.x,b.y-a.y);
+      const half=udl*len/2;
+      F[m.i].y-=half; F[m.j].y-=half;
+    }
+  }
+  for(const pl of pointLoads){
+    if(pl.node>=0 && pl.node<F.length){ F[pl.node].x+=pl.fx; F[pl.node].y+=pl.fy; }
+  }
+  return F;
+}
+
+/* ============================================================
+   SOLVER — Method of Joints (linear system)
+   ============================================================ */
+function solveLinear(A,b){
+  const n=b.length, M=A.map((r,i)=>r.concat(b[i]));
+  for(let col=0;col<n;col++){
+    let piv=col;
+    for(let r=col+1;r<n;r++) if(Math.abs(M[r][col])>Math.abs(M[piv][col])) piv=r;
+    [M[col],M[piv]]=[M[piv],M[col]];
+    const pv=M[col][col];
+    if(Math.abs(pv)<1e-9) throw new Error('โครงไม่เสถียร/แก้ไม่ได้ (singular)');
+    for(let r=0;r<n;r++){ if(r===col) continue; const f=M[r][col]/pv;
+      for(let c=col;c<=n;c++) M[r][c]-=f*M[col][c]; }
+  }
+  return M.map((r,i)=>r[n]/M[i][i]);
+}
+
+function analyze(model,F){
+  const N=model.nodes.length, Mn=model.members.length, U=Mn+3;
+  if(2*N!==U) throw new Error(`โครงไม่ determinate (2N=${2*N}, m+r=${U})`);
+  const A=Array.from({length:2*N},()=>new Array(U).fill(0)), b=new Array(2*N).fill(0);
+  model.members.forEach((m,k)=>{
+    const a=model.nodes[m.i], c=model.nodes[m.j], L=Math.hypot(c.x-a.x,c.y-a.y);
+    const lx=(c.x-a.x)/L, ly=(c.y-a.y)/L;
+    A[2*m.i][k]+=lx;  A[2*m.i+1][k]+=ly;
+    A[2*m.j][k]-=lx;  A[2*m.j+1][k]-=ly;
+  });
+  A[2*model.pin][Mn]+=1;          // Rx pin
+  A[2*model.pin+1][Mn+1]+=1;      // Ry pin
+  A[2*model.roller+1][Mn+2]+=1;   // Ry roller
+  for(let k=0;k<N;k++){ b[2*k]=-F[k].x; b[2*k+1]=-F[k].y; }
+  const x=solveLinear(A,b);
+  const forces=model.members.map((m,k)=>{
+    const a=model.nodes[m.i], c=model.nodes[m.j];
+    return {...m, len:Math.hypot(c.x-a.x,c.y-a.y), force:x[k]};
+  });
+  return {forces, reactions:{Rx:x[Mn],Ry1:x[Mn+1],Ry2:x[Mn+2]}};
+}
+
+/* ============================================================
+   DESIGN — ASD (AISC)
+   ============================================================ */
+const G=9.80665; // 1 kgf = 9.80665 N  (แปลง N -> kgf)
+
+function proportionCheck(type,L,H){
+  const parallel=['pratt','howe','warren'].includes(type);
+  if(parallel){
+    const ratio=L/H; let status='ok',msg;
+    if(ratio>20){status='warn';msg='โครงตื้นเกินไป (L/d > 20) อาจแอ่นตัวมาก — ควรเพิ่มความสูง H';}
+    else if(ratio<8){status='warn';msg='โครงลึกเกินไป (L/d < 8) สิ้นเปลืองวัสดุ — ควรลดความสูง H';}
+    else msg='อยู่ในช่วงแนะนำ (L/d = 8–20, เหมาะสุด ~10–15)';
+    return {label:'อัตราส่วนช่วง/ความลึก (L/d)',value:ratio.toFixed(1),
+      recommend:'8 – 20 (เหมาะสุด 10–15)',status,msg};
+  }
+  const angle=Math.atan(H/(L/2))*180/Math.PI; let status='ok',msg;
+  if(angle<10){status='warn';msg='ความชันต่ำเกินไป (< 10°) ระบายน้ำไม่ดี และแรงในชิ้นส่วนสูงขึ้นมาก';}
+  else if(angle>45){status='warn';msg='ความชันสูงเกินไป (> 45°) สิ้นเปลืองวัสดุ';}
+  else msg='อยู่ในช่วงแนะนำ (15°–35° เหมาะสุด)';
+  return {label:'มุมลาดหลังคา (slope)',value:angle.toFixed(1)+'°',
+    recommend:'15° – 35° (ยอมรับ 10°–45°)',status,msg,
+    extra:`H/L = ${(H/L).toFixed(3)} · pitch = ${(2*H/L).toFixed(2)}`};
+}
+
+function Fa(Fy,E,KLr){
+  const Cc=Math.sqrt(2*Math.PI*Math.PI*E/Fy);
+  if(KLr<=Cc){
+    const FS=5/3 + 3*KLr/(8*Cc) - Math.pow(KLr,3)/(8*Math.pow(Cc,3));
+    return (1-KLr*KLr/(2*Cc*Cc))*Fy/FS;
+  }
+  return 12*Math.PI*Math.PI*E/(23*KLr*KLr);
+}
+function checkSection(sec,Tmax,Cmax,Lmax,Fy,E){
+  const Ft=0.6*Fy;
+  const Pt=Ft*sec.A/G;                          // kgf
+  const KLr=1.0*Lmax*1000/sec.r;
+  const fa=Fa(Fy,E,KLr);
+  const Pc=fa*sec.A/G;                           // kgf
+  const slLim = Cmax>1e-6?200:300;
+  const utT = Tmax>0? Tmax/Pt:0;
+  const utC = Cmax>0? Cmax/Pc:0;
+  const ut = Math.max(utT,utC);
+  const ok = (Tmax<=Pt)&&(Cmax<=Pc)&&(KLr<=slLim || Cmax<1e-6 && KLr<=300);
+  return {Pt,Pc,KLr,ut,ok,slLim,fa};
+}
+
+/* ============================================================
+   STATE + UI
+   ============================================================ */
+let MODEL=null, RESULT=null, plList=[{node:-1,fx:0,fy:0}], picks={};
+const $=id=>document.getElementById(id);
+const ROLE={top:{label:'Upper cord',color:'#C9633F'},bottom:{label:'Lower cord',color:'#2E7D52'},
+  diagonal:{label:'Diagonal',color:'#2C5AA0'},vertical:{label:'Vertical',color:'#8a6d3b'}};
+
+function nodeLabel(i){const nd=MODEL.nodes[i];return `N${i} (${nd.x.toFixed(1)},${nd.y.toFixed(1)})`;}
+
+function renderPL(){
+  const opts = MODEL? MODEL.nodes.map((nd,i)=>`<option value="${i}">N${i} (${nd.x.toFixed(1)},${nd.y.toFixed(1)})</option>`).join(''):'';
+  $('plRows').innerHTML = plList.map((p,k)=>`
+    <div class="pl-row">
+      <select onchange="plList[${k}].node=+this.value">
+        <option value="-1">— เลือก joint —</option>${opts}
+      </select>
+      <input type="number" value="${p.fx}" placeholder="Fx" oninput="plList[${k}].fx=+this.value||0">
+      <input type="number" value="${p.fy}" placeholder="Fy↓-" oninput="plList[${k}].fy=+this.value||0">
+      <button class="del" onclick="plList.splice(${k},1);renderPL()">×</button>
+    </div>`).join('');
+  // restore selected node values
+  $('plRows').querySelectorAll('select').forEach((s,k)=>{ if(plList[k].node>=0) s.value=plList[k].node; });
+}
+function addPL(){ plList.push({node:-1,fx:0,fy:0}); renderPL(); }
+
+function buildModelOnly(){
+  MODEL=genTruss($('ttype').value,+$('span').value,+$('height').value,+$('panels').value);
+}
+
+function run(){
+  try{
+    buildModelOnly();
+    const F=buildLoads(MODEL,+$('udl').value, plList.filter(p=>p.node>=0));
+    RESULT=analyze(MODEL,F);
+    RESULT.loads=F;
+    picks={};
+    renderAll();
+  }catch(e){ alert('เกิดข้อผิดพลาด: '+e.message); console.error(e); }
+}
+
+function renderProp(){
+  const p=proportionCheck($('ttype').value,+$('span').value,+$('height').value);
+  const col=p.status==='ok'?'var(--ok)':'var(--warn)';
+  $('propBody').innerHTML=`
+    <div class="kpi">
+      <div class="k">${p.label}<b style="color:${col}">${p.value}</b></div>
+      <div class="k">ช่วงแนะนำ<b>${p.recommend}</b></div>
+      <div class="k">สถานะ<b style="color:${col}">${p.status==='ok'?'ผ่าน ✓':'ควรทบทวน ⚠'}</b></div>
+      ${p.extra?`<div class="k">เพิ่มเติม<b>${p.extra}</b></div>`:''}
+    </div>
+    <div style="margin-top:10px;font-size:12.5px;color:${col}">${p.msg}</div>`;
+}
+
+function renderAll(){
+  renderPL();
+  renderProp();
+  drawSVG();
+  renderTable();
+  renderDesign();
+  // print meta
+  $('pTitle').textContent='รายงานการออกแบบโครงถักเหล็ก — '+$('projName').value;
+  $('pMeta').innerHTML=`โครงการ: ${$('projName').value}<br>ออกแบบโดย: ${$('projBy').value} · ${$('projDate').value||''}<br>
+    ${$('ttype').selectedOptions[0].text} · L=${$('span').value}m H=${$('height').value}m`;
+  $('diagTag').textContent=`${MODEL.nodes.length} joints · ${MODEL.members.length} members`;
+}
+
+/* ---------- SVG ---------- */
+function drawSVG(){
+  const W=900,Hp=460,pad=64;
+  const xs=MODEL.nodes.map(n=>n.x), ys=MODEL.nodes.map(n=>n.y);
+  const minx=Math.min(...xs),maxx=Math.max(...xs),miny=Math.min(...ys),maxy=Math.max(...ys);
+  const sx=(W-2*pad)/((maxx-minx)||1), sy=(Hp-2*pad)/((maxy-miny)||1), s=Math.min(sx,sy);
+  const ox=(W-(maxx-minx)*s)/2, oy=Hp-pad;
+  const X=x=>ox+(x-minx)*s, Y=y=>oy-(y-miny)*s;
+  let svg='';
+  // members
+  const maxF=Math.max(1,...RESULT.forces.map(f=>Math.abs(f.force)));
+  RESULT.forces.forEach((f,k)=>{
+    const a=MODEL.nodes[f.i],b=MODEL.nodes[f.j];
+    const col=Math.abs(f.force)<0.05?'var(--zero)':(f.force>0?'var(--tension)':'var(--comp)');
+    const wd=1.5+3.5*Math.abs(f.force)/maxF;
+    svg+=`<line x1="${X(a.x)}" y1="${Y(a.y)}" x2="${X(b.x)}" y2="${Y(b.y)}" stroke="${col}" stroke-width="${wd}" stroke-linecap="round"/>`;
+    const mx=(X(a.x)+X(b.x))/2, my=(Y(a.y)+Y(b.y))/2;
+    svg+=`<text x="${mx}" y="${my-3}" font-size="9.5" fill="#444" text-anchor="middle" style="paint-order:stroke;stroke:#fff;stroke-width:3px">${f.force.toFixed(0)}</text>`;
+  });
+  // supports
+  const drawPin=(i)=>{const n=MODEL.nodes[i];const x=X(n.x),y=Y(n.y);
+    return `<polygon points="${x},${y} ${x-9},${y+15} ${x+9},${y+15}" fill="none" stroke="#333" stroke-width="1.5"/><line x1="${x-13}" y1="${y+15}" x2="${x+13}" y2="${y+15}" stroke="#333" stroke-width="1.5"/>`;};
+  const drawRoller=(i)=>{const n=MODEL.nodes[i];const x=X(n.x),y=Y(n.y);
+    return `<polygon points="${x},${y} ${x-9},${y+13} ${x+9},${y+13}" fill="none" stroke="#333" stroke-width="1.5"/><circle cx="${x-5}" cy="${y+17}" r="3" fill="none" stroke="#333" stroke-width="1.3"/><circle cx="${x+5}" cy="${y+17}" r="3" fill="none" stroke="#333" stroke-width="1.3"/><line x1="${x-13}" y1="${y+21}" x2="${x+13}" y2="${y+21}" stroke="#333" stroke-width="1.5"/>`;};
+  svg+=drawPin(MODEL.pin)+drawRoller(MODEL.roller);
+  // load arrows
+  RESULT.loads.forEach((f,i)=>{
+    if(Math.abs(f.y)<1e-6 && Math.abs(f.x)<1e-6) return;
+    const n=MODEL.nodes[i],x=X(n.x),y=Y(n.y);
+    if(f.y<0) svg+=`<line x1="${x}" y1="${y-30}" x2="${x}" y2="${y-4}" stroke="#C9633F" stroke-width="1.8"/><polygon points="${x},${y-2} ${x-4},${y-9} ${x+4},${y-9}" fill="#C9633F"/>`;
+  });
+  // nodes
+  MODEL.nodes.forEach((n,i)=>{
+    svg+=`<circle cx="${X(n.x)}" cy="${Y(n.y)}" r="3.2" fill="#fff" stroke="#333" stroke-width="1.3"/>`;
+    svg+=`<text x="${X(n.x)+5}" y="${Y(n.y)-5}" font-size="8.5" fill="#999">${i}</text>`;
+  });
+  $('svg').innerHTML=svg;
+  const R=RESULT.reactions;
+  $('reactTxt').innerHTML=`Reactions: R<sub>pin</sub>=(${R.Rx.toFixed(0)}, ${R.Ry1.toFixed(0)}) · R<sub>roller</sub>=(0, ${R.Ry2.toFixed(0)}) kg`;
+}
+
+/* ---------- Member table ---------- */
+function renderTable(){
+  const tb=$('memTable').querySelector('tbody');
+  tb.innerHTML=RESULT.forces.map((f,k)=>{
+    const t=Math.abs(f.force)<0.05?{c:'z',l:'Zero'}:(f.force>0?{c:'t',l:'ดึง T'}:{c:'c',l:'อัด C'});
+    return `<tr><td>M${k+1}</td><td>${ROLE[f.role].label}</td><td>${f.i}–${f.j}</td>
+      <td>${f.len.toFixed(2)}</td><td><b>${f.force.toFixed(0)}</b></td>
+      <td><span class="pill ${t.c}">${t.l}</span></td></tr>`;
+  }).join('');
+  $('memTag').textContent=`${RESULT.forces.length} ชิ้น`;
+}
+
+/* ---------- Design ---------- */
+function groupStats(){
+  const Fy=+$('grade').value, E=+$('emod').value;
+  const groups={};
+  for(const f of RESULT.forces){
+    const g=groups[f.role]||(groups[f.role]={role:f.role,Tmax:0,Cmax:0,Lmax:0,count:0,members:[]});
+    g.Tmax=Math.max(g.Tmax, f.force>0?f.force:0);
+    g.Cmax=Math.max(g.Cmax, f.force<0?-f.force:0);
+    g.Lmax=Math.max(g.Lmax, f.len);
+    g.count++; g.members.push(f);
+  }
+  return {groups,Fy,E};
+}
+
+function renderDesign(){
+  const {groups,Fy,E}=groupStats();
+  const sectype=SECTYPES[$('sectype').value]||SECTYPES.shs;
+  const DB=sectype.list;
+  $('secTag').textContent='Design · '+$('sectype').value.toUpperCase();
+  $('secTypeNote').textContent=sectype.label;
+  const order=['top','bottom','diagonal','vertical'];
+  let html='';
+  let totalW=0;
+  // สีเปอร์เซนต์: ผ่าน = เขียว/ส้ม (ไม่ใช้แดง) · ไม่ผ่าน = แดง
+  const utClass=(u,ok)=> !ok ? 'bad' : (u<=0.85?'ok':'warn');
+  for(const role of order){
+    const g=groups[role]; if(!g) continue;
+    // candidate sections sorted by weight
+    const cand=DB.map(sec=>({sec,...checkSection(sec,g.Tmax,g.Cmax,g.Lmax,Fy,E)}))
+                  .sort((a,b)=>a.sec.w-b.sec.w);
+    const passing=cand.filter(c=>c.ok);
+    const sugg=(passing.length?passing:cand.slice(-3)).slice(0,3);
+    // reset pick ถ้ายังไม่เลือก หรือชื่อเดิมไม่มีในชนิดหน้าตัดที่เลือกอยู่
+    if(picks[role]===undefined || !cand.some(c=>c.sec.name===picks[role]))
+      picks[role]= (sugg[0]||cand[0]).sec.name;
+    const chosen=cand.find(c=>c.sec.name===picks[role])||sugg[0];
+    totalW += chosen.sec.w * g.members.reduce((s,m)=>s+m.len,0);
+    let opts='';
+    // suggested 3 as quick options + full select
+    sugg.forEach(c=>{
+      const sel=c.sec.name===picks[role]?'sel':'';
+      opts+=`<div class="opt ${sel}" onclick="pick('${role}','${c.sec.name}')">
+        <span class="nm">${c.sec.name}</span>
+        <span style="color:var(--ink2);font-size:11px">${c.sec.w.toFixed(1)} kg/m</span>
+        <span class="ut ${utClass(c.ut,c.ok)}">${(c.ut*100).toFixed(0)}%</span></div>`;
+    });
+    const fullSel=`<select onchange="pick('${role}',this.value)" style="margin-top:6px;font-size:12px">
+      ${cand.map(c=>`<option value="${c.sec.name}" ${c.sec.name===picks[role]?'selected':''}>${c.sec.name} — ${(c.ut*100).toFixed(0)}% ${c.ok?'✓':'✗'}</option>`).join('')}
+    </select>`;
+
+    html+=`<div class="dgroup">
+      <h3><span class="dot" style="background:${ROLE[role].color}"></span>${ROLE[role].label}</h3>
+      <div class="meta">${g.count} ชิ้น · T<sub>max</sub>=${g.Tmax.toFixed(0)} · C<sub>max</sub>=${g.Cmax.toFixed(0)} kg · L<sub>max</sub>=${g.Lmax.toFixed(2)} m</div>
+      ${opts}
+      ${fullSel}
+      <div class="meta" style="margin-top:8px;border-top:1px solid var(--line);padding-top:7px">
+        เลือก: <b>${chosen.sec.name}</b> · กำลังดึง ${chosen.Pt.toFixed(0)} / อัด ${chosen.Pc.toFixed(0)} kg ·
+        KL/r=${chosen.KLr.toFixed(0)} · <span class="ut ${utClass(chosen.ut,chosen.ok)}">U=${(chosen.ut*100).toFixed(0)}% ${chosen.ok?'ผ่าน':'ไม่ผ่าน'}</span>
+      </div>
+    </div>`;
+  }
+  $('designCards').innerHTML=html;
+  const totalLen=RESULT.forces.reduce((s,m)=>s+m.len,0);
+  $('kpiBar').innerHTML=`
+    <div class="k">ความยาวรวม member<b>${totalLen.toFixed(1)} m</b></div>
+    <div class="k">น้ำหนักเหล็กโดยประมาณ<b>${totalW.toFixed(0)} kg</b></div>
+    <div class="k">เกรดเหล็ก<b>Fy ${Fy} MPa</b></div>
+    <div class="k">วิธีออกแบบ<b>ASD (AISC)</b></div>`;
+}
+function pick(role,name){ picks[role]=name; renderDesign(); }
+
+/* ---------- Example / init ---------- */
+function loadExample(){
+  $('ttype').value='pratt_roof'; $('span').value=12; $('height').value=3; $('panels').value=8;
+  $('udl').value=800; plList=[{node:-1,fx:0,fy:0}]; run();
+}
+function init(){
+  $('projDate').valueAsDate=new Date();
+  buildModelOnly(); renderPL();
+  ['ttype','span','height','panels'].forEach(id=>$(id).addEventListener('change',()=>{buildModelOnly();renderPL();}));
+  $('sectype').addEventListener('change',()=>{ if(RESULT) renderDesign(); });
+  run();
+}
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ออกแบบฐานรากเดี่ยวสี่เหลี่ยม — วิธี ดร.มงคล (RC SDM)</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root,body{
+    --bg:#0f1419; --panel:#1a2230; --panel2:#222c3c; --line:#2e3a4d;
+    --text:#e6edf3; --muted:#9bb0c5; --accent:#4ea1ff; --accent2:#7bd88f;
+    --ok:#3fb950; --ng:#f85149; --warn:#e3b341; --chip:#2b3a52;
+    --header-bg:linear-gradient(135deg,#15324f,#0f1419);
+    --code-bg:#0d1420; --code-text:#9bb0c5;
+    --dg-bg:#0d1420; --dg-foot:#10243a; --dg-line:#4ea1ff; --dg-col:#2e3a4d;
+    --dg-barL:#4ea1ff; --dg-barB:#7bd88f; --dg-text:#e6edf3; --dg-muted:#9bb0c5; --dg-ground:#1a1206;
+  }
+  body.light{
+    --bg:#eef1f6; --panel:#ffffff; --panel2:#f1f5fa; --line:#d4dbe4;
+    --text:#172033; --muted:#566173; --accent:#1565c0; --accent2:#1b7a35;
+    --ok:#1b7a35; --ng:#c62828; --warn:#a9750a; --chip:#e6edf5;
+    --header-bg:linear-gradient(135deg,#e3edf7,#f6f9fc);
+    --code-bg:#f5f8fc; --code-text:#43566b;
+    --dg-bg:#f8fafc; --dg-foot:#dbe7f3; --dg-line:#1565c0; --dg-col:#aab6c4;
+    --dg-barL:#1565c0; --dg-barB:#1b7a35; --dg-text:#172033; --dg-muted:#566173; --dg-ground:#e9e1d1;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:"Sarabun","Segoe UI",Tahoma,sans-serif;
+    background:var(--bg); color:var(--text); line-height:1.55; font-size:15px;
+  }
+  svg{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  header{
+    background:var(--header-bg);
+    padding:18px 24px; border-bottom:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  }
+  header h1{margin:0;font-size:20px;font-weight:700}
+  header p{margin:4px 0 0;color:var(--muted);font-size:13px}
+  .toolbar{display:flex;gap:8px;flex-shrink:0}
+  .toolbar button{
+    background:var(--chip); border:1px solid var(--line); color:var(--text);
+    border-radius:7px; padding:9px 14px; font-size:13.5px; cursor:pointer; font-weight:600;
+  }
+  .toolbar button:hover{border-color:var(--accent)}
+  .wrap{display:grid;grid-template-columns:380px 1fr;gap:0;align-items:start}
+  @media(max-width:980px){.wrap{grid-template-columns:1fr}}
+  /* ---- input panel ---- */
+  .inputs{
+    background:var(--panel); padding:18px; border-right:1px solid var(--line);
+    position:sticky; top:0; max-height:100vh; overflow-y:auto;
+  }
+  @media(max-width:980px){.inputs{position:static;max-height:none}}
+  .group{margin-bottom:18px}
+  .group h3{
+    margin:0 0 10px; font-size:13px; letter-spacing:.4px; text-transform:uppercase;
+    color:var(--accent); border-bottom:1px solid var(--line); padding-bottom:6px;
+  }
+  .field{display:flex;align-items:center;justify-content:space-between;margin:7px 0;gap:8px}
+  .field label{font-size:13.5px;color:var(--text);flex:1}
+  .field .unit{color:var(--muted);font-size:12px;min-width:46px;text-align:right}
+  .field input,.field select{
+    width:92px; background:var(--panel2); border:1px solid var(--line); color:var(--text);
+    border-radius:6px; padding:6px 8px; font-size:14px; text-align:right;
+  }
+  .field select{width:108px;text-align:left}
+  .field input:focus,.field select:focus{outline:none;border-color:var(--accent)}
+  .presets{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+  .presets button{
+    flex:1; background:var(--chip); border:1px solid var(--line); color:var(--text);
+    border-radius:6px; padding:8px 6px; font-size:12.5px; cursor:pointer;
+  }
+  .presets button:hover{border-color:var(--accent);background:#26344a}
+  /* ---- results ---- */
+  .results{padding:18px 24px}
+  .summary{
+    border-radius:10px; padding:16px 18px; margin-bottom:18px; border:1px solid var(--line);
+    display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  }
+  .summary.pass{background:rgba(63,185,80,.10);border-color:var(--ok)}
+  .summary.fail{background:rgba(248,81,73,.10);border-color:var(--ng)}
+  .summary .big{font-size:22px;font-weight:700}
+  .summary .sub{color:var(--muted);font-size:13px}
+  .pill{padding:3px 10px;border-radius:20px;font-size:12.5px;font-weight:600}
+  .pill.ok{background:rgba(63,185,80,.18);color:var(--ok)}
+  .pill.ng{background:rgba(248,81,73,.18);color:var(--ng)}
+  .pill.warn{background:rgba(227,179,65,.18);color:var(--warn)}
+  .card{
+    background:var(--panel); border:1px solid var(--line); border-radius:10px;
+    margin-bottom:14px; overflow:hidden;
+  }
+  .card .head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:11px 16px; background:var(--panel2); border-bottom:1px solid var(--line);
+  }
+  .card .head h2{margin:0;font-size:15px;font-weight:600}
+  .card .body{padding:14px 16px}
+  .row{display:flex;justify-content:space-between;gap:12px;padding:3px 0;font-size:14px}
+  .row .lbl{color:var(--muted)}
+  .row .val{font-variant-numeric:tabular-nums;text-align:right}
+  .calc{
+    font-family:"Consolas","Courier New",monospace; font-size:12.5px; color:var(--code-text);
+    background:var(--code-bg); border:1px solid var(--line); border-radius:6px;
+    padding:8px 10px; margin:8px 0; white-space:pre-wrap; line-height:1.5;
+  }
+  .calc b{color:var(--accent2)}
+  .check{display:flex;justify-content:space-between;align-items:center;
+    padding:8px 10px;margin-top:8px;border-radius:6px;background:var(--code-bg);border:1px solid var(--line)}
+  .check .txt{font-size:13.5px}
+  .note{color:var(--warn);font-size:12.5px;margin-top:6px}
+  svg{width:100%;height:auto;background:var(--dg-bg);border-radius:8px;border:1px solid var(--line)}
+  .diagrams{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:680px){.diagrams{grid-template-columns:1fr}}
+  .footnote{color:var(--muted);font-size:12px;margin-top:18px;border-top:1px solid var(--line);padding-top:12px}
+  ol.refstd{margin:0;padding-left:22px}
+  ol.refstd li{font-size:13.5px;line-height:1.6;margin-bottom:6px;color:var(--text)}
+  .badge-bar{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .field.txt{flex-direction:column;align-items:stretch;gap:4px}
+  .field.txt label{font-size:12.5px;color:var(--muted)}
+  .field.txt input{width:100%;text-align:left}
+  /* ---- print report header (screen-hidden) ---- */
+  .printOnly{display:none}
+  .print-header{margin-bottom:14px;border-bottom:2px solid #000;padding-bottom:8px}
+  .print-header .ph-title{font-size:15px;font-weight:700}
+  .print-header .ph-sub{font-size:11px;color:#444;margin-top:2px}
+  .print-header table{width:100%;border-collapse:collapse;margin-top:8px;font-size:11px}
+  .print-header td{border:1px solid #999;padding:3px 7px}
+  .print-header td.k{background:#f0f0f0;font-weight:600;width:90px;white-space:nowrap}
+  /* ================= PRINT / PDF (A4 portrait) ================= */
+  @media print{
+    @page{size:A4 portrait;margin:11mm 11mm 12mm;}
+    html,body{background:#fff;color:#000;font-size:13px;line-height:1.5}
+    header,.inputs,.toolbar,.presets,.footnote{display:none!important}
+    .wrap{display:block}
+    .results{padding:0}
+    .printOnly{display:block}
+    .print-header .ph-title{font-size:19px}
+    .print-header .ph-sub{font-size:13px}
+    .print-header table{font-size:13px}
+    .print-header td{padding:5px 9px}
+    .print-header td.k{width:96px}
+    .summary{break-inside:avoid;border:1.5px solid #000;background:#fff!important;padding:11px 15px;margin-bottom:13px}
+    .summary .big{font-size:19px;color:#000!important}
+    .summary .sub{font-size:13.5px;color:#333}
+    .card{break-inside:avoid;border:1px solid #777;border-radius:5px;margin-bottom:12px}
+    .card .head{background:#ececec!important;border-bottom:1px solid #777;padding:8px 14px}
+    .card .head h2{font-size:15.5px;color:#000}
+    .card .body{padding:12px 14px}
+    .row,.row .lbl,.row .val{font-size:13px;color:#000}
+    .calc{background:#f6f6f6!important;color:#222!important;border:1px solid #bbb;font-size:12px;line-height:1.55;padding:9px 12px;page-break-inside:avoid}
+    .calc b{color:#000!important;font-weight:700}
+    .check{background:#f6f6f6!important;border:1px solid #bbb;padding:9px 12px}
+    .check .txt{font-size:13px;color:#000}
+    .pill{font-size:12.5px;border:1px solid #555}
+    .pill.ok{background:#e3f3e6!important;color:#1b7a35!important}
+    .pill.ng{background:#fbe4e3!important;color:#c62828!important}
+    .pill.warn{background:#fcf2d9!important;color:#9a6a05!important}
+    ol.refstd li{font-size:13px;line-height:1.6;margin-bottom:7px;color:#000}
+    .refstd-card{page-break-inside:avoid}
+    svg{border:1px solid #999;background:#fff!important}
+    .diagrams{grid-template-columns:1fr 1fr}
+    .note{font-size:12.5px;color:#9a6a05}
+    .card,.summary,.print-header{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="hd-left">
+    <h1>ออกแบบฐานรากเดี่ยวสี่เหลี่ยม (Isolated Rectangular Footing)</h1>
+    <p>วิธี Strength Design (USD) | หาขนาดด้วย service load · ออกแบบหน้าตัดด้วย 1.4D + 1.7L</p>
+  </div>
+  <div class="toolbar">
+    <button id="themeBtn" onclick="toggleTheme()" title="สลับโหมดสว่าง/มืด">☀ Light</button>
+    <button onclick="doPrint()" title="พิมพ์หรือบันทึกเป็น PDF (A4)">⎙ พิมพ์ / PDF</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <!-- ============ INPUTS ============ -->
+  <div class="inputs">
+    <div class="presets">
+      <button onclick="loadPreset('ex136')">โหลดตัวอย่าง 13.6 (จัตุรัส)</button>
+      <button onclick="loadPreset('ex137')">โหลดตัวอย่าง 13.7 (ผืนผ้า)</button>
+    </div>
+
+    <div class="group">
+      <h3>ข้อมูลโครงการ (สำหรับรายงาน)</h3>
+      <div class="field txt"><label>ชื่อโครงการ</label><input id="proj" type="text" placeholder="ระบุชื่อโครงการ"></div>
+      <div class="field txt"><label>ผู้ออกแบบ</label><input id="eng" type="text" placeholder="ชื่อ-สกุล วิศวกร"></div>
+      <div class="field txt"><label>รหัสฐานราก</label><input id="fcode" type="text" value="F1"></div>
+      <div class="field txt"><label>วันที่</label><input id="pdate" type="text"></div>
+    </div>
+
+    <div class="group">
+      <h3>น้ำหนักบรรทุก</h3>
+      <div class="field"><label>น้ำหนักคงที่ (Dead, P<sub>D</sub>)</label><input id="PD" type="number" step="1" value="40"><span class="unit">ตัน</span></div>
+      <div class="field"><label>น้ำหนักจร (Live, P<sub>L</sub>)</label><input id="PL" type="number" step="1" value="30"><span class="unit">ตัน</span></div>
+    </div>
+
+    <div class="group">
+      <h3>วัสดุ</h3>
+      <div class="field"><label>กำลังคอนกรีต f'<sub>c</sub></label><input id="fc" type="number" step="10" value="240"><span class="unit">ksc</span></div>
+      <div class="field"><label>กำลังครากเหล็ก f<sub>y</sub></label>
+        <select id="fy">
+          <option value="2400">SR24 (2400)</option>
+          <option value="3000">SD30 (3000)</option>
+          <option value="4000" selected>SD40 (4000)</option>
+          <option value="5000">SD50 (5000)</option>
+        </select><span class="unit">ksc</span></div>
+      <div class="field"><label>น้ำหนักคอนกรีต γ<sub>c</sub></label><input id="gc" type="number" step="0.1" value="2.4"><span class="unit">t/m³</span></div>
+    </div>
+
+    <div class="group">
+      <h3>ดินและเสา</h3>
+      <div class="field"><label>หน่วยแรงดันดินยอมให้ q<sub>a</sub></label><input id="qa" type="number" step="0.5" value="10"><span class="unit">t/m²</span></div>
+      <div class="field"><label>ขนาดเสา (สี่เหลี่ยมจัตุรัส) c</label><input id="col" type="number" step="5" value="40"><span class="unit">ซม.</span></div>
+      <div class="field"><label>น้ำหนักดินถม/surcharge</label><input id="surch" type="number" step="0.5" value="0"><span class="unit">t/m²</span></div>
+      <div class="field"><label>ตำแหน่งเสา (α<sub>s</sub>)</label>
+        <select id="alphas">
+          <option value="40" selected>เสาภายใน (40)</option>
+          <option value="30">เสาขอบ (30)</option>
+          <option value="20">เสามุม (20)</option>
+        </select><span class="unit"></span></div>
+    </div>
+
+    <div class="group">
+      <h3>ขนาดฐานราก</h3>
+      <div class="field"><label>ด้านสั้น B</label><input id="B" type="number" step="0.1" value="2.8"><span class="unit">เมตร</span></div>
+      <div class="field"><label>ด้านยาว L</label><input id="L" type="number" step="0.1" value="2.8"><span class="unit">เมตร</span></div>
+      <div class="field"><label>ความหนา h</label><input id="h" type="number" step="5" value="40"><span class="unit">ซม.</span></div>
+      <div class="field"><label>ระยะหุ้มคอนกรีต (cover)</label><input id="cov" type="number" step="0.5" value="7.5"><span class="unit">ซม.</span></div>
+    </div>
+
+    <div class="group">
+      <h3>เหล็กเสริม</h3>
+      <div class="field"><label>ขนาดเหล็ก ด้านยาว</label>
+        <select id="barL"></select><span class="unit"></span></div>
+      <div class="field"><label>ขนาดเหล็ก ด้านสั้น</label>
+        <select id="barB"></select><span class="unit"></span></div>
+    </div>
+  </div>
+
+  <!-- ============ RESULTS ============ -->
+  <div class="results">
+    <div class="printOnly print-header">
+      <div class="ph-title">รายการคำนวณออกแบบฐานรากเดี่ยว — Isolated Footing Design Calculation Sheet</div>
+      <div class="ph-sub">วิธี Strength Design (USD) — สัมประสิทธิ์น้ำหนัก 1.4D + 1.7L · φ เฉือน = 0.85 · φ ดัด = 0.90</div>
+      <table>
+        <tr><td class="k">โครงการ</td><td id="ph_proj"></td><td class="k">รหัสฐานราก</td><td id="ph_code"></td></tr>
+        <tr><td class="k">ผู้ออกแบบ</td><td id="ph_eng"></td><td class="k">วันที่</td><td id="ph_date"></td></tr>
+      </table>
+    </div>
+    <div id="summary" class="summary"><div><div class="big">—</div></div></div>
+
+    <!-- Step 1 -->
+    <div class="card">
+      <div class="head"><h2>1. ขนาดฐานราก &amp; ตรวจหน่วยแรงดันดิน</h2><span id="b1" class="pill">—</span></div>
+      <div class="body" id="body1"></div>
+    </div>
+    <!-- Step 2 -->
+    <div class="card">
+      <div class="head"><h2>2. การเฉือนทะลุ (Punching / Two-way) ที่ d/2</h2><span id="b2" class="pill">—</span></div>
+      <div class="body" id="body2"></div>
+    </div>
+    <!-- Step 3 -->
+    <div class="card">
+      <div class="head"><h2>3. การเฉือนทางเดียว (Beam / One-way) ที่ d</h2><span id="b3" class="pill">—</span></div>
+      <div class="body" id="body3"></div>
+    </div>
+    <!-- Step 4 -->
+    <div class="card">
+      <div class="head"><h2>4. เหล็กเสริมรับโมเมนต์ดัด</h2><span id="b4" class="pill">—</span></div>
+      <div class="body" id="body4"></div>
+    </div>
+    <!-- Step 5 -->
+    <div class="card">
+      <div class="head"><h2>5. ตรวจระยะฝังยึด (Development length)</h2><span id="b5" class="pill">—</span></div>
+      <div class="body" id="body5"></div>
+    </div>
+
+    <!-- Diagram -->
+    <div class="card">
+      <div class="head"><h2>รูปฐานราก</h2></div>
+      <div class="body diagrams">
+        <div><div style="color:var(--muted);font-size:12px;margin-bottom:6px">ผังฐานราก (Plan)</div><div id="planSvg"></div></div>
+        <div><div style="color:var(--muted);font-size:12px;margin-bottom:6px">รูปตัด (Section)</div><div id="secSvg"></div></div>
+      </div>
+    </div>
+
+    <!-- Reference standards -->
+    <div class="card refstd-card">
+      <div class="head"><h2>มาตรฐานอ้างอิงในการออกแบบ</h2></div>
+      <div class="body">
+        <ol class="refstd">
+          <li>กฏกระทรวง กำหนดการออกแบบโครงสร้างอาคาร และลักษณะและคุณสมบัติของวัสดุที่ใช้ในงานโครงสร้างอาคาร พ.ศ. 2566</li>
+          <li>กฏกระทรวง กำหนดฐานรากของอาคารและพื้นดินที่รองรับอาคาร พ.ศ. 2566</li>
+          <li>มาตรฐานสำหรับอาคารคอนกรีตเสริมเหล็ก โดยวิธีกำลัง (มาตรฐาน วสท. 011008-21)</li>
+          <li>ข้อกำหนดมาตรฐานวัสดุและการก่อสร้างสำหรับโครงสร้างคอนกรีต พ.ศ. 2565 (มาตรฐาน วสท. 011014-22)</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="footnote">
+      ตัวคูณน้ำหนัก USD = 1.4D + 1.7L · φ เฉือน = 0.85 · φ ดัด = 0.90 (ตามที่หนังสือใช้) ·
+      กำลังเฉือนคอนกรีตหน่วย ksc-cm · เครื่องมือนี้เพื่อการศึกษา/ประมาณการ วิศวกรผู้ออกแบบต้องตรวจสอบซ้ำก่อนใช้งานจริง
+    </div>
+  </div>
+</div>
+
+<script>
+// ---------- bar database ----------
+const BARS = [
+  {n:"DB12", d:12, A:1.131},
+  {n:"DB16", d:16, A:2.011},
+  {n:"DB20", d:20, A:3.142},
+  {n:"DB25", d:25, A:4.909},
+  {n:"DB28", d:28, A:6.158},
+  {n:"DB32", d:32, A:8.042},
+];
+function fillBarSelect(id,def){
+  const s=document.getElementById(id);
+  BARS.forEach(b=>{const o=document.createElement('option');o.value=b.d;o.textContent=b.n+" (A="+b.A+" cm²)";if(b.d===def)o.selected=true;s.appendChild(o);});
+}
+fillBarSelect('barL',16);
+fillBarSelect('barB',16);
+
+const $=id=>document.getElementById(id);
+const num=id=>parseFloat($(id).value)||0;
+const f=(x,d=2)=>isFinite(x)?x.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}):'—';
+function barInfo(d){return BARS.find(b=>b.d===d)||BARS[1];}
+
+function pill(el,ok,txt){
+  el.className='pill '+(ok?'ok':'ng');
+  el.textContent=txt||(ok?'ผ่าน OK':'ไม่ผ่าน NG');
+}
+function pillWarn(el,txt){el.className='pill warn';el.textContent=txt;}
+
+// ---------- main compute ----------
+function compute(){
+  const PD=num('PD'), PL=num('PL');
+  const fc=num('fc'), fy=num('fy'), gc=num('gc');
+  const qa=num('qa'), c=num('col'), surch=num('surch'), alphas=num('alphas');
+  const B=num('B'), L=num('L'), h=num('h'), cov=num('cov');
+  const dbL=parseFloat($('barL').value), dbB=parseFloat($('barB').value);
+  const sqrtfc=Math.sqrt(fc);
+  const A=B*L;
+  const cm=c/100;                       // column size in m
+  // effective depth (single, top layer approx) — matches book convention
+  const d=Math.round(h - cov - (Math.max(dbL,dbB)/10)/2); // cm
+  const dm=d/100;
+  let allOK=true;
+
+  // ===== STEP 1: soil pressure =====
+  const Areq=(PD+PL)*1.1/qa;
+  const Wfoot=gc*(h/100)*A;             // self weight (t)
+  const Wsoil=surch*A;                  // surcharge (t)
+  const q=(PD+PL+Wfoot+Wsoil)/A;        // service pressure
+  const ok1=q<=qa*1.0001;
+  const qu=(1.4*PD+1.7*PL)/A;           // factored net pressure
+  if(!ok1)allOK=false;
+  $('body1').innerHTML=`
+    <div class="calc">พื้นที่ต้องการ  A<sub>req</sub> = (P<sub>D</sub>+P<sub>L</sub>)×1.1 / q<sub>a</sub>
+      = (${f(PD,0)}+${f(PL,0)})×1.1 / ${f(qa,1)} = <b>${f(Areq)} m²</b></div>
+    <div class="row"><span class="lbl">ขนาดที่เลือก B × L</span><span class="val">${f(B,2)} × ${f(L,2)} = ${f(A)} m²</span></div>
+    <div class="row"><span class="lbl">น้ำหนักฐานราก W = γ<sub>c</sub>·h·A</span><span class="val">${f(Wfoot)} ตัน</span></div>
+    ${surch>0?`<div class="row"><span class="lbl">น้ำหนักดินถม</span><span class="val">${f(Wsoil)} ตัน</span></div>`:''}
+    <div class="calc">หน่วยแรงดันดิน (service)
+  q = (P<sub>D</sub>+P<sub>L</sub>+W) / A = (${f(PD,0)}+${f(PL,0)}+${f(Wfoot)})/${f(A)} = <b>${f(q)} t/m²</b></div>
+    <div class="check"><span class="txt">q = ${f(q)} t/m²  ${ok1?'≤':'>'}  q<sub>a</sub> = ${f(qa,2)} t/m²</span>
+      <span class="pill ${ok1?'ok':'ng'}">${ok1?'OK':'เกินกำลังดิน'}</span></div>
+    <div class="calc" style="margin-top:10px">หน่วยแรงดันดินประลัย (USD)
+  q<sub>u</sub> = (1.4P<sub>D</sub>+1.7P<sub>L</sub>)/A = (1.4×${f(PD,0)}+1.7×${f(PL,0)})/${f(A)} = <b>${f(qu)} t/m²</b></div>
+    <div class="row"><span class="lbl">ความลึกประสิทธิผล d = h − cover − d<sub>b</sub>/2</span><span class="val">${f(d,0)} ซม.</span></div>
+  `;
+  pill($('b1'),ok1,ok1?'ผ่าน OK':'ดินรับไม่ไหว');
+
+  // ===== STEP 2: punching shear =====
+  const bo=4*(c+d);                     // perimeter (cm)
+  const cd=(c+d)/100;                   // (c+d) in m
+  const Vu2=qu*(A - cd*cd);             // ton
+  const betac=1;                        // square column
+  const coef1=1.06;
+  const coef2=0.53*(1+2/betac);
+  const coef3=0.27*(alphas*d/bo+2);
+  const coefMin=Math.min(coef1,coef2,coef3);
+  let govName=coefMin===coef1?'1.06':(coefMin===coef2?'0.53(1+2/β)':'0.27(α·d/b₀+2)');
+  const phiVc2=0.85*coefMin*sqrtfc*bo*d/1000; // ton
+  const ok2=phiVc2>=Vu2;
+  if(!ok2)allOK=false;
+  $('body2').innerHTML=`
+    <div class="row"><span class="lbl">หน้าตัดวิกฤตห่างผิวเสา d/2</span><span class="val">${f(d/2,1)} ซม.</span></div>
+    <div class="calc">เส้นรอบรูป  b<sub>0</sub> = 4(c+d) = 4(${f(c,0)}+${f(d,0)}) = <b>${f(bo,0)} ซม.</b>
+แรงเฉือน  V<sub>u</sub> = q<sub>u</sub>[A − (c+d)²] = ${f(qu)}[${f(A)} − ${f(cd,3)}²] = <b>${f(Vu2)} ตัน</b></div>
+    <div class="calc">สัมประสิทธิ์กำลังเฉือน (เลือกค่าน้อยสุด): 1.06 / ${f(coef2,2)} / ${f(coef3,2)} → ใช้ <b>${f(coefMin,2)}</b> (${govName})
+φV<sub>c</sub> = 0.85×${f(coefMin,2)}√f'<sub>c</sub>·b<sub>0</sub>·d
+     = 0.85×${f(coefMin,2)}×${f(sqrtfc,2)}×${f(bo,0)}×${f(d,0)}/10³ = <b>${f(phiVc2)} ตัน</b></div>
+    <div class="check"><span class="txt">φV<sub>c</sub> = ${f(phiVc2)}  ${ok2?'≥':'<'}  V<sub>u</sub> = ${f(Vu2)} ตัน</span>
+      <span class="pill ${ok2?'ok':'ng'}">${ok2?'OK':'หนาไม่พอ'}</span></div>
+    ${!ok2?'<div class="note">⚠ เพิ่มความหนา h หรือ f\'c เพื่อเพิ่มกำลังเฉือนทะลุ</div>':''}
+  `;
+  pill($('b2'),ok2);
+
+  // ===== STEP 3: one-way shear (governing = longer cantilever) =====
+  // direction along L (section perpendicular to L), cantilever measured along L:
+  const aL=(L-cm)/2 - dm;  // m
+  const aB=(B-cm)/2 - dm;
+  const aOne=Math.max(aL,aB);
+  const widthOne=(aOne===aL)? B : L;  // width of the section (m)
+  const dir3=(aOne===aL)?'ด้านยาว':'ด้านสั้น';
+  const Vu3=qu*widthOne*Math.max(aOne,0); // ton
+  const phiVc3=0.85*0.53*sqrtfc*(widthOne*100)*d/1000; // ton
+  const ok3=phiVc3>=Vu3;
+  if(!ok3)allOK=false;
+  $('body3').innerHTML=`
+    <div class="row"><span class="lbl">ทิศควบคุม</span><span class="val">${dir3} (ระยะยื่นมากสุด)</span></div>
+    <div class="calc">ระยะยื่นจากหน้าตัดวิกฤต  a = (มิติ−c)/2 − d = ${f(aOne)} m
+V<sub>u</sub> = q<sub>u</sub>·(กว้าง)·a = ${f(qu)}×${f(widthOne)}×${f(Math.max(aOne,0))} = <b>${f(Vu3)} ตัน</b></div>
+    <div class="calc">φV<sub>c</sub> = 0.85×0.53√f'<sub>c</sub>·b·d
+     = 0.85×0.53×${f(sqrtfc,2)}×${f(widthOne*100,0)}×${f(d,0)}/10³ = <b>${f(phiVc3)} ตัน</b></div>
+    <div class="check"><span class="txt">φV<sub>c</sub> = ${f(phiVc3)}  ${ok3?'≥':'<'}  V<sub>u</sub> = ${f(Vu3)} ตัน</span>
+      <span class="pill ${ok3?'ok':'ng'}">${ok3?'OK':'หนาไม่พอ'}</span></div>
+    ${!ok3?'<div class="note">⚠ เพิ่มความหนา h เพื่อเพิ่มกำลังเฉือนทางเดียว</div>':''}
+  `;
+  pill($('b3'),ok3);
+
+  // ===== STEP 4: flexure (both directions) =====
+  function flexure(span,width,dbBar){
+    // span = footing dim in bending direction (m); width = perpendicular width (m)
+    const a=(span-cm)/2;                       // cantilever to column face (m)
+    const Mu=qu*width*a*a/2;                   // t·m
+    const MuKgcm=Mu*1e5;                       // kg·cm
+    const b=width*100;                         // cm
+    const Rn=MuKgcm/(0.9*b*d*d);               // ksc
+    let inside=1-2*Rn/(0.85*fc);
+    let rho, As, feasible=true;
+    if(inside<0){feasible=false; rho=NaN; As=NaN;}
+    else{ rho=(0.85*fc/fy)*(1-Math.sqrt(inside)); As=rho*b*d; }
+    const Asmin=(fy>=4000?0.0018:0.002)*b*h;
+    const Asreq=Math.max(feasible?As:Infinity,Asmin);
+    const bar=barInfo(dbBar);
+    const nbar=Math.ceil(Asreq/bar.A);
+    const Aprov=nbar*bar.A;
+    return {a,Mu,Rn,rho,As,Asmin,Asreq,bar,nbar,Aprov,feasible,b};
+  }
+  const fL=flexure(L,B,dbL);  // long-direction steel: bending span = L, distributed over width B
+  const fB=flexure(B,L,dbB);  // short-direction steel: bending span = B, distributed over width L
+  const ok4=fL.feasible && fB.feasible;
+  if(!ok4)allOK=false;
+  // band distribution for short direction (rectangular)
+  const beta=L/B;
+  const bandFrac=2/(beta+1);
+  const isRect=Math.abs(L-B)>0.01;
+
+  function flexBlock(t,fr,label,dirNote){
+    if(!fr.feasible){
+      return `<div style="margin-bottom:8px"><b>${label}</b>
+        <div class="note">⚠ หน้าตัดรับโมเมนต์ไม่ได้ (เพิ่ม h หรือ f'c) — R<sub>n</sub>=${f(fr.Rn)} ksc สูงเกินไป</div></div>`;
+    }
+    return `<div style="margin-bottom:12px;border-bottom:1px solid var(--line);padding-bottom:10px">
+      <b style="color:var(--accent)">${label}</b> ${dirNote||''}
+      <div class="calc">ระยะยื่นถึงผิวเสา a = (${label.includes('ยาว')?'L':'B'}−c)/2 = ${f(fr.a)} m
+M<sub>u</sub> = q<sub>u</sub>·(กว้าง)·a²/2 = ${f(qu)}×${f(fr.b/100)}×${f(fr.a)}²/2 = <b>${f(fr.Mu)} t·m</b>
+R<sub>n</sub> = M<sub>u</sub>/(φ·b·d²) = ${f(fr.Rn)} ksc ,  ρ = ${f(fr.rho,4)}</div>
+      <div class="row"><span class="lbl">A<sub>s</sub> ต้องการ</span><span class="val">${f(fr.As)} cm²</span></div>
+      <div class="row"><span class="lbl">A<sub>s,min</sub> = ${fy>=4000?'0.0018':'0.002'}·b·h</span><span class="val">${f(fr.Asmin)} cm²</span></div>
+      <div class="row"><span class="lbl">ใช้ A<sub>s</sub> ออกแบบ</span><span class="val">${f(fr.Asreq)} cm² ${fr.Asmin>=fr.As?'(min ควบคุม)':''}</span></div>
+      <div class="check"><span class="txt">เลือก <b>${fr.nbar} ${fr.bar.n}</b> (A<sub>s</sub> = ${f(fr.Aprov)} cm²)</span>
+        <span class="pill ${fr.Aprov>=fr.Asreq?'ok':'ng'}">${fr.Aprov>=fr.Asreq?'พอ':'ไม่พอ'}</span></div>
+    </div>`;
+  }
+  let body4=flexBlock('s',fL,'เหล็กทางด้านยาว (วางตามด้าน L)','');
+  body4+=flexBlock('s',fB,'เหล็กทางด้านสั้น (วางตามด้าน B)','');
+  if(isRect && fB.feasible){
+    const Asband=fB.Asreq*bandFrac;
+    const bar=fB.bar;
+    const nBand=Math.ceil(Asband/bar.A);
+    body4+=`<div class="calc">การจัดเหล็กด้านสั้น (ฐานผืนผ้า) β = L/B = ${f(beta,2)}
+สัดส่วนในแถบกลาง = 2/(β+1) = <b>${f(bandFrac,3)}</b>
+A<sub>s,แถบกลาง</sub> = ${f(bandFrac,3)}×${f(fB.Asreq)} = ${f(Asband)} cm² → จัด <b>${nBand} ${bar.n}</b> ในแถบกลางกว้าง ${f(B)} m
+ที่เหลือกระจายในแถบริมสองข้าง</div>`;
+  }
+  $('body4').innerHTML=body4;
+  pill($('b4'),ok4);
+
+  // ===== STEP 5: development length =====
+  function devlen(fr){
+    const db=fr.bar.d/10; // cm
+    const coef=fr.bar.d<=20?6.6:5.3;
+    let ld=fy/(coef*sqrtfc)*db; // cm
+    ld=Math.max(ld,30);
+    const avail=fr.a*100 - cov; // cm
+    const ok=avail>=ld;
+    return {ld,avail,ok,db,coef};
+  }
+  const dL=devlen(fL), dB=devlen(fB);
+  const ok5=dL.ok && dB.ok;
+  $('body5').innerHTML=`
+    <div class="calc">l<sub>d</sub> = f<sub>y</sub>/(k√f'<sub>c</sub>)·d<sub>b</sub>  (k=6.6 สำหรับ ≤DB20, k=5.3 สำหรับ ≥DB25)</div>
+    <div class="row"><span class="lbl">ด้านยาว ${fL.bar.n}: l<sub>d</sub> = ${f(dL.ld,1)} cm</span>
+      <span class="val">มีจริง ${f(dL.avail,1)} cm <span class="pill ${dL.ok?'ok':'warn'}">${dL.ok?'OK':'ต้องงอขอ'}</span></span></div>
+    <div class="row"><span class="lbl">ด้านสั้น ${fB.bar.n}: l<sub>d</sub> = ${f(dB.ld,1)} cm</span>
+      <span class="val">มีจริง ${f(dB.avail,1)} cm <span class="pill ${dB.ok?'ok':'warn'}">${dB.ok?'OK':'ต้องงอขอ'}</span></span></div>
+    ${!ok5?'<div class="note">⚠ ระยะฝังยึดไม่พอแบบตรง → ใช้เหล็กงอขอ (standard hook) ที่ปลาย</div>':''}
+  `;
+  if(ok5)pill($('b5'),true); else pillWarn($('b5'),'ใช้เหล็กงอขอ');
+
+  // ===== summary =====
+  const sEl=$('summary');
+  if(allOK){
+    sEl.className='summary pass';
+    sEl.innerHTML=`<div><div class="big" style="color:var(--ok)">✓ ฐานรากผ่านการตรวจสอบ</div>
+      <div class="sub">ฐานราก ${f(B,2)}×${f(L,2)}×${f(h/100,2)} m · เหล็กด้านยาว ${fL.nbar}${fL.bar.n} · เหล็กด้านสั้น ${fB.nbar}${fB.bar.n}</div></div>
+      <div class="badge-bar">
+        <span class="pill ok">ดิน</span><span class="pill ok">เฉือนทะลุ</span><span class="pill ok">เฉือนทางเดียว</span>
+        <span class="pill ok">โมเมนต์</span><span class="pill ${ok5?'ok':'warn'}">ฝังยึด${ok5?'':' (งอขอ)'}</span></div>`;
+  }else{
+    sEl.className='summary fail';
+    sEl.innerHTML=`<div><div class="big" style="color:var(--ng)">✗ ยังไม่ผ่าน — ปรับขนาด/วัสดุ</div>
+      <div class="sub">ตรวจรายการที่ขึ้น NG ด้านล่าง แล้วเพิ่มขนาดฐาน/ความหนา/กำลังวัสดุ</div></div>
+      <div class="badge-bar">
+        <span class="pill ${ok1?'ok':'ng'}">ดิน</span><span class="pill ${ok2?'ok':'ng'}">เฉือนทะลุ</span>
+        <span class="pill ${ok3?'ok':'ng'}">เฉือนทางเดียว</span><span class="pill ${ok4?'ok':'ng'}">โมเมนต์</span>
+        <span class="pill ${ok5?'ok':'warn'}">ฝังยึด</span></div>`;
+  }
+
+  // report header
+  $('ph_proj').textContent=$('proj').value||'—';
+  $('ph_eng').textContent=$('eng').value||'—';
+  $('ph_code').textContent=$('fcode').value||'—';
+  $('ph_date').textContent=$('pdate').value||'—';
+
+  drawPlan(B,L,c,fL,fB);
+  drawSection(B,h,c,fL);
+}
+
+// ---------- theme & print ----------
+function toggleTheme(){
+  const light=document.body.classList.toggle('light');
+  $('themeBtn').textContent=light?'🌙 Dark':'☀ Light';
+  try{localStorage.setItem('footingTheme',light?'light':'dark');}catch(e){}
+  compute();
+}
+function doPrint(){window.print();}
+// force light palette for the printout, then restore
+let _prevLight=null;
+window.addEventListener('beforeprint',()=>{
+  _prevLight=document.body.classList.contains('light');
+  if(!_prevLight){document.body.classList.add('light');compute();}
+});
+window.addEventListener('afterprint',()=>{
+  if(_prevLight===false){document.body.classList.remove('light');compute();}
+});
+
+// ---------- diagrams ----------
+// ===== CAD-style engineering detail helpers (rules 1-7) =====
+const CAD_DEFS=`<defs>
+ <pattern id="cadConc" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="9" height="9" fill="#eef3fb"/><line x1="0" y1="0" x2="0" y2="9" stroke="#b9c6dc" stroke-width=".8"/></pattern>
+ <pattern id="cadSand" width="11" height="11" patternUnits="userSpaceOnUse"><rect width="11" height="11" fill="#f6edd4"/><circle cx="2.5" cy="3" r="1" fill="#c9a94a"/><circle cx="8" cy="7.5" r="1" fill="#c9a94a"/></pattern>
+ <pattern id="cadLean" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="#dedede"/><line x1="0" y1="0" x2="0" y2="8" stroke="#9a9a9a" stroke-width="1"/></pattern>
+ <pattern id="cadGround" width="16" height="10" patternUnits="userSpaceOnUse"><rect width="16" height="10" fill="#efe7d6"/><path d="M0 10 L5 3 M8 10 L13 3" stroke="#bda878" stroke-width=".9" fill="none"/></pattern>
+</defs>`;
+const CAD_STYLE=`<style>
+ text{font-family:'Sarabun','TH Sarabun New',Tahoma,sans-serif;}
+ .cad-foot{fill:url(#cadConc);stroke:#2f5597;stroke-width:1.8;}
+ .cad-col{fill:#cfd8ec;stroke:#2f5597;stroke-width:1.4;}
+ .cad-dim{stroke:#444;stroke-width:.9;} .cad-ext{stroke:#9aa6b4;stroke-width:.7;} .cad-tick{stroke:#444;stroke-width:1.1;}
+ .cad-dimtxt{font-size:12px;fill:#222;} .cad-calltxt{font-size:11.5px;fill:#1f4e96;font-weight:600;}
+ .cad-leader{fill:none;stroke:#1f4e96;stroke-width:.9;} .cad-dot{fill:#1f4e96;}
+ .cad-rebar{stroke:#1f4e96;stroke-width:1;fill:none;} .cad-bardot{fill:#1f4e96;}
+ .cad-note{font-size:11px;fill:#555;} .cad-title{font-size:13px;fill:#1f4e96;font-weight:700;}
+</style>`;
+function cadDimH(x1,x2,y,label,extTo){
+  let s=`<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" class="cad-dim"/>`;
+  for(const xx of [x1,x2]){
+    s+=`<line x1="${xx-3.5}" y1="${y+3.5}" x2="${xx+3.5}" y2="${y-3.5}" class="cad-tick"/>`;
+    if(extTo!=null)s+=`<line x1="${xx}" y1="${y}" x2="${xx}" y2="${extTo}" class="cad-ext"/>`;
+  }
+  s+=`<text x="${(x1+x2)/2}" y="${y-5}" class="cad-dimtxt" text-anchor="middle">${label}</text>`;
+  return s;
+}
+function cadDimV(y1,y2,x,label,extTo){
+  let s=`<line x1="${x}" y1="${y1}" x2="${x}" y2="${y2}" class="cad-dim"/>`;
+  for(const yy of [y1,y2]){
+    s+=`<line x1="${x-3.5}" y1="${yy+3.5}" x2="${x+3.5}" y2="${yy-3.5}" class="cad-tick"/>`;
+    if(extTo!=null)s+=`<line x1="${x}" y1="${yy}" x2="${extTo}" y2="${yy}" class="cad-ext"/>`;
+  }
+  const cy=(y1+y2)/2;
+  s+=`<text x="${x-5}" y="${cy}" class="cad-dimtxt" text-anchor="middle" transform="rotate(-90 ${x-5} ${cy})">${label}</text>`;
+  return s;
+}
+// leader: diagonal from tip -> label anchor, then short horizontal shoulder under text
+function cadCallout(xt,yt,xl,yl,text,anchor){
+  anchor=anchor||'start';
+  const sh=anchor==='end'?-1:1;
+  const shoulder=xl+sh*Math.min(40,Math.max(14,text.length*5.2));
+  return `<polyline points="${xt},${yt} ${xl},${yl} ${shoulder},${yl}" class="cad-leader"/>`+
+         `<circle cx="${xt}" cy="${yt}" r="2.1" class="cad-dot"/>`+
+         `<text x="${xl}" y="${yl-3}" class="cad-calltxt" text-anchor="${anchor}">${text}</text>`;
+}
+function cadSheet(W,H,body,title){
+  const t=title?`<text x="${W/2}" y="${H-9}" class="cad-title" text-anchor="middle">${title}</text>`:'';
+  const svg=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${CAD_DEFS}${CAD_STYLE}`+
+    `<rect x="0" y="0" width="${W}" height="${H}" fill="#ffffff"/>`+
+    `<rect x="6" y="6" width="${W-12}" height="${H-12}" fill="none" stroke="#c4cdda" stroke-width="1"/>`+
+    body+t+`</svg>`;
+  if(/undefined|NaN|null(?![A-Za-z])/.test(svg))console.warn('CAD verify: bad token in detail SVG');
+  return svg;
+}
+
+function drawPlan(B,L,c,fL,fB){
+  const W=360,H=360,S=Math.min((W-130)/B,(H-130)/L);
+  const fw=B*S,fh=L*S,ox=(W-fw)/2+6,oy=(H-fh)/2;
+  const cw=(c/100)*S,cx=ox+fw/2-cw/2,cy=oy+fh/2-cw/2;
+  let g='';
+  const nL=fL.nbar;
+  for(let i=0;i<nL;i++){const x=(ox+(nL>1?i*fw/(nL-1):fw/2)).toFixed(1);g+=`<line x1="${x}" y1="${oy.toFixed(1)}" x2="${x}" y2="${(oy+fh).toFixed(1)}" stroke="#2f5597" stroke-width=".8" opacity=".45"/>`;}
+  const nB=fB.nbar;
+  for(let i=0;i<nB;i++){const y=(oy+(nB>1?i*fh/(nB-1):fh/2)).toFixed(1);g+=`<line x1="${ox.toFixed(1)}" y1="${y}" x2="${(ox+fw).toFixed(1)}" y2="${y}" stroke="#1b7a35" stroke-width=".8" opacity=".45"/>`;}
+  let b=`<rect x="${ox}" y="${oy}" width="${fw}" height="${fh}" class="cad-foot"/>`+g+
+        `<rect x="${cx}" y="${cy}" width="${cw}" height="${cw}" class="cad-col"/>`+
+        `<text x="${ox+fw/2}" y="${oy+fh/2+4}" class="cad-calltxt" text-anchor="middle">C ${c}×${c}</text>`;
+  b+=cadDimH(ox,ox+fw,oy-24,`B = ${B.toFixed(2)} ม.`,oy);
+  b+=cadDimV(oy,oy+fh,ox-24,`L = ${L.toFixed(2)} ม.`,ox);
+  b+=`<text x="${ox+fw/2}" y="${oy+fh+30}" class="cad-note" text-anchor="middle">เหล็กล่าง: ทิศยาว ${fL.nbar}${fL.bar.n} · ทิศสั้น ${fB.nbar}${fB.bar.n}</text>`;
+  $('planSvg').innerHTML=cadSheet(W,H,b,'PLAN — ผังฐานรากเดี่ยว');
+}
+function drawSection(B,h,c,fL){
+  const W=360,H=240,S=(W-90)/B;
+  const fw=B*S,ox=(W-fw)/2;
+  const colH=46,yColTop=26,yF=yColTop+colH;
+  const ft=(h/100)*S,yFB=yF+ft;
+  const tLean=Math.max(4,0.05*S),tSand=Math.max(4,0.05*S);
+  const yLeanB=yFB+tLean,ySandB=yLeanB+tSand;
+  const cw=(c/100)*S,cx=ox+fw/2-cw/2;
+  let dots='';
+  const nL=fL.nbar;
+  for(let i=0;i<nL;i++){const x=(ox+10+(nL>1?i*(fw-20)/(nL-1):(fw-20)/2)).toFixed(1);dots+=`<circle cx="${x}" cy="${(yFB-7).toFixed(1)}" r="2.5" class="cad-bardot"/>`;}
+  let b=`<rect x="${(ox-44).toFixed(1)}" y="${yF}" width="${(fw+88).toFixed(1)}" height="${(ySandB-yF+8).toFixed(1)}" fill="url(#cadGround)"/>`+
+        `<line x1="${ox-44}" y1="${yF}" x2="${ox-6}" y2="${yF}" stroke="#8a7d5a" stroke-width="1"/>`+
+        `<line x1="${ox+fw+6}" y1="${yF}" x2="${ox+fw+44}" y2="${yF}" stroke="#8a7d5a" stroke-width="1"/>`+
+        `<rect x="${(ox-12).toFixed(1)}" y="${yLeanB}" width="${(fw+24).toFixed(1)}" height="${tSand}" fill="url(#cadSand)" stroke="#c9a94a" stroke-width=".6"/>`+
+        `<rect x="${(ox-8).toFixed(1)}" y="${yFB}" width="${(fw+16).toFixed(1)}" height="${tLean}" fill="url(#cadLean)" stroke="#9a9a9a" stroke-width=".6"/>`+
+        `<rect x="${ox}" y="${yF}" width="${fw}" height="${ft}" class="cad-foot"/>`+
+        `<rect x="${cx}" y="${yColTop}" width="${cw}" height="${colH}" class="cad-col"/>`+dots;
+  b+=cadDimV(yF,yFB,ox-22,`h=${h}`,ox);
+  b+=cadDimH(ox,ox+fw,ySandB+26,`B = ${B.toFixed(2)} ม.`,ySandB);
+  b+=`<text x="${cx+cw/2}" y="${yColTop-6}" class="cad-calltxt" text-anchor="middle">เสา ${c}×${c}</text>`;
+  b+=cadCallout(ox+fw*0.5,yFB-7,W-14,yFB+18,`เหล็กล่าง ${fL.nbar}${fL.bar.n}`,'end');
+  b+=cadCallout(ox+fw-14,(yFB+yLeanB)/2,W-14,yLeanB+2,`Lean 5 ซม.`,'end');
+  b+=cadCallout(ox+14,(yLeanB+ySandB)/2,18,ySandB+2,`ทรายอัดแน่น 5 ซม.`,'start');
+  $('secSvg').innerHTML=cadSheet(W,H,b,'SECTION — รูปตัดฐานราก');
+}
+
+// ---------- presets ----------
+function loadPreset(p){
+  if(p==='ex136'){
+    set({PD:40,PL:30,fc:240,fy:4000,gc:2.4,qa:10,col:40,surch:0,alphas:40,B:2.8,L:2.8,h:40,cov:7.5,barL:16,barB:16});
+  }else if(p==='ex137'){
+    set({PD:100,PL:80,fc:240,fy:4000,gc:2.4,qa:15,col:50,surch:0,alphas:40,B:2.5,L:5.5,h:80,cov:7.5,barL:28,barB:25});
+  }
+  compute();
+}
+function set(o){for(const k in o){const el=$(k);if(el)el.value=o[k];}}
+
+// init
+(function(){
+  // default date (today)
+  const d=new Date();
+  $('pdate').value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  // restore theme
+  let t='dark';try{t=localStorage.getItem('footingTheme')||'dark';}catch(e){}
+  if(t==='light'){document.body.classList.add('light');$('themeBtn').textContent='🌙 Dark';}
+})();
+document.querySelectorAll('input,select').forEach(el=>el.addEventListener('input',compute));
+compute();
+</script>
+</body>
+</html>
