@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ออกแบบฐานรากตีนเป็ด — RC Spread Footing (Eccentric)</title>
+<style>
+  :root{
+    --bg:#F0EEE6;          /* anthropic warm paper */
+    --paper:#FFFFFF;
+    --ink:#1A1A18;
+    --muted:#6B6760;
+    --line:#E2DDD2;
+    --clay:#C9694A;        /* anthropic clay/coral */
+    --clay-soft:#F4E7E0;
+    --blue:#1F5FBF;        /* editable text */
+    --blue-soft:#EAF1FB;
+    --green:#2F7D52;
+    --red:#C0392B;
+    --shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.06);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Segoe UI","Sarabun","Inter",system-ui,-apple-system,sans-serif;
+    font-size:13px;line-height:1.45;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+  /* ---- top toolbar (screen only) ---- */
+  .toolbar{
+    position:sticky;top:0;z-index:50;
+    background:rgba(240,238,230,.9);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);
+    display:flex;align-items:center;gap:12px;
+    padding:10px 18px;
+  }
+  .toolbar .brand{font-weight:700;letter-spacing:.2px}
+  .toolbar .brand small{color:var(--muted);font-weight:500;margin-left:8px}
+  .toolbar .spacer{flex:1}
+  .btn{
+    border:1px solid var(--line);background:var(--paper);color:var(--ink);
+    padding:8px 16px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:600;
+    transition:.15s;display:inline-flex;align-items:center;gap:7px;
+  }
+  .btn:hover{border-color:var(--clay);color:var(--clay)}
+  .btn.primary{background:var(--clay);color:#fff;border-color:var(--clay)}
+  .btn.primary:hover{background:#b4583c;color:#fff}
+
+  .wrap{max-width:850px;margin:22px auto;padding:0 16px 60px}
+
+  /* ---- sheet (≈ A4) ---- */
+  .sheet{
+    background:var(--paper);border:1px solid var(--line);border-radius:12px;
+    box-shadow:var(--shadow);padding:26px 30px;margin:0 0 22px;
+  }
+  .sheet h2.section{
+    font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;
+    color:var(--clay);margin:0 0 12px;padding-bottom:7px;border-bottom:1.5px solid var(--clay-soft);
+    display:flex;align-items:center;gap:8px;
+  }
+  .sheet h2.section .n{
+    background:var(--clay);color:#fff;width:20px;height:20px;border-radius:50%;
+    display:inline-flex;align-items:center;justify-content:center;font-size:11px;
+  }
+
+  /* letterhead */
+  .letter{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid var(--ink);padding-bottom:12px;margin-bottom:16px}
+  .letter .title{font-size:21px;font-weight:800;letter-spacing:.3px}
+  .letter .title small{display:block;font-size:12px;font-weight:500;color:var(--muted);letter-spacing:0;margin-top:2px}
+  .letter .meta{text-align:right;font-size:12px;color:var(--muted)}
+  .letter .meta b{color:var(--ink)}
+
+  .topgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px 18px;margin-bottom:6px}
+  .field{display:flex;flex-direction:column;gap:3px}
+  .field label{font-size:11px;color:var(--muted);font-weight:600}
+
+  /* editable inputs = blue text */
+  input.inp{
+    font-family:inherit;font-size:13px;color:var(--blue);font-weight:700;
+    background:var(--blue-soft);border:1px solid #D5E2F4;border-radius:7px;
+    padding:6px 9px;width:100%;transition:.12s;
+  }
+  input.inp:focus{outline:none;border-color:var(--blue);background:#fff;box-shadow:0 0 0 3px rgba(31,95,191,.12)}
+  input.inp.num{text-align:right}
+  input.inp.txt{color:var(--blue)}
+
+  /* two column layout for calc */
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+  @media(max-width:720px){.cols{grid-template-columns:1fr}}
+
+  .grp{margin-bottom:16px}
+  .grp h3{font-size:12px;font-weight:700;color:var(--ink);margin:0 0 8px;letter-spacing:.2px;
+    background:var(--bg);padding:5px 9px;border-radius:6px;border-left:3px solid var(--clay)}
+
+  table.io{width:100%;border-collapse:collapse}
+  table.io td{padding:4px 4px;vertical-align:middle;border-bottom:1px solid #F1EEE7}
+  table.io tr:last-child td{border-bottom:none}
+  table.io td.lbl{color:var(--muted);font-size:12px;width:54%}
+  table.io td.sym{font-style:italic;color:var(--ink);font-weight:600;white-space:nowrap}
+  table.io td.val{text-align:right;font-variant-numeric:tabular-nums}
+  table.io td.unit{color:var(--muted);font-size:11px;width:46px;padding-left:6px}
+  .inwrap{display:flex;align-items:center;gap:6px;justify-content:flex-end}
+  .inwrap input.inp{width:88px}
+
+  .outv{font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
+  .chk{font-weight:700;font-size:11px;padding:1px 7px;border-radius:20px;white-space:nowrap}
+  .chk.ok{background:#E7F3EC;color:var(--green)}
+  .chk.no{background:#FBE9E7;color:var(--red)}
+  .warn{color:var(--red);font-size:11px;font-weight:600}
+
+  .resrow{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #F1EEE7;gap:10px}
+  .resrow:last-child{border:none}
+  .resrow .k{color:var(--muted);font-size:12px}
+  .resrow .v{font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+
+  .summary-card{background:var(--clay-soft);border:1px solid #EAD2C7;border-radius:10px;padding:14px 16px;margin-top:6px}
+  .summary-card .big{font-size:15px;font-weight:800;color:#9c4329;margin-bottom:6px}
+  .summary-card .line{font-size:12.5px;margin:3px 0}
+  .summary-card .line b{color:var(--clay)}
+
+  /* drawings */
+  .figwrap{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+  @media(max-width:720px){.figwrap{grid-template-columns:1fr}}
+  .fig{border:1px solid var(--line);border-radius:10px;padding:10px;background:#fff}
+  .fig .cap{font-size:12px;font-weight:700;text-align:center;color:var(--ink);margin-bottom:4px}
+  .fig svg{width:100%;height:auto;display:block}
+  svg text{font-family:"Segoe UI","Sarabun",sans-serif}
+
+  .note{font-size:11px;color:var(--muted);margin-top:10px;line-height:1.5}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;font-size:11px;color:var(--muted);margin-top:8px}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  .dot{width:10px;height:10px;border-radius:3px;display:inline-block}
+
+  /* ---- PRINT : A4 portrait ---- */
+  @page{size:A4 portrait;margin:11mm 10mm}
+  @media print{
+    body{background:#fff;font-size:10.3px}
+    .toolbar{display:none}
+    .wrap{max-width:none;margin:0;padding:0}
+    .sheet{box-shadow:none;border:none;border-radius:0;padding:0 0 6mm;margin:0;page-break-inside:avoid}
+    .sheet+.sheet{page-break-before:always}
+    input.inp{background:transparent;border:none;color:var(--blue);padding:1px 2px;-webkit-text-fill-color:var(--blue)}
+    input.inp.num{width:auto;min-width:50px}
+    .inwrap input.inp{width:auto;min-width:48px}
+    .fig{break-inside:avoid}
+    .toolbar,.noprint{display:none!important}
+    /* compaction so calculation sheet fits exactly one A4 page */
+    .letter{padding-bottom:8px;margin-bottom:9px}
+    .letter .title{font-size:18px}
+    .topgrid{margin-bottom:4px;gap:5px 16px}
+    .cols{gap:16px}
+    .sheet h2.section{margin-bottom:6px;padding-bottom:4px}
+    .grp{margin-bottom:7px}
+    .grp h3{padding:3px 8px;margin-bottom:4px}
+    table.io td{padding:2px 4px}
+    .summary-card{padding:9px 12px;margin-top:2px}
+    .summary-card .line{margin:2px 0}
+    .summary-card .big{font-size:13px;margin-bottom:4px}
+    .figwrap{gap:12px}
+    .fig{padding:7px}
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar noprint">
+  <div class="brand">ฐานรากตีนเป็ด<small>RC Eccentric Spread Footing</small></div>
+  <div class="spacer"></div>
+  <button class="btn" onclick="resetAll()">↺ ค่าเริ่มต้น</button>
+  <button class="btn primary" onclick="window.print()">🖨 พิมพ์ / บันทึก PDF (A4)</button>
+</div>
+
+<div class="wrap">
+
+<!-- ============ SHEET 1 : CALCULATION ============ -->
+<section class="sheet">
+  <div class="letter">
+    <div class="title">RC-Design of Spread Footing
+      <small>การออกแบบฐานรากแผ่แบบเยื้องศูนย์ (ฐานรากตีนเป็ด) — วิธีหน่วยแรงใช้งาน (WSD)</small>
+    </div>
+    <div class="meta">
+      <div>Date : <b id="today"></b></div>
+      <div>engineer : <b id="m_eng"></b></div>
+      <div>Footing : <b id="m_no"></b></div>
+    </div>
+  </div>
+
+  <div class="topgrid">
+    <div class="field"><label>Project / โครงการ</label><input class="inp txt" id="i_project" value="รั้วบ้าน"></div>
+    <div class="field"><label>Engineer / ผู้ออกแบบ</label><input class="inp txt" id="i_engineer" value="New  Man"></div>
+    <div class="field"><label>Footing Number</label><input class="inp txt" id="i_footingNo" value="Fence"></div>
+  </div>
+  <div class="topgrid" style="grid-template-columns:1fr 2fr">
+    <div class="field"><label>ออกแบบฐานราก / ชื่อฐานราก</label><input class="inp txt" id="i_ftgName" value="รั้ว"></div>
+    <div class="field" style="justify-content:flex-end"><label>&nbsp;</label>
+      <div class="note" style="margin:0">แก้ไขได้เฉพาะช่อง <b style="color:var(--blue)">ตัวเลข/ตัวหนังสือสีน้ำเงิน</b> เท่านั้น ผลลัพธ์อื่นจะคำนวณให้อัตโนมัติ</div>
+    </div>
+  </div>
+
+  <div class="cols" style="margin-top:14px">
+    <!-- LEFT : INPUTS -->
+    <div>
+      <h2 class="section"><span class="n">1</span>ข้อมูลป้อนเข้า (Input)</h2>
+
+      <div class="grp">
+        <h3>คุณสมบัติวัสดุ (Materials)</h3>
+        <table class="io">
+          <tr><td class="lbl">กำลังอัดคอนกรีต</td><td class="sym">fc'</td>
+            <td class="val"><span class="inwrap"><input class="inp num" id="i_fc1" value="173.334"></span></td><td class="unit">ksc</td></tr>
+          <tr><td class="lbl">สัมประสิทธิ์ fc</td><td class="sym">Coef</td>
+            <td class="val"><span class="inwrap"><input class="inp num" id="i_coef" value="0.375"></span></td><td class="unit"></td></tr>
+          <tr><td class="lbl">กำลังครากเหล็ก</td><td class="sym">fy</td>
+            <td class="val"><span class="inwrap"><input class="inp num" id="i_fy" value="3000"></span></td><td class="unit">ksc</td></tr>
+          <tr><td class="lbl">fc = fc'·Coef</td><td class="sym">fc</td><td class="val"><span class="outv" id="o_fc"></span></td><td class="unit">ksc</td></tr>
+          <tr><td class="lbl">fs (allowable)</td><td class="sym">fs</td><td class="val"><span class="outv" id="o_fs"></span></td><td class="unit">ksc</td></tr>
+          <tr><td class="lbl">n , k , j</td><td class="sym">n·k·j</td><td class="val"><span class="outv" id="o_nkj"></span></td><td class="unit"></td></tr>
+          <tr><td class="lbl">โมดูลัสหน้าตัด R</td><td class="sym">R</td><td class="val"><span class="outv" id="o_R"></span></td><td class="unit">ksc</td></tr>
+        </table>
+      </div>
+
+      <div class="grp">
+        <h3>แรงกระทำ (Loads)</h3>
+        <table class="io">
+          <tr><td class="lbl">แรงกดจากเสาตอม่อ</td><td class="sym">P</td>
+            <td class="val"><span class="inwrap"><input class="inp num" id="i_P" value="2800"></span></td><td class="unit">kg</td></tr>
+          <tr><td class="lbl">โมเมนต์ที่เสา</td><td class="sym">Ma</td>
+            <td class="val"><span class="inwrap"><input class="inp num" id="i_Ma" value="300"></span></td><td class="unit">kg-m</td></tr>
+          <tr><td class="lbl">ถมดินบนหลังฐานรากสูง</td><td class="sym">h</td>
+            <td class="val"><span class="inwrap"><input class="inp num" id="i_soilH" value="1"></span></td><td class="unit">m</td></tr>
+          <tr><td class="lbl">ถ.พ. ของดินบนหลังฐาน</td><td class="sym">γ</td>
+            <td class="val"><span class="inwrap"><input class="inp num" id="i_soilG" value="1600"></span></td><td class="unit">kg/m³</td></tr>
+          <tr><td class="lbl">หน่วยแรงดันดินยอมให้</td><td class="sym">p(max)</td>
+            <td class="val"><span class="inwrap"><input class="inp num" id="i_pmax" value="10000"></span></td><td class="unit">kg/m²</td></tr>
+          <tr><td class="lbl">น้ำหนักแผ่ดิน+ฐาน Wa</td><td class="sym">Wa</td><td class="val"><span class="outv" id="o_Wa"></span></td><td class="unit">kg/m²</td></tr>
+        </table>
+      </div>
+
+      <div class="grp">
+        <h3>ขนาดรูปร่าง (Geometry)</h3>
+        <table class="io">
+          <tr><td class="lbl">ระยะขอบฐานชิดเขต–ขอบเสา</td><td class="sym">La</td>
+            <td class="val"><span class="inwrap"><input class="inp num" id="i_La" value="0.1"></span></td><td class="unit">m</td></tr>
+          <tr><td class="lbl">ความลึกเสาในแนวยาว L</td><td class="sym">a</td>
+            <td class="val"><span class="inwrap"><input class="inp num" id="i_a" value="0.3"></span></td><td class="unit">m</td></tr>
+          <tr><td class="lbl">ความกว้างเสาในแนวกว้าง B</td><td class="sym">b</td>
+            <td class="val"><span class="inwrap"><input class="inp num" id="i_b" value="0.2"></span></td><td class="unit">m</td></tr>
+          <tr><td class="lbl">ความหนาฐานราก (สมมุติ)</td><td class="sym">T</td>
+            <td class="val"><span class="inwrap"><input class="inp num" id="i_T" value="0.3"></span></td><td class="unit">m</td></tr>
+          <tr><td class="lbl">ความยาวฐานราก</td><td class="sym">L</td>
+            <td class="val"><span class="inwrap"><input class="inp num" id="i_L" value="1"></span></td><td class="unit">m</td></tr>
+          <tr><td class="lbl">ความกว้างฐานราก</td><td class="sym">B</td>
+            <td class="val"><span class="inwrap"><input class="inp num" id="i_B" value="1.5"></span></td><td class="unit">m</td></tr>
+        </table>
+      </div>
+
+      <div class="grp">
+        <h3>เหล็กเสริม (Reinforcement)</h3>
+        <table class="io">
+          <tr><td class="lbl">เส้นผ่าศูนย์กลางเหล็ก</td><td class="sym">D</td>
+            <td class="val"><span class="inwrap"><input class="inp num" id="i_Dbar" value="12"></span></td><td class="unit">mm</td></tr>
+          <tr><td class="lbl">ระยะหุ้มคอนกรีต</td><td class="sym">d'</td>
+            <td class="val"><span class="inwrap"><input class="inp num" id="i_cover" value="7.5"></span></td><td class="unit">cm</td></tr>
+          <tr><td class="lbl">ความลึกประสิทธิผล</td><td class="sym">d</td><td class="val"><span class="outv" id="o_d"></span></td><td class="unit">cm</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- RIGHT : RESULTS / CHECKS -->
+    <div>
+      <h2 class="section"><span class="n">2</span>การตรวจสอบ &amp; ผลลัพธ์ (Design)</h2>
+
+      <div class="grp">
+        <h3>หน่วยแรงดันใต้ฐานราก (Soil pressure)</h3>
+        <table class="io">
+          <tr><td class="lbl">แรงดันดินต่ำสุด</td><td class="sym">p₁</td><td class="val"><span class="outv" id="o_p1"></span></td><td class="unit"><span id="o_p1chk"></span></td></tr>
+          <tr><td class="lbl">แรงดันดินสูงสุด</td><td class="sym">p₂</td><td class="val"><span class="outv" id="o_p2"></span></td><td class="unit"><span id="o_p2chk"></span></td></tr>
+          <tr><td class="lbl">โมเมนต์ออกแบบ M</td><td class="sym">M</td><td class="val"><span class="outv" id="o_Mcol"></span></td><td class="unit">kg-m</td></tr>
+          <tr><td class="lbl">ความกว้างต้องการ B(req)</td><td class="sym">B'</td><td class="val"><span class="outv" id="o_Breq"></span></td><td class="unit"><span id="o_Breqchk"></span></td></tr>
+        </table>
+      </div>
+
+      <div class="grp">
+        <h3>ตรวจสอบความหนา (Thickness)</h3>
+        <table class="io">
+          <tr><td class="lbl">M(max) / V(max)</td><td class="sym">M·V</td><td class="val"><span class="outv" id="o_MVmax"></span></td><td class="unit"></td></tr>
+          <tr><td class="lbl">d จากโมเมนต์ดัด</td><td class="sym">d₁</td><td class="val"><span class="outv" id="o_d1"></span></td><td class="unit"><span id="o_d1chk"></span></td></tr>
+          <tr><td class="lbl">d จากแรงเฉือนคาน</td><td class="sym">d₂</td><td class="val"><span class="outv" id="o_d2"></span></td><td class="unit"><span id="o_d2chk"></span></td></tr>
+          <tr><td class="lbl">d จากแรงเฉือนทะลุ</td><td class="sym">d₃</td><td class="val"><span class="outv" id="o_d3"></span></td><td class="unit"><span id="o_d3chk"></span></td></tr>
+          <tr><td class="lbl">v คาน / v ทะลุ (ยอมให้)</td><td class="sym">v</td><td class="val"><span class="outv" id="o_v"></span></td><td class="unit">ksc</td></tr>
+        </table>
+        <div class="resrow" style="margin-top:6px">
+          <span class="k">สรุปความหนา (d ใช้งาน = <b id="o_dav"></b> cm)</span>
+          <span class="v" id="o_thickConc"></span>
+        </div>
+      </div>
+
+      <div class="grp">
+        <h3>หน่วยแรงยึดหน่วง (Bond)</h3>
+        <table class="io">
+          <tr><td class="lbl">u ที่ยอมให้</td><td class="sym">u</td><td class="val"><span class="outv" id="o_u"></span></td><td class="unit">ksc</td></tr>
+        </table>
+      </div>
+
+      <div class="grp">
+        <h3>เหล็กเสริมที่ต้องการ (Required steel)</h3>
+        <table class="io">
+          <tr><td class="lbl">As ด้านยาว (L) — My</td><td class="sym">As,L</td><td class="val"><span class="outv" id="o_AsL"></span></td><td class="unit">cm²</td></tr>
+          <tr><td class="lbl">As ด้านกว้าง (B) — Mx</td><td class="sym">As,B</td><td class="val"><span class="outv" id="o_AsB"></span></td><td class="unit">cm²</td></tr>
+          <tr><td class="lbl">As ขั้นต่ำ (0.125%)</td><td class="sym">As,min</td><td class="val"><span class="outv" id="o_Asmin"></span></td><td class="unit">cm²</td></tr>
+        </table>
+      </div>
+
+      <div class="grp">
+        <h3>เหล็กเสริมกันร้าว — เหล็กบน (Top crack-control · วสท.)</h3>
+        <table class="io">
+          <tr><td class="lbl">อัตราเหล็กกันร้าว ρ (ตาม fy)</td><td class="sym">ρ</td><td class="val"><span class="outv" id="o_rhoTS"></span></td><td class="unit"></td></tr>
+          <tr><td class="lbl">เหล็กบนแนวขนานด้านยาว (L) — As=ρ·B·T</td><td class="sym">As,top L</td><td class="val"><span class="outv" id="o_AsTopL"></span></td><td class="unit">cm²</td></tr>
+          <tr><td class="lbl">เหล็กบนแนวขนานด้านกว้าง (B) — As=ρ·L·T</td><td class="sym">As,top B</td><td class="val"><span class="outv" id="o_AsTopB"></span></td><td class="unit">cm²</td></tr>
+        </table>
+      </div>
+
+      <div class="summary-card">
+        <div class="big">สรุปผลการออกแบบ</div>
+        <div class="line">ความหนาฐานราก <b id="s_T"></b> &nbsp;|&nbsp; d = <b id="s_d"></b></div>
+        <div class="line">เหล็กล่างแนวขนานด้าน <b>ยาว (L)</b> : <b id="s_steelL"></b></div>
+        <div class="line">เหล็กล่างแนวขนานด้าน <b>กว้าง (B)</b> : <b id="s_steelB"></b></div>
+        <div class="line">เหล็กบน (กันร้าว) แนวด้าน <b>ยาว (L)</b> : <b id="s_steelTopL"></b></div>
+        <div class="line">เหล็กบน (กันร้าว) แนวด้าน <b>กว้าง (B)</b> : <b id="s_steelTopB"></b></div>
+        <div class="line" id="s_status"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SHEET 2 : DRAWINGS plan + section ============ -->
+<section class="sheet">
+  <h2 class="section"><span class="n">3</span>รูปแสดงฐานราก (Footing Geometry)</h2>
+  <div class="figwrap">
+    <div class="fig">
+      <div class="cap">Plan View — แปลนฐานราก</div>
+      <svg id="svgPlan" viewBox="0 0 360 300"></svg>
+    </div>
+    <div class="fig">
+      <div class="cap">Section — รูปตัด (ตีนเป็ด)</div>
+      <svg id="svgSec" viewBox="0 0 360 300"></svg>
+    </div>
+  </div>
+  <div class="legend">
+    <span><i class="dot" style="background:#C9694A"></i>เสาตอม่อ / Column</span>
+    <span><i class="dot" style="background:#9FB7D4"></i>หน่วยแรงดันดิน p₁–p₂</span>
+    <span><i class="dot" style="background:#1A1A18"></i>ขอบฐานราก B × L</span>
+  </div>
+  <div class="note" id="geomNote"></div>
+</section>
+
+<!-- ============ SHEET 3 : FORCE DIAGRAMS ============ -->
+<section class="sheet">
+  <h2 class="section"><span class="n">4</span>แผนภาพแรง (Load / Shear / Moment Diagrams)</h2>
+  <div class="figwrap">
+    <div class="fig">
+      <div class="cap">Diagram X–X (แนวยาว L)</div>
+      <svg id="svgXX" viewBox="0 0 360 380"></svg>
+    </div>
+    <div class="fig">
+      <div class="cap">Diagram Y–Y (แนวกว้าง B)</div>
+      <svg id="svgYY" viewBox="0 0 360 380"></svg>
+    </div>
+  </div>
+  <div class="note">
+    SFD = Shear Force Diagram (แผนภาพแรงเฉือน), BMD = Bending Moment Diagram (แผนภาพโมเมนต์ดัด).
+    แนว X–X (ตามด้านยาว L) หน่วยแรงดันดินไล่ระดับ p₂·B → p₁·B (trapezoid) เพราะแรงเยื้องศูนย์อยู่ในแนวนี้ ;
+    แนว Y–Y (ตามด้านกว้าง B) หน่วยแรงดันดินคงที่ตลอดความกว้าง จึงเป็นโหลดสม่ำเสมอ p₂·L (uniform) — ไม่ไล่ระดับ.
+  </div>
+</section>
+
+</div><!-- /wrap -->
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const num = id => parseFloat($(id).value) || 0;
+const PI = Math.PI;
+const up = (x,n=0)=>{const f=Math.pow(10,n);return Math.ceil(x*f-1e-9)/f;};
+const rnd = (x,n=0)=>{const f=Math.pow(10,n);return Math.round(x*f)/f;};
+const fmt = (x,n=2)=> (isFinite(x)? x.toLocaleString('en-US',{minimumFractionDigits:n,maximumFractionDigits:n}) : '–');
+const chip = (ok,t)=>`<span class="chk ${ok?'ok':'no'}">${t}</span>`;
+
+/* อัตราเหล็กเสริมกันร้าว/อุณหภูมิ ตาม วสท. (อิงกำลังครากเหล็ก fy)
+   - เหล็กเส้นกลมผิวเรียบ SR24 (fy≤2400)         : 0.0025
+   - เหล็กข้ออ้อย fy ≤ 3500 (SD30)               : 0.0020
+   - เหล็กข้ออ้อย 3500 < fy ≤ 4200 (SD40)        : 0.0018
+   - เหล็กข้ออ้อย fy > 4200                       : 0.0018·4200/fy  แต่ไม่น้อยกว่า 0.0014 */
+function tsRatio(fy){
+  const deformed = fy>2400;
+  if(!deformed) return 0.0025;
+  if(fy<=3500)  return 0.0020;
+  if(fy<=4200)  return 0.0018;
+  return Math.max(0.0018*4200/fy, 0.0014);
+}
+
+const INPUT_IDS = ['i_project','i_engineer','i_footingNo','i_ftgName','i_fc1','i_coef','i_fy','i_P','i_Ma','i_soilH','i_soilG','i_pmax','i_La','i_a','i_b','i_T','i_L','i_B','i_Dbar','i_cover'];
+const DEFAULTS = {i_project:'รั้วบ้าน',i_engineer:'New  Man',i_footingNo:'Fence',i_ftgName:'รั้ว',i_fc1:173.334,i_coef:0.375,i_fy:3000,i_P:2800,i_Ma:300,i_soilH:1,i_soilG:1600,i_pmax:10000,i_La:0.1,i_a:0.3,i_b:0.2,i_T:0.3,i_L:1,i_B:1.5,i_Dbar:12,i_cover:7.5};
+
+function compute(){
+  // ---- inputs ----
+  const fc1=num('i_fc1'), coef=num('i_coef'), fy=num('i_fy');
+  const P=num('i_P'), Ma=num('i_Ma'), soilH=num('i_soilH'), soilG=num('i_soilG'), pmax=num('i_pmax');
+  const La=num('i_La'), a=num('i_a'), b=num('i_b'), T=num('i_T'), L=num('i_L'), B=num('i_B');
+  const Dbar=num('i_Dbar'), cover=num('i_cover');
+
+  // ---- material ----
+  const fc = fc1*coef;                                   // J7
+  const fs = fy>3000?1700:0.5*fy;                        // J8
+  const n  = Math.floor(2.04e6/15210/Math.sqrt(fc1));    // H9 ROUNDDOWN
+  const k  = 1/(1+(fs/(n*fc)));                           // J9
+  const j  = 1-(k/3);                                     // H10
+  const R  = 0.5*fc*k*j;                                  // J10
+  const Dh = (Dbar/10)/2;                                 // S9 cm
+  const d  = T*100 - cover - Dh;                          // S12 cm (effective depth)
+  const vB = 0.29*Math.sqrt(fc1);                         // S16 beam shear allow
+  const vP = 0.53*Math.sqrt(fc1);                         // S20 punch allow
+  const Wa = soilH*soilG + T*2400;                        // H27
+  const N8 = Wa*B;                                        // line load along L
+  const Mcol = P*(L/2 - La - a/2) + Ma;                   // J29
+
+  // ---- soil pressure (eccentric, along L) ----
+  const p1 = P/(L*B) - 6*Mcol/(B*L*L) + Wa;              // H39 min
+  const p2 = P/(L*B) + 6*Mcol/(B*L*L) + Wa;              // H40 max
+  const Breq = up((6*Mcol/(L*L) - P/L)/Wa, 2);          // J36
+
+  const O12 = p2*(L-La-a/2)/L;                            // H40*(...)
+  const O13 = p2 - O12;
+  const O14 = O12 - p1;
+  const O24 = Wa*L;
+  const armR = (L-La-a/2);   // cantilever toward long side
+  const armL = (La+a/2);     // cantilever toward edge side
+
+  // ---- moments for thickness ----
+  const K16 = 0.5*p1*B*armR*armR + (1/3)*O14*B*armR*armR - 0.5*N8*armR*armR;
+  const K17 = 0.5*O12*B*armL*armL + (2/3)*O13*B*armL*armL - 0.5*N8*armL*armL;
+  const L16 = K16>K17 ? Math.abs(Ma) : 0;
+  const L17 = K17>K16 ? Math.abs(Ma) : 0;
+  const N18 = K16 + L16;
+  const M19 = K17 + L17;
+  const N31 = 0.5*p1*L*(B/2)*(B/2) + 0.5*(p2-p1)*L*(B/2)*(B/2) - 0.5*O24*(B/2)*(B/2);
+
+  // ---- shears ----
+  const M14 = O13*B/2*armL + O12*B*armL - N8*armL;
+  const N14 = Math.max( P - (O13*B/2*armL + O12*B*armL - N8*armL),
+                        p1*B*armR + O14*B/2*armR - N8*armR );
+  const N28 = p1*L*B/2 + (p2-p1)/2*L*B/2 - O24*B/2;
+
+  // ---- M(max) / V(max) ----
+  const sqA = Math.sqrt((N18+M19)/(R*B));
+  const sqB = Math.sqrt(N31/(R*L));
+  const N5  = Math.max(sqA,sqB);
+  const Mmax = (sqB>=sqA) ? N31 : (N18+M19);             // O5
+  const cN14=N14/(B*100*vB), cM14=M14/(B*100*vB), cN28=N28/(L*100*vB);
+  const N6 = Math.max(cN14,cM14,cN28);
+  let Vmax;                                              // O6 priority N28,N14,M14
+  if(N6===cN28) Vmax=N28; else if(N6===cN14) Vmax=N14; else if(N6===cM14) Vmax=M14; else Vmax=Math.max(N14,M14);
+
+  // ---- thickness checks ----
+  const S5=Mmax, S6=Vmax;
+  const d1 = (S5===N18||S5===M19) ? Math.sqrt(S5/(R*B)) : Math.sqrt(S5/(R*L));   // S14
+  const d2 = (S6===M14||S6===N14) ? S6/(B*100*vB) : S6/(L*100*vB);              // S18
+  // punching S24 / S22
+  const bb=b*100, cond=(2*d+bb)>(B*100);
+  const J21 = cond?0:a;
+  const coefP = vP*(2*J21*100+bb);
+  let d3;
+  if(cond){ d3 = P/(Math.min(bb+d,B*100)*vP); }
+  else { d3 = (-coefP + Math.sqrt(coefP*coefP + 8*vP*P))/(4*vP); }              // S24 positive root
+  const thickOK = (d1<=d)&&(d2<=d)&&(d3<=d);
+
+  // ---- bond ----
+  const u = (fy<=2400)? Math.min(1.615*Math.sqrt(fc1)/(Dbar/10),11) : Math.min(3.23*Math.sqrt(fc1)/(Dbar/10),35); // S27
+
+  // ---- required steel ----
+  const My=N18+M19, Vy=(N14<0?-1*Math.max(N14,M14):Math.max(N14,M14));
+  const AsL = My/(fs*j*d/100);                           // S31
+  const SoL_req = Vy/(u*j*d);                            // S32
+  const Mx=N31, Vx=(N28<0?-N28:N28);
+  const AsB = Mx/(fs*j*d/100);                           // S36
+  const SoB_req = Vx/(u*j*d);                            // S37
+  const Asmin_L = 0.00125*B*100*T*100;
+  const Asmin_B = 0.00125*L*100*T*100;
+
+  const barArea = PI/4*(Dbar/10)*(Dbar/10);
+  const prefix = (Dbar>=9)? (fy<=2400?'RB':'DB') : '';
+  // L direction
+  const nL = Math.max(up(AsL/barArea,0), up(Asmin_L,0), up(SoL_req/(PI*(Dbar/10)),0));
+  const AsL_prov = nL*barArea, SoL = rnd(nL*PI*(Dbar/10),3);
+  // B direction
+  const nB = Math.max(up(AsB/barArea,0), up(Asmin_B,0), up(SoB_req/(PI*(Dbar/10)),0));
+  const AsB_prov = nB*barArea, SoB = rnd(nB*PI*(Dbar/10),3);
+
+  // ---- เหล็กเสริมกันร้าว (เหล็กบน) Top crack-control steel — ตาม วสท. ----
+  // อัตราเหล็กกันร้าว ρ ปรับตามกำลังคราก fy (วสท.)
+  const rhoTS = tsRatio(fy);
+  // As = ρ·(หน้าตัด gross)  →  จำนวนเส้น n = ROUNDUP(As / พื้นที่เหล็ก 1 เส้น)
+  const AsTopL = rhoTS*(B*100)*(T*100);                   // แนวขนานด้านยาว (L) : ρ·B·T (cm²)
+  const nTopL  = Math.max(2, up(AsTopL/barArea,0));
+  const AsTopL_prov = nTopL*barArea;
+  const AsTopB = rhoTS*(L*100)*(T*100);                   // แนวขนานด้านกว้าง (B): ρ·L·T (cm²)
+  const nTopB  = Math.max(2, up(AsTopB/barArea,0));
+  const AsTopB_prov = nTopB*barArea;
+
+  // ---- warnings ----
+  const wLa  = (La>0.2)?'ฐานรากห่างเขตเกินไป':'';
+  const wL   = (L<(La+a+T))?'ความยาวฐานรากน้อยเกินไป':'';
+  const wWide= (p2<pmax && B>Breq && p1>0)?'':'ต้องเพิ่มความกว้าง';
+
+  return {fc1,coef,fy,P,Ma,soilH,soilG,pmax,La,a,b,T,L,B,Dbar,cover,
+    fc,fs,n,k,j,R,d,vB,vP,Wa,N8,Mcol,p1,p2,Breq,
+    d1,d2,d3,thickOK,u,Mmax,Vmax,My,Mx,
+    AsL,AsB,Asmin_L,Asmin_B,prefix,nL,AsL_prov,SoL,nB,AsB_prov,SoB,
+    rhoTS,AsTopL,nTopL,AsTopL_prov,AsTopB,nTopB,AsTopB_prov,
+    wLa,wL,wWide};
+}
+
+function render(){
+  const r = compute();
+  // letterhead
+  $('m_eng').textContent = $('i_engineer').value;
+  $('m_no').textContent  = $('i_footingNo').value;
+
+  // material
+  $('o_fc').textContent  = fmt(r.fc,3);
+  $('o_fs').textContent  = fmt(r.fs,0);
+  $('o_nkj').textContent = `${r.n} · ${fmt(r.k,3)} · ${fmt(r.j,3)}`;
+  $('o_R').textContent   = fmt(r.R,3);
+  $('o_Wa').textContent  = fmt(r.Wa,0);
+  $('o_d').textContent   = fmt(r.d,2);
+
+  // soil pressure
+  $('o_p1').textContent = fmt(r.p1,1);
+  $('o_p2').textContent = fmt(r.p2,1);
+  $('o_p1chk').innerHTML = chip(r.p1>0, r.p1>0?'>0 OK':'≤0');
+  $('o_p2chk').innerHTML = chip(r.p2<=r.pmax, r.p2<=r.pmax?'OK':'>pmax');
+  $('o_Mcol').textContent = fmt(r.Mcol,1);
+  $('o_Breq').textContent = fmt(r.Breq,2);
+  $('o_Breqchk').innerHTML = chip(r.B>=r.Breq, r.B>=r.Breq?'B≥B\'':'เพิ่ม B');
+
+  // thickness
+  $('o_MVmax').textContent = `${fmt(r.Mmax,0)} / ${fmt(r.Vmax,0)}`;
+  $('o_d1').textContent = fmt(r.d1,2);
+  $('o_d2').textContent = fmt(r.d2,2);
+  $('o_d3').textContent = fmt(r.d3,2);
+  $('o_d1chk').innerHTML = chip(r.d1<=r.d,'cm');
+  $('o_d2chk').innerHTML = chip(r.d2<=r.d,'cm');
+  $('o_d3chk').innerHTML = chip(r.d3<=r.d,'cm');
+  $('o_v').textContent = `${fmt(r.vB,2)} / ${fmt(r.vP,2)}`;
+  $('o_dav').textContent = fmt(r.d,1);
+  $('o_thickConc').innerHTML = `${fmt(r.T*100,0)} cm &nbsp;${chip(r.thickOK, r.thickOK?'ใช้ได้ตามที่สมมุติ':'ต้องแก้ไข')}`;
+
+  // bond + steel
+  $('o_u').textContent = fmt(r.u,2);
+  $('o_AsL').textContent = fmt(r.AsL,3);
+  $('o_AsB').textContent = fmt(r.AsB,3);
+  $('o_Asmin').textContent = `${fmt(r.Asmin_L,2)} (L) / ${fmt(r.Asmin_B,2)} (B)`;
+  $('o_rhoTS').textContent  = `${fmt(r.rhoTS*100,3)} %  (fy=${fmt(r.fy,0)})`;
+  $('o_AsTopL').textContent = `${fmt(r.AsTopL,3)}  →  ${r.nTopL} ${r.prefix}${r.Dbar}mm`;
+  $('o_AsTopB').textContent = `${fmt(r.AsTopB,3)}  →  ${r.nTopB} ${r.prefix}${r.Dbar}mm`;
+
+  // summary card
+  $('s_T').textContent = `${fmt(r.T*100,0)} cm`;
+  $('s_d').textContent = `${fmt(r.d,1)} cm`;
+  $('s_steelL').textContent = `${r.nL} ${r.prefix}${r.Dbar}mm @ So ${fmt(r.SoL,1)} cm  (As = ${fmt(r.AsL_prov,3)} cm²)`;
+  $('s_steelB').textContent = `${r.nB} ${r.prefix}${r.Dbar}mm @ So ${fmt(r.SoB,1)} cm  (As = ${fmt(r.AsB_prov,3)} cm²)`;
+  $('s_steelTopL').textContent = `${r.nTopL} ${r.prefix}${r.Dbar}mm  (As = ${fmt(r.AsTopL_prov,3)} cm² ≥ ${fmt(r.AsTopL,3)})`;
+  $('s_steelTopB').textContent = `${r.nTopB} ${r.prefix}${r.Dbar}mm  (As = ${fmt(r.AsTopB_prov,3)} cm² ≥ ${fmt(r.AsTopB,3)})`;
+  const issues=[r.wLa,r.wL,r.wWide].filter(Boolean);
+  const allOK = r.thickOK && r.p1>0 && r.p2<=r.pmax && issues.length===0;
+  $('s_status').innerHTML = allOK
+    ? `<b style="color:var(--green)">✔ ผ่านการตรวจสอบทั้งหมด — Design OK</b>`
+    : `<b style="color:var(--red)">⚠ ต้องตรวจสอบ: ${issues.concat(r.thickOK?[]:['ความหนาไม่พอ'],r.p1>0?[]:['p₁≤0'],r.p2<=r.pmax?[]:['p₂>p(max)']).join(' · ')}</b>`;
+
+  drawPlan(r); drawSection(r); drawXX(r); drawYY(r);
+
+  $('geomNote').innerHTML =
+   `ฐานราก B×L = <b>${fmt(r.B,2)} × ${fmt(r.L,2)} m</b> หนา <b>${fmt(r.T*100,0)} cm</b> · เสา ${fmt(r.b*100,0)}×${fmt(r.a*100,0)} cm วางเยื้องชิดเขต La = ${fmt(r.La*100,0)} cm · `+
+   `หน่วยแรงดันดิน p₂ (สูงสุด) = <b>${fmt(r.p2,0)}</b> kg/m² ที่ฝั่งเสา ลดเป็น p₁ (ต่ำสุด) = <b>${fmt(r.p1,0)}</b> kg/m² ที่ปลายฐาน`;
+}
+
+/* ============ SVG helpers ============ */
+const SVGNS="http://www.w3.org/2000/svg";
+function el(tag,attr,parent){const e=document.createElementNS(SVGNS,tag);for(const k in attr)e.setAttribute(k,attr[k]);if(parent)parent.appendChild(e);return e;}
+function txt(p,x,y,s,o={}){const t=el('text',{x,y,'font-size':o.fs||10,'text-anchor':o.anc||'middle',fill:o.fill||'#1A1A18','font-weight':o.fw||400,'font-style':o.fst||'normal'},p);t.textContent=s;return t;}
+function clear(svg){while(svg.firstChild)svg.removeChild(svg.firstChild);}
+function dimLine(p,x1,y1,x2,y2){ // simple dimension line with ticks
+  el('line',{x1,y1,x2,y2,stroke:'#8A857B','stroke-width':.7},p);
+}
+function arrow(p,x1,y1,x2,y2,col='#1A1A18'){
+  el('line',{x1,y1,x2,y2,stroke:col,'stroke-width':1.4},p);
+  const ang=Math.atan2(y2-y1,x2-x1),s=5;
+  el('path',{d:`M${x2},${y2} L${x2-s*Math.cos(ang-0.4)},${y2-s*Math.sin(ang-0.4)} L${x2-s*Math.cos(ang+0.4)},${y2-s*Math.sin(ang+0.4)} Z`,fill:col},p);
+}
+
+/* ---- PLAN VIEW ---- */
+function drawPlan(r){
+  const svg=$('svgPlan');clear(svg);
+  const X0=55,Y0=60,W=250,H=150;             // footing rectangle (L horizontal, B vertical)
+  // footing
+  el('rect',{x:X0,y:Y0,width:W,height:H,fill:'#FBFAF7',stroke:'#1A1A18','stroke-width':1.4},svg);
+  // column position (eccentric near left): La from left, depth a (horiz), width b (vert centered)
+  const f = W/r.L;                            // px per metre (L dir)
+  const fb= H/r.B;                            // px per metre (B dir)
+  const colX = X0 + r.La*f;
+  const colW = r.a*f;
+  const colH = r.b*fb;
+  const colY = Y0 + (H-colH)/2;
+  el('rect',{x:colX,y:colY,width:colW,height:colH,fill:'#E7D2C8',stroke:'#C9694A','stroke-width':1.3},svg);
+  el('line',{x1:colX,y1:colY,x2:colX+colW,y2:colY+colH,stroke:'#C9694A','stroke-width':.8},svg);
+  el('line',{x1:colX+colW,y1:colY,x2:colX,y2:colY+colH,stroke:'#C9694A','stroke-width':.8},svg);
+  // centerlines
+  const cymid=Y0+H/2, cxcol=colX+colW/2;
+  el('line',{x1:X0-12,y1:cymid,x2:X0+W+8,y2:cymid,stroke:'#3B6FB0','stroke-width':.7,'stroke-dasharray':'6 3'},svg);
+  el('line',{x1:cxcol,y1:Y0-8,x2:cxcol,y2:Y0+H+8,stroke:'#3B6FB0','stroke-width':.7,'stroke-dasharray':'6 3'},svg);
+  // section labels placed inside the footing to avoid dimension collisions
+  txt(svg,X0+W-26,cymid-5,'X–X',{fs:9,fill:'#3B6FB0',fw:700});
+  txt(svg,cxcol+18,Y0+18,'Y–Y',{fs:9,fill:'#3B6FB0',fw:700});
+  // dims top : La+a/2 and L-La-a/2
+  const dT=Y0-26, midX=colX+colW/2;
+  el('line',{x1:X0,y1:dT,x2:midX,y2:dT,stroke:'#8A857B','stroke-width':.7},svg);
+  el('line',{x1:midX,y1:dT,x2:X0+W,y2:dT,stroke:'#8A857B','stroke-width':.7},svg);
+  [X0,midX,X0+W].forEach(x=>el('line',{x1:x,y1:dT-3,x2:x,y2:dT+3,stroke:'#8A857B','stroke-width':.7},svg));
+  txt(svg,(X0+midX)/2,dT-3,'La+a/2',{fs:8.5,fill:'#6B6760'});
+  txt(svg,(midX+X0+W)/2,dT-3,'L−La−a/2',{fs:8.5,fill:'#6B6760'});
+  // dim L (very top)
+  const dL=Y0-44;
+  el('line',{x1:X0,y1:dL,x2:X0+W,y2:dL,stroke:'#1A1A18','stroke-width':.7},svg);
+  [X0,X0+W].forEach(x=>el('line',{x1:x,y1:dL-3,x2:x,y2:dL+3,stroke:'#1A1A18','stroke-width':.7},svg));
+  txt(svg,X0+W/2,dL-3,`L = ${fmt(r.L,2)} m`,{fs:9,fw:700});
+  // dim B (right)
+  const dR=X0+W+16;
+  el('line',{x1:dR,y1:Y0,x2:dR,y2:Y0+H,stroke:'#1A1A18','stroke-width':.7},svg);
+  [Y0,Y0+H].forEach(y=>el('line',{x1:dR-3,y1:y,x2:dR+3,y2:y,stroke:'#1A1A18','stroke-width':.7},svg));
+  txt(svg,dR+11,Y0+H/2,`B = ${fmt(r.B,2)} m`,{fs:9,fw:700,anc:'middle'}).setAttribute('transform',`rotate(90 ${dR+11} ${Y0+H/2})`);
+  // La dim small
+  const dLa=Y0+H+16;
+  el('line',{x1:X0,y1:dLa,x2:colX,y2:dLa,stroke:'#8A857B','stroke-width':.7},svg);
+  [X0,colX].forEach(x=>el('line',{x1:x,y1:dLa-3,x2:x,y2:dLa+3,stroke:'#8A857B','stroke-width':.7},svg));
+  txt(svg,(X0+colX)/2,dLa+11,`La=${fmt(r.La*100,0)}`,{fs:8,fill:'#6B6760'});
+  el('line',{x1:colX,y1:dLa,x2:colX+colW,y2:dLa,stroke:'#8A857B','stroke-width':.7},svg);
+  el('line',{x1:colX+colW,y1:dLa-3,x2:colX+colW,y2:dLa+3,stroke:'#8A857B','stroke-width':.7},svg);
+  txt(svg,colX+colW/2,dLa+11,`a=${fmt(r.a*100,0)}`,{fs:8,fill:'#6B6760'});
+  txt(svg,colX+colW/2,colY-4,'Column',{fs:8,fill:'#C9694A',fw:700});
+}
+
+/* ---- SECTION (duck foot) ---- */
+function drawSection(r){
+  const svg=$('svgSec');clear(svg);
+  const X0=55,W=250;
+  const slabY=150, slabH=24;
+  const f=W/r.L;
+  // column
+  const colX=X0+r.La*f, colW=r.a*f, colTop=58, colBot=slabY;
+  // footing slab
+  el('rect',{x:X0,y:slabY,width:W,height:slabH,fill:'#FBFAF7',stroke:'#1A1A18','stroke-width':1.4},svg);
+  // rebar layers (section cut along L : bars running into page appear as dots)
+  const rbInset=12, rbX0=X0+rbInset, rbX1=X0+W-rbInset;
+  const drawBars=(yy,cnt,col)=>{
+    const m=Math.max(2,Math.min(14,cnt|0));
+    for(let i=0;i<m;i++){const x=(m===1)?(rbX0+rbX1)/2:rbX0+(rbX1-rbX0)*i/(m-1);
+      el('circle',{cx:x,cy:yy,r:2.1,fill:col,stroke:'#1A1A18','stroke-width':.4},svg);}
+  };
+  const yTop=slabY+5, yBot=slabY+slabH-5;
+  drawBars(yBot,r.nB,'#1A1A18');                 // bottom main steel (B-dir bars seen in this cut)
+  drawBars(yTop,r.nTopB,'#2F7D52');              // top crack-control steel
+  txt(svg,X0-2,yTop+3,'เหล็กบน',{fs:7,anc:'end',fill:'#2F7D52',fw:700});
+  txt(svg,X0-2,yBot+3,'เหล็กล่าง',{fs:7,anc:'end',fill:'#1A1A18',fw:700});
+  // column rect
+  el('rect',{x:colX,y:colTop,width:colW,height:colBot-colTop,fill:'#E7D2C8',stroke:'#C9694A','stroke-width':1.3},svg);
+  // P load + Ma
+  const pcx=colX+colW/2;
+  arrow(svg,pcx,colTop-34,pcx,colTop-2,'#1A1A18');
+  txt(svg,pcx,colTop-38,'P',{fs:13,fw:700,fst:'italic'});
+  el('path',{d:`M${pcx-20},${colTop-20} A 16 16 0 0 1 ${pcx-4},${colTop-30}`,fill:'none',stroke:'#1A1A18','stroke-width':1.2},svg);
+  arrow(svg,pcx-8,colTop-32,pcx-2,colTop-30,'#1A1A18');
+  txt(svg,pcx+26,colTop-22,'Ma',{fs:12,fw:700,fst:'italic'});
+  // soil pressure trapezoid below slab (p2 high at column/left, p1 low at right)
+  const py0=slabY+slabH+6, maxP=Math.max(r.p1,r.p2,1);
+  const scale=46/maxP;
+  const h2=Math.max(2,Math.abs(r.p2)*scale), h1=Math.max(2,Math.abs(r.p1)*scale);
+  el('path',{d:`M${X0},${py0} L${X0+W},${py0} L${X0+W},${py0+h1} L${X0},${py0+h2} Z`,fill:'#BBD0E6',opacity:.85,stroke:'#3B6FB0','stroke-width':1},svg);
+  // pressure arrows
+  for(let i=0;i<=10;i++){const x=X0+i*W/10;const hh=h2+(h1-h2)*i/10;arrow(svg,x,py0+hh,x,py0+3,'#5B82B0');}
+  txt(svg,X0-6,py0+h2/2,'p₂',{fs:10,fw:700,anc:'end',fill:'#2C5B96'});
+  txt(svg,X0+W+6,py0+h1/2,'p₁',{fs:10,fw:700,anc:'start',fill:'#2C5B96'});
+  txt(svg,X0-6,py0+h2/2+12,fmt(r.p2,0),{fs:7.5,anc:'end',fill:'#6B6760'});
+  txt(svg,X0+W+6,py0+h1/2+12,fmt(r.p1,0),{fs:7.5,anc:'start',fill:'#6B6760'});
+  // dims bottom: La+a/2, L-La-a/2
+  const dB=py0+Math.max(h1,h2)+20, midX=colX+colW/2;
+  el('line',{x1:X0,y1:dB,x2:midX,y2:dB,stroke:'#8A857B','stroke-width':.7},svg);
+  el('line',{x1:midX,y1:dB,x2:X0+W,y2:dB,stroke:'#8A857B','stroke-width':.7},svg);
+  [X0,midX,X0+W].forEach(x=>el('line',{x1:x,y1:dB-3,x2:x,y2:dB+3,stroke:'#8A857B','stroke-width':.7},svg));
+  txt(svg,(X0+midX)/2,dB+11,'La+a/2',{fs:8,fill:'#6B6760'});
+  txt(svg,(midX+X0+W)/2,dB+11,'L−La−a/2',{fs:8,fill:'#6B6760'});
+  const dL=dB+18;
+  el('line',{x1:X0,y1:dL,x2:X0+W,y2:dL,stroke:'#1A1A18','stroke-width':.7},svg);
+  [X0,X0+W].forEach(x=>el('line',{x1:x,y1:dL-3,x2:x,y2:dL+3,stroke:'#1A1A18','stroke-width':.7},svg));
+  txt(svg,X0+W/2,dL+11,`L = ${fmt(r.L,2)} m`,{fs:9,fw:700});
+  // thickness dim
+  const dT=X0+W+14;
+  el('line',{x1:dT,y1:slabY,x2:dT,y2:slabY+slabH,stroke:'#1A1A18','stroke-width':.7},svg);
+  [slabY,slabY+slabH].forEach(y=>el('line',{x1:dT-3,y1:y,x2:dT+3,y2:y,stroke:'#1A1A18','stroke-width':.7},svg));
+  txt(svg,dT+12,slabY+slabH/2+3,`T=${fmt(r.T*100,0)}`,{fs:8,fill:'#6B6760',anc:'start'});
+  // La / a small dims (top of slab)
+  const dLa=colTop+ (colBot-colTop)/2;
+  txt(svg,colX+colW/2,colTop+(colBot-colTop)/2,'',{});
+  el('line',{x1:X0,y1:slabY-6,x2:colX,y2:slabY-6,stroke:'#8A857B','stroke-width':.6},svg);
+  txt(svg,(X0+colX)/2,slabY-9,`La=${fmt(r.La*100,0)}`,{fs:7.5,fill:'#6B6760'});
+  el('line',{x1:colX,y1:slabY-6,x2:colX+colW,y2:slabY-6,stroke:'#8A857B','stroke-width':.6},svg);
+  txt(svg,colX+colW/2,slabY-9,`a=${fmt(r.a*100,0)}`,{fs:7.5,fill:'#6B6760'});
+}
+
+/* ---- Diagram X-X ---- */
+function drawXX(r){
+  const svg=$('svgXX');clear(svg);
+  const X0=55,W=250, midX=X0+ (r.La+r.a/2)/r.L*W;
+  // load
+  const ly=70, maxP=Math.max(r.p1,r.p2,1), sc=34/maxP;
+  const h2=Math.abs(r.p2)*sc, h1=Math.abs(r.p1)*sc;
+  el('path',{d:`M${X0},${ly} L${X0+W},${ly} L${X0+W},${ly+h1} L${X0},${ly+h2} Z`,fill:'#BBD0E6',opacity:.85,stroke:'#3B6FB0','stroke-width':1},svg);
+  for(let i=0;i<=12;i++){const x=X0+i*W/12;const hh=h2+(h1-h2)*i/12;arrow(svg,x,ly+hh,x,ly+2,'#5B82B0');}
+  // P + Ma at midX
+  arrow(svg,midX,ly-30,midX,ly-2,'#1A1A18');
+  txt(svg,midX,ly-34,'P',{fs:12,fw:700,fst:'italic'});
+  txt(svg,midX+22,ly-20,'Ma',{fs:11,fw:700,fst:'italic'});
+  txt(svg,X0-6,ly+h2/2,'p₂·B',{fs:8.5,anc:'end',fw:700,fill:'#2C5B96'});
+  txt(svg,X0+W+5,ly+h1/2,'p₁·B',{fs:8.5,anc:'start',fw:700,fill:'#2C5B96'});
+  // base line + dims
+  const by=ly+Math.max(h1,h2)+12;
+  el('line',{x1:X0,y1:by,x2:midX,y2:by,stroke:'#8A857B','stroke-width':.7},svg);
+  el('line',{x1:midX,y1:by,x2:X0+W,y2:by,stroke:'#8A857B','stroke-width':.7},svg);
+  [X0,midX,X0+W].forEach(x=>el('line',{x1:x,y1:by-3,x2:x,y2:by+3,stroke:'#8A857B','stroke-width':.7},svg));
+  txt(svg,(X0+midX)/2,by+10,'La+a/2',{fs:8,fill:'#6B6760'});
+  txt(svg,(midX+X0+W)/2,by+10,'L−La−a/2',{fs:8,fill:'#6B6760'});
+  txt(svg,X0+W/2,by+22,`L = ${fmt(r.L,2)} m`,{fs:9,fw:700});
+  // SFD
+  const s0=210; el('line',{x1:X0,y1:s0,x2:X0+W,y2:s0,stroke:'#1A1A18','stroke-width':.8},svg);
+  el('path',{d:`M${X0},${s0} L${midX},${s0} L${midX},${s0-26} L${X0+W},${s0-6} Z`,fill:'#E7D2C8',opacity:.8,stroke:'#C9694A','stroke-width':1},svg);
+  txt(svg,(midX+X0+W)/2,s0-12,'+',{fs:12,fw:700,fill:'#C9694A'});
+  txt(svg,X0+W+16,s0,'SFD',{fs:9,fw:700,anc:'start'});
+  txt(svg,X0-8,s0,'0',{fs:8,anc:'end'});txt(svg,X0+W+2,s0,'0',{fs:8,anc:'start'});
+  // BMD
+  const m0=300; el('line',{x1:X0,y1:m0,x2:X0+W,y2:m0,stroke:'#1A1A18','stroke-width':.8},svg);
+  el('path',{d:`M${X0},${m0} L${midX},${m0} L${midX},${m0-12} Q${(midX+X0+W)/2},${m0-44} ${X0+W},${m0} Z`,fill:'#E7D2C8',opacity:.8,stroke:'#C9694A','stroke-width':1},svg);
+  txt(svg,(midX+X0+W)/2,m0-16,'+',{fs:12,fw:700,fill:'#C9694A'});
+  txt(svg,X0+W+16,m0,'BMD',{fs:9,fw:700,anc:'start'});
+  txt(svg,X0-8,m0,'0',{fs:8,anc:'end'});txt(svg,X0+W+2,m0,'0',{fs:8,anc:'start'});
+  txt(svg,X0+W/2,m0+20,`My ≈ ${fmt(r.My,0)} kg·m`,{fs:8.5,fill:'#6B6760'});
+}
+
+/* ---- Diagram Y-Y ---- */
+function drawYY(r){
+  const svg=$('svgYY');clear(svg);
+  const X0=55,W=250, midX=X0+W/2;
+  const ly=80, maxP=Math.max(r.p1,r.p2,1), sc=26/maxP;
+  // ในแนว Y–Y (แนวกว้าง B) ความเยื้องศูนย์อยู่ในแนว L เท่านั้น หน่วยแรงดันดิน
+  // จึงคงที่ตลอดความกว้าง B → load เป็นรูปสี่เหลี่ยม (uniform) ไม่ใช่ trapezoid
+  const hY=Math.abs(r.p2)*sc;            // ใช้ p₂ (ค่าสูงสุด) คงที่ตลอดความกว้าง
+  el('rect',{x:X0,y:ly,width:W,height:hY,fill:'#BBD0E6',opacity:.85,stroke:'#3B6FB0','stroke-width':1},svg);
+  for(let i=0;i<=12;i++){const x=X0+i*W/12;arrow(svg,x,ly+hY,x,ly+2,'#5B82B0');}
+  arrow(svg,midX,ly-30,midX,ly-2,'#1A1A18');
+  txt(svg,midX,ly-34,'P',{fs:12,fw:700,fst:'italic'});
+  txt(svg,X0-6,ly+hY/2,'p₂·L',{fs:8.5,anc:'end',fw:700,fill:'#2C5B96'});
+  txt(svg,X0+W+5,ly+hY/2,'p₂·L',{fs:8.5,anc:'start',fw:700,fill:'#2C5B96'});
+  // dims B/2 B/2
+  const by=ly+Math.max(h1,h2)+12;
+  el('line',{x1:X0,y1:by,x2:midX,y2:by,stroke:'#8A857B','stroke-width':.7},svg);
+  el('line',{x1:midX,y1:by,x2:X0+W,y2:by,stroke:'#8A857B','stroke-width':.7},svg);
+  [X0,midX,X0+W].forEach(x=>el('line',{x1:x,y1:by-3,x2:x,y2:by+3,stroke:'#8A857B','stroke-width':.7},svg));
+  txt(svg,(X0+midX)/2,by+10,'B/2',{fs:8.5,fill:'#6B6760'});
+  txt(svg,(midX+X0+W)/2,by+10,'B/2',{fs:8.5,fill:'#6B6760'});
+  txt(svg,X0+W/2,by+22,`B = ${fmt(r.B,2)} m`,{fs:9,fw:700});
+  // SFD (antisymmetric)
+  const s0=215; el('line',{x1:X0,y1:s0,x2:X0+W,y2:s0,stroke:'#1A1A18','stroke-width':.8},svg);
+  el('path',{d:`M${X0},${s0} L${midX},${s0-22} L${midX},${s0} Z`,fill:'#E7D2C8',opacity:.8,stroke:'#C9694A','stroke-width':1},svg);
+  el('path',{d:`M${midX},${s0} L${midX},${s0+22} L${X0+W},${s0} Z`,fill:'#E7D2C8',opacity:.8,stroke:'#C9694A','stroke-width':1},svg);
+  txt(svg,(X0+midX)/2,s0-8,'+',{fs:11,fw:700,fill:'#C9694A'});
+  txt(svg,(midX+X0+W)/2,s0+14,'−',{fs:13,fw:700,fill:'#C9694A'});
+  txt(svg,X0+W+16,s0,'SFD',{fs:9,fw:700,anc:'start'});
+  // BMD symmetric hump
+  const m0=305; el('line',{x1:X0,y1:m0,x2:X0+W,y2:m0,stroke:'#1A1A18','stroke-width':.8},svg);
+  el('path',{d:`M${X0},${m0} Q${midX},${m0-46} ${X0+W},${m0} Z`,fill:'#E7D2C8',opacity:.8,stroke:'#C9694A','stroke-width':1},svg);
+  txt(svg,midX,m0-16,'+',{fs:12,fw:700,fill:'#C9694A'});
+  txt(svg,X0+W+16,m0,'BMD',{fs:9,fw:700,anc:'start'});
+  txt(svg,X0+W/2,m0+20,`Mx ≈ ${fmt(r.Mx,0)} kg·m`,{fs:8.5,fill:'#6B6760'});
+}
+
+function resetAll(){ for(const id of INPUT_IDS){ if(DEFAULTS[id]!==undefined) $(id).value=DEFAULTS[id]; } render(); }
+
+// init
+$('today').textContent = new Date().toLocaleDateString('th-TH',{day:'2-digit',month:'short',year:'numeric'});
+INPUT_IDS.forEach(id=>$(id).addEventListener('input',render));
+render();
+</script>
+</body>
+</html>

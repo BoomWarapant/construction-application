@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>การออกแบบระบบไม้แบบพื้น (นั่งร้านญี่ปุ่น)</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue:#1f4e79; --blue2:#2e6da4; --line:#d9dee5; --bg:#eef1f5;
+    --ok:#1e7e34; --okbg:#e3f5e9; --bad:#b02a37; --badbg:#fbe7e9;
+    --yellow:#fff7cc; --yellow-bd:#e6cf5a; --ink:#1f2937; --muted:#6b7280;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:"Segoe UI","Tahoma","Sarabun",sans-serif; font-size:14px; line-height:1.5;
+  }
+  .wrap{max-width:1180px; margin:0 auto; padding:18px 16px 60px;}
+  header.app{
+    background:linear-gradient(135deg,var(--blue),var(--blue2));
+    color:#fff; border-radius:14px; padding:20px 24px; margin-bottom:18px;
+    box-shadow:0 6px 18px rgba(31,78,121,.25);
+  }
+  header.app h1{margin:0; font-size:21px; font-weight:700;}
+  header.app p{margin:4px 0 0; opacity:.9; font-size:13px;}
+  .status-banner{
+    margin-top:14px; padding:12px 16px; border-radius:10px; font-weight:700;
+    font-size:16px; display:flex; align-items:center; gap:10px;
+  }
+  .status-banner.pass{background:var(--okbg); color:var(--ok);}
+  .status-banner.fail{background:var(--badbg); color:var(--bad);}
+  .status-banner .dot{width:12px;height:12px;border-radius:50%;background:currentColor}
+
+  .grid-cards{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  @media(max-width:880px){.grid-cards{grid-template-columns:1fr}}
+  .card{
+    background:#fff; border:1px solid var(--line); border-radius:12px;
+    overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,.04);
+  }
+  .card.full{grid-column:1/-1}
+  .card h2{
+    margin:0; background:var(--blue); color:#fff; padding:11px 16px;
+    font-size:15px; font-weight:700; display:flex; justify-content:space-between; align-items:center;
+  }
+  .card h2 .sub{font-weight:400; font-size:12px; opacity:.85}
+  .card .body{padding:14px 16px}
+
+  .sec-label{
+    font-size:12px; font-weight:700; color:var(--blue);
+    text-transform:uppercase; letter-spacing:.4px; margin:14px 0 6px;
+    border-bottom:1px solid var(--line); padding-bottom:4px;
+  }
+  .sec-label:first-child{margin-top:0}
+
+  .field{display:flex; align-items:center; gap:8px; margin:6px 0;}
+  .field label{flex:1 1 auto; font-size:13px;}
+  .field .sym{color:var(--muted); font-style:italic; min-width:30px}
+  .field input,.field select{
+    width:120px; padding:6px 8px; border:1px solid var(--line); border-radius:6px;
+    font-size:13px; text-align:right; font-family:inherit;
+  }
+  .field select{text-align:left; width:auto; min-width:150px}
+  .field input.yellow{background:var(--yellow); border-color:var(--yellow-bd); font-weight:700;}
+  .field .unit{min-width:54px; font-size:12px; color:var(--muted)}
+  .field input[readonly]{background:#f3f4f6; color:#374151; font-weight:600}
+  .hint{font-size:11.5px; color:var(--muted); margin:2px 0 8px 0;}
+
+  table.res{width:100%; border-collapse:collapse; margin-top:6px; font-size:13px;}
+  table.res th,table.res td{padding:7px 8px; border-bottom:1px solid var(--line); text-align:right;}
+  table.res th{background:#f7f9fb; color:var(--blue); font-weight:600; text-align:right; font-size:12px}
+  table.res td.l,table.res th.l{text-align:left}
+  table.res td.val{font-weight:700; font-variant-numeric:tabular-nums}
+  .badge{display:inline-block; padding:2px 10px; border-radius:20px; font-weight:700; font-size:12px}
+  .badge.ok{background:var(--okbg); color:var(--ok)}
+  .badge.bad{background:var(--badbg); color:var(--bad)}
+
+  .legend{display:flex; gap:18px; flex-wrap:wrap; font-size:12px; color:var(--muted); margin:10px 2px}
+  .legend .sw{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:5px}
+  .toolbar{display:flex; gap:10px; margin:0 0 14px}
+  .btn{
+    border:1px solid var(--blue); background:#fff; color:var(--blue);
+    padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;
+  }
+  .btn.primary{background:var(--blue); color:#fff}
+  .btn:hover{opacity:.9}
+  footer{margin-top:24px; text-align:center; font-size:12px; color:var(--muted)}
+
+  /* ---- CAD section ---- */
+  .cad-row{display:grid; grid-template-columns:1.35fr 1fr; gap:14px;}
+  @media(max-width:880px){.cad-row{grid-template-columns:1fr}}
+  .cad-pane{border:1px solid var(--line); border-radius:10px; background:#fff; padding:8px; overflow:hidden;}
+  .cad-pane svg{width:100%; height:auto; display:block; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+  .cad-cap{text-align:center; font-size:12px; color:var(--muted); margin-top:6px; font-weight:600;}
+  @media print{
+    @page{ size:A4 portrait; margin:10mm 9mm; }
+    html,body{background:#fff;}
+    body{font-size:10.5px; line-height:1.32;}
+    .wrap{max-width:none; margin:0; padding:0;}
+    .toolbar{display:none !important;}
+
+    header.app{
+      border-radius:8px; padding:10px 14px; margin-bottom:10px; box-shadow:none;
+    }
+    header.app h1{font-size:15px;}
+    header.app p{font-size:10px; margin-top:2px;}
+    .status-banner{margin-top:8px; padding:6px 12px; font-size:12px;}
+
+    .legend{font-size:9.5px; gap:12px; margin:6px 2px 10px;}
+
+    .grid-cards{gap:8px;}
+    .card{break-inside:avoid; page-break-inside:avoid; border-radius:8px; box-shadow:none;}
+    .card h2{padding:6px 12px; font-size:12px;}
+    .card h2 .sub{font-size:10px;}
+    .card .body{padding:8px 12px;}
+
+    .sec-label{font-size:10px; margin:8px 0 4px; padding-bottom:2px;}
+    .field{margin:3px 0; gap:6px;}
+    .field label{font-size:10.5px;}
+    .field input,.field select{padding:2px 6px; font-size:10px;}
+    .field .unit{font-size:9.5px;}
+    .hint{font-size:9px; margin:1px 0 5px;}
+
+    table.res{font-size:10px; margin-top:4px;}
+    table.res th,table.res td{padding:3px 6px;}
+    .badge{padding:1px 7px; font-size:10px;}
+
+    footer{margin-top:12px; font-size:9px;}
+
+    *{-webkit-print-color-adjust:exact; print-color-adjust:exact;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="app">
+    <h1>การออกแบบระบบไม้แบบพื้น (นั่งร้านญี่ปุ่น)</h1>
+    <p>ไม้แบบพื้น R.C. และพื้น Flat Slab — ออกแบบ ไม้อัด · ตง · คาน · ตรวจสอบน้ำหนักลงนั่งร้าน</p>
+    <div id="masterBanner" class="status-banner pass">
+      <span class="dot"></span><span id="masterText">ผ่านทั้งหมด</span>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <button class="btn primary" onclick="window.print()">พิมพ์ / บันทึก PDF</button>
+    <button class="btn" onclick="resetDefaults()">คืนค่าเริ่มต้น</button>
+  </div>
+
+  <div class="legend">
+    <span><span class="sw" style="background:var(--yellow);border:1px solid var(--yellow-bd)"></span>ช่องสีเหลือง = ค่าที่ผู้ใช้ป้อนได้</span>
+    <span><span class="sw" style="background:#f3f4f6;border:1px solid var(--line)"></span>ช่องเทา = ค่าคำนวณ/ดึงจากตาราง (แก้ได้)</span>
+    <span><span class="badge ok">OK.</span> ผ่าน</span>
+    <span><span class="badge bad">ไม่ผ่าน</span> ต้องแก้ไข</span>
+  </div>
+
+  <div class="grid-cards">
+
+    <!-- ================= 1. ไม้อัด ================= -->
+    <div class="card">
+      <h2>1. การออกแบบไม้อัด <span class="sub">Plywood</span></h2>
+      <div class="body">
+        <div class="sec-label">ข้อมูลออกแบบ</div>
+        <div class="field"><label>ไม้อัดหนา</label><span class="sym">t</span><input class="yellow" id="t_ply" type="number" step="any"><span class="unit">มม.</span></div>
+        <div class="field"><label>ค่าแรงดัด (allowable)</label><span class="sym">fb</span><input class="yellow" id="fb_ply" type="number" step="any"><span class="unit">กก./ซม²</span></div>
+        <div class="field"><label>ค่าแรงเฉือน</label><span class="sym">fv</span><input class="yellow" id="fv_ply" type="number" step="any"><span class="unit">กก./ซม²</span></div>
+        <div class="field"><label>โมดูลัสยืดหยุ่น</label><span class="sym">Et</span><input class="yellow" id="Et_ply" type="number" step="any"><span class="unit">กก./ซม²</span></div>
+        <div class="field"><label>ความหนาพื้น Flat Slab</label><span class="sym">t</span><input class="yellow" id="t_slab" type="number" step="any"><span class="unit">ซม.</span></div>
+        <div class="field"><label>ระยะห่างตง (ช่วงไม้อัด)</label><span class="sym">l</span><input class="yellow" id="joist_spacing" type="number" step="any"><span class="unit">ซม.</span></div>
+        <div class="field"><label>ความกว้างที่คิด</label><span class="sym">b</span><input class="yellow" id="b_ply" type="number" step="any"><span class="unit">ซม.</span></div>
+
+        <div class="sec-label">น้ำหนักกระทำ</div>
+        <div class="field"><label>น้ำหนักจรระหว่างก่อสร้าง (×100)</label><span class="sym">×</span><input class="yellow" id="ll_factor" type="number" step="any"><span class="unit">→ กก./ม²</span></div>
+        <div class="hint">น้ำหนักคนงาน/เครื่องจักร 200–400 กก./ม² (ค่า 2 = 200)</div>
+        <div class="field"><label>แรงกระแทกระหว่างเท (สัดส่วน)</label><span class="sym">×</span><input class="yellow" id="impact_factor" type="number" step="any"><span class="unit">ของ นน.คอนกรีต</span></div>
+        <div class="hint">มีค่าระหว่าง 10–30% ของน้ำหนักคอนกรีต (0.15 = 15%)</div>
+
+        <div class="sec-label">ผลการคำนวณ</div>
+        <table class="res" id="res_ply"></table>
+      </div>
+    </div>
+
+    <!-- ================= 2. ตง ================= -->
+    <div class="card">
+      <h2>2. การออกแบบตง <span class="sub">Joist</span></h2>
+      <div class="body">
+        <div class="sec-label">ข้อมูลออกแบบ</div>
+        <div class="field"><label>ใช้ตงเหล็กขนาด</label><select id="sec_joist" onchange="fillSection('joist')"></select></div>
+        <div class="field"><label>ค่าแรงดัด (allowable)</label><span class="sym">fb</span><input class="yellow" id="fb_joist" type="number" step="any"><span class="unit">กก./ซม²</span></div>
+        <div class="field"><label>ค่าแรงเฉือน</label><span class="sym">fv</span><input class="yellow" id="fv_joist" type="number" step="any"><span class="unit">กก./ซม²</span></div>
+        <div class="field"><label>โมดูลัสยืดหยุ่น</label><span class="sym">Es</span><input class="yellow" id="Es_joist" type="number" step="any"><span class="unit">กก./ซม²</span></div>
+        <div class="field"><label>ระยะช่วง (Span)</label><span class="sym">L</span><input class="yellow" id="span_joist" type="number" step="any"><span class="unit">ซม.</span></div>
+        <div class="hint">ระยะระหว่างตง = ระยะห่างตงด้านบน (l) = <span id="echo_joist_sp"></span> ซม.</div>
+
+        <div class="sec-label">คุณสมบัติหน้าตัด (แก้ไขได้)</div>
+        <div class="field"><label>น้ำหนัก</label><span class="sym">w</span><input id="w_joist" type="number" step="any"><span class="unit">กก./ม.</span></div>
+        <div class="field"><label>Modulus of Section</label><span class="sym">Sx</span><input id="Sx_joist" type="number" step="any"><span class="unit">ซม³</span></div>
+        <div class="field"><label>Moment of Inertia</label><span class="sym">Ix</span><input id="Ix_joist" type="number" step="any"><span class="unit">ซม⁴</span></div>
+        <div class="field"><label>Radius of Gyration</label><span class="sym">rx</span><input id="rx_joist" type="number" step="any"><span class="unit">ซม.</span></div>
+
+        <div class="sec-label">ผลการคำนวณ</div>
+        <table class="res" id="res_joist"></table>
+      </div>
+    </div>
+
+    <!-- ================= 3. คาน ================= -->
+    <div class="card">
+      <h2>3. การออกแบบคาน <span class="sub">Beam</span></h2>
+      <div class="body">
+        <div class="sec-label">ข้อมูลออกแบบ</div>
+        <div class="field"><label>ใช้คานเหล็กขนาด</label><select id="sec_beam" onchange="fillSection('beam')"></select></div>
+        <div class="field"><label>ระยะช่วง (Span)</label><span class="sym">L</span><input class="yellow" id="span_beam" type="number" step="any"><span class="unit">ซม.</span></div>
+        <div class="hint">fb / fv / Es ใช้ค่าเดียวกับตง (fb=<span id="echo_fb_beam"></span>, Es=<span id="echo_Es_beam"></span> กก./ซม²)</div>
+
+        <div class="sec-label">คุณสมบัติหน้าตัด (แก้ไขได้)</div>
+        <div class="field"><label>น้ำหนัก</label><span class="sym">w</span><input id="w_beam" type="number" step="any"><span class="unit">กก./ม.</span></div>
+        <div class="field"><label>Modulus of Section</label><span class="sym">Sx</span><input id="Sx_beam" type="number" step="any"><span class="unit">ซม³</span></div>
+        <div class="field"><label>Moment of Inertia</label><span class="sym">Ix</span><input id="Ix_beam" type="number" step="any"><span class="unit">ซม⁴</span></div>
+        <div class="field"><label>Radius of Gyration</label><span class="sym">rx</span><input id="rx_beam" type="number" step="any"><span class="unit">ซม.</span></div>
+
+        <div class="sec-label">ผลการคำนวณ</div>
+        <table class="res" id="res_beam"></table>
+      </div>
+    </div>
+
+    <!-- ================= 4. นั่งร้าน ================= -->
+    <div class="card">
+      <h2>4. ตรวจสอบน้ำหนักลงนั่งร้าน <span class="sub">Scaffold</span></h2>
+      <div class="body">
+        <div class="sec-label">ระหว่างเทคอนกรีต</div>
+        <div class="field"><label>ระยะห่างระหว่างนั่งร้านแต่ละชุด</label><span class="sym">S</span><input class="yellow" id="scaf_S" type="number" step="any"><span class="unit">ม.</span></div>
+        <div class="field"><label>กำลังรับน้ำหนักของขานั่งร้าน</label><span class="sym"></span><input class="yellow" id="scaf_cap" type="number" step="any"><span class="unit">กก./ขา</span></div>
+        <div class="hint">ใช้นั่งร้านญี่ปุ่น (PILE Ø1½ นิ้ว)</div>
+
+        <div class="sec-label">หลังจากดึงลวด Tendon (ลดค้ำยัน)</div>
+        <div class="field"><label>ลดค้ำยันลงเหลือ (สัดส่วน นน.)</label><span class="sym">×</span><input class="yellow" id="scaf_reduce" type="number" step="any"><span class="unit"></span></div>
+        <div class="field"><label>ระยะห่างระหว่างนั่งร้านแต่ละชุด</label><span class="sym">S</span><input class="yellow" id="scaf_S2" type="number" step="any"><span class="unit">ม.</span></div>
+        <div class="field"><label>กำลังรับน้ำหนักของขานั่งร้าน</label><span class="sym"></span><input class="yellow" id="scaf_cap2" type="number" step="any"><span class="unit">กก./ขา</span></div>
+
+        <div class="sec-label">ผลการคำนวณ</div>
+        <table class="res" id="res_scaf"></table>
+        <div class="hint">พื้นที่อาณาเขต (Tributary area) A เทคอนกรีต = ช่วงคาน × (ช่วงตง/2 + S/2) · หลังดึง tendon A = ช่วงคาน × S (เช่น 1.8 × 2.4 = 4.32 ม²)</div>
+      </div>
+    </div>
+
+    <!-- ================= 5. รูปตัด CAD ================= -->
+    <div class="card full">
+      <h2>5. รูปตัดระบบไม้แบบพื้น <span class="sub">Section Detail — สไตล์ CAD</span></h2>
+      <div class="body">
+        <div class="hint" style="margin-top:0">รูปตัดตามแนวคาน — แสดงการเรียงชั้น พื้นคอนกรีต → ไม้อัด → ตง → คาน → นั่งร้านญี่ปุ่น (อัปเดตตามค่าที่ป้อนแบบ real-time)</div>
+        <div class="cad-row">
+          <div class="cad-pane"><div id="cadSection"></div><div class="cad-cap">รูปตัด A–A (ตามแนวคาน) · มาตราส่วนตามจริง</div></div>
+          <div class="cad-pane"><div id="cadDetail"></div><div class="cad-cap">ขยายรายละเอียดการเรียงชั้นไม้แบบ (Build-up)</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    เครื่องคำนวณออกแบบไม้แบบพื้น — แปลงจากไฟล์ ไม้แบบพื้น.xlsx · ทุกค่าคำนวณแบบ real-time<br>
+    หมายเหตุ: คุณสมบัติหน้าตัดเหล็กกล่อง (SHS) เป็นค่ามาตรฐานอ้างอิง โปรดตรวจสอบกับ spec ผู้ผลิตจริงก่อนใช้งาน
+  </footer>
+</div>
+
+<script>
+/* ---------- ตารางหน้าตัดเหล็กกล่อง (Square Hollow Section) ----------
+   [weight kg/m, Sx cm3, Ix cm4, rx cm]  — ค่ามาตรฐานอ้างอิง
+   หมายเหตุ: 50x50x1.6 และ 100x100x2.3 ตรงกับค่าในไฟล์ Excel ต้นฉบับ */
+const SECTIONS = {
+  "Square Tube 25x25x1.6 mm.":  [1.12, 1.01, 1.26, 0.94],
+  "Square Tube 25x25x2.3 mm.":  [1.54, 1.29, 1.61, 0.90],
+  "Square Tube 32x32x1.6 mm.":  [1.46, 1.74, 2.79, 1.22],
+  "Square Tube 32x32x2.3 mm.":  [2.03, 2.31, 3.70, 1.20],
+  "Square Tube 38x38x1.6 mm.":  [1.76, 2.54, 4.82, 1.47],
+  "Square Tube 38x38x2.3 mm.":  [2.46, 3.42, 6.50, 1.44],
+  "Square Tube 38x38x3.2 mm.":  [3.30, 4.33, 8.23, 1.40],
+  "Square Tube 50x50x1.6 mm.":  [2.38, 4.68, 11.7, 1.96],
+  "Square Tube 50x50x2.3 mm.":  [3.34, 6.34, 15.9, 1.93],
+  "Square Tube 50x50x3.2 mm.":  [4.50, 8.16, 20.4, 1.89],
+  "Square Tube 75x75x1.6 mm.":  [3.64, 11.4, 42.7, 3.03],
+  "Square Tube 75x75x2.3 mm.":  [5.14, 15.6, 58.6, 2.99],
+  "Square Tube 75x75x3.2 mm.":  [6.99, 20.6, 77.2, 2.94],
+  "Square Tube 100x100x2.3 mm.":[6.95, 27.9, 140,  3.97],
+  "Square Tube 100x100x3.2 mm.":[9.52, 37.5, 187,  3.93],
+  "Square Tube 100x100x4.5 mm.":[13.1, 49.9, 249,  3.86],
+  "Square Tube 125x125x3.2 mm.":[12.0, 59.5, 372,  4.93],
+  "Square Tube 125x125x4.5 mm.":[16.6, 79.7, 498,  4.85],
+  "Square Tube 150x150x3.2 mm.":[14.5, 87.3, 655,  5.94],
+  "Square Tube 150x150x4.5 mm.":[20.1, 118,  882,  5.86],
+  "Square Tube 150x150x6.0 mm.":[26.4, 151,  1130, 5.79]
+};
+
+const DEFAULTS = {
+  t_ply:15, fb_ply:140, fv_ply:9, Et_ply:56000, t_slab:23,
+  joist_spacing:35, b_ply:100, ll_factor:2, impact_factor:0.15,
+  sec_joist:"Square Tube 50x50x1.6 mm.", fb_joist:1440, fv_joist:1000, Es_joist:2040000, span_joist:120,
+  sec_beam:"Square Tube 100x100x2.3 mm.", span_beam:180,
+  scaf_S:1.2, scaf_cap:2000, scaf_reduce:0.5, scaf_S2:2.4, scaf_cap2:2000
+};
+
+const $ = id => document.getElementById(id);
+const num = id => parseFloat($(id).value) || 0;
+const fmt = (v,d=2) => (isFinite(v)? v.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}) : '-');
+let LOADS = {};   // ค่าน้ำหนักที่คำนวณได้ ใช้ในรูป CAD (อัปเดตทุกครั้งที่ calc)
+
+function buildSelects(){
+  for(const id of ['sec_joist','sec_beam']){
+    const sel = $(id);
+    sel.innerHTML='';
+    for(const name in SECTIONS){
+      const o=document.createElement('option'); o.value=name; o.textContent=name; sel.appendChild(o);
+    }
+  }
+}
+function fillSection(which){
+  const sel = which==='joist' ? 'sec_joist':'sec_beam';
+  const p = SECTIONS[$(sel).value];
+  if(!p) return;
+  $('w_'+which).value  = p[0];
+  $('Sx_'+which).value = p[1];
+  $('Ix_'+which).value = p[2];
+  $('rx_'+which).value = p[3];
+  calc();
+}
+
+function checkRow(label, val, op, lim, unit, pass){
+  const sym = op==='<' ? '&lt;' : op;
+  return `<tr>
+    <td class="l">${label}</td>
+    <td class="val">${fmt(val)}</td>
+    <td>${sym}</td>
+    <td>${fmt(lim)}</td>
+    <td>${unit||''}</td>
+    <td><span class="badge ${pass?'ok':'bad'}">${pass?'OK.':'ไม่ผ่าน'}</span></td>
+  </tr>`;
+}
+function infoRow(label, val, unit){
+  return `<tr><td class="l">${label}</td><td class="val">${fmt(val)}</td><td colspan="2"></td><td>${unit||''}</td><td></td></tr>`;
+}
+const head = `<tr><th class="l">รายการ</th><th>ค่าคำนวณ</th><th></th><th>ค่าจำกัด</th><th></th><th>สถานะ</th></tr>`;
+
+function calc(){
+  // ---------- inputs ----------
+  const t_ply=num('t_ply'), fb_ply=num('fb_ply'), Et_ply=num('Et_ply');
+  const t_slab=num('t_slab'), jsp_cm=num('joist_spacing'), b=num('b_ply');
+  const llf=num('ll_factor'), impf=num('impact_factor');
+  const jsp_m = jsp_cm/100;
+  $('echo_joist_sp').textContent = jsp_cm;
+
+  // joist & beam section props
+  const jw=num('w_joist'), jSx=num('Sx_joist'), jIx=num('Ix_joist'), jrx=num('rx_joist');
+  const fb_j=num('fb_joist'), Es_j=num('Es_joist');
+  const span_j=num('span_joist');
+  const bw=num('w_beam'), bSx=num('Sx_beam'), bIx=num('Ix_beam'), brx=num('rx_beam');
+  const span_b=num('span_beam');
+  $('echo_fb_beam').textContent = fb_j;
+  $('echo_Es_beam').textContent = Es_j.toLocaleString('en-US');
+
+  // ---------- LOADS ----------
+  const concrete = (t_slab/100)*2400;                 // E21
+  const joistsPerM = Math.ceil(1/jsp_m)+1;            // I65 = ROUNDUP(1/l)+1
+  const plyWeight = t_ply/1000*490;                   // ส่วนน้ำหนักไม้อัด
+  const assumed = Math.ceil((plyWeight + jw*joistsPerM)/5)*5; // E22 CEILING(...,5)
+  const live = 100*llf;                               // E23
+  const impact = concrete*impf;                       // E24
+  const w = concrete + assumed + live + impact;       // E25 (กก./ม²)
+  LOADS = {w, concrete, assumed, live, impact};       // เก็บไว้ให้รูป CAD ใช้แสดงผล
+
+  // ---------- 1. PLYWOOD ----------
+  const d_ply = t_ply/10;                             // cm
+  const S_ply = b*Math.pow(d_ply,2)/6;
+  const M_ply = (w*Math.pow(jsp_m,2)/10)*100;         // kg-cm
+  const fb_act_ply = M_ply/S_ply;
+  const c1 = fb_act_ply < fb_ply;
+  const defl_allow_ply = jsp_cm/360;
+  const I_ply = b*Math.pow(d_ply,3)/12;
+  const defl_ply = 0.8*5*(w/100)*Math.pow(jsp_cm,4)/(384*Et_ply*I_ply);
+  const c2 = defl_ply < defl_allow_ply;
+  $('res_ply').innerHTML = head
+    + infoRow('น้ำหนักบรรทุกคอนกรีต', concrete, 'กก./ม²')
+    + infoRow('สมมติ นน.ไม้แบบ+แปเหล็ก', assumed, 'กก./ม²')
+    + infoRow('น้ำหนักจร', live, 'กก./ม²')
+    + infoRow('แรงกระแทก', impact, 'กก./ม²')
+    + infoRow('นน.กระทำรวม (w)', w, 'กก./ม²')
+    + checkRow('หน่วยแรงดัด fb', fb_act_ply, '<', fb_ply, 'กก./ซม²', c1)
+    + checkRow('ระยะแอ่นตัว Deflection', defl_ply, '<', defl_allow_ply, 'ซม.', c2);
+
+  // ---------- 2. JOIST ----------
+  const w_joist = w*jsp_m;                            // I71 (กก./ม.)
+  const M_joist = (w_joist*Math.pow(span_j/100,2)/10)*100; // kg-cm
+  const klr_j = span_j/jrx;
+  const cj1 = klr_j < 240;
+  const fb_act_j = M_joist/jSx;
+  const cj2 = fb_act_j < fb_j;
+  const defl_allow_j = span_j/360;
+  const defl_j = 0.8*5*(w_joist/100)*Math.pow(span_j,4)/(384*Es_j*jIx);
+  const cj3 = defl_j < defl_allow_j;
+  $('res_joist').innerHTML = head
+    + infoRow('นน.ถ่ายจากพื้น (w)', w_joist, 'กก./ม.')
+    + infoRow('โมเมนต์ดัด M', M_joist, 'กก.-ซม.')
+    + checkRow('อัตราส่วน KL/rx', klr_j, '<', 240, '', cj1)
+    + checkRow('หน่วยแรงดัด fb', fb_act_j, '<', fb_j, 'กก./ซม²', cj2)
+    + checkRow('ระยะแอ่นตัว Deflection', defl_j, '<', defl_allow_j, 'ซม.', cj3);
+
+  // ---------- 3. BEAM ----------
+  const w_beam_floor = w*(span_j/100);                // I106 นน.จากพื้น
+  const W_beam = w_beam_floor + bw;                   // E109 + นน.คานเอง
+  const M_beam = (W_beam*Math.pow(span_b/100,2)/10)*100;
+  const klr_b = span_b/brx;
+  const cb1 = klr_b < 240;
+  const fb_act_b = M_beam/bSx;
+  const cb2 = fb_act_b < fb_j;                        // I122 = E96 = fb ตง
+  const defl_allow_b = span_b/360;
+  const defl_b = 0.8*5*(W_beam/100)*Math.pow(span_b,4)/(384*Es_j*bIx);
+  const cb3 = defl_b < defl_allow_b;
+  $('res_beam').innerHTML = head
+    + infoRow('นน.ถ่ายจากพื้น (w)', w_beam_floor, 'กก./ม.')
+    + infoRow('Uniform Load รวม นน.คาน (W)', W_beam, 'กก./ม.')
+    + infoRow('โมเมนต์ดัด M', M_beam, 'กก.-ซม.')
+    + checkRow('อัตราส่วน KL/rx', klr_b, '<', 240, '', cb1)
+    + checkRow('หน่วยแรงดัด fb', fb_act_b, '<', fb_j, 'กก./ซม²', cb2)
+    + checkRow('ระยะแอ่นตัว Deflection', defl_b, '<', defl_allow_b, 'ซม.', cb3);
+
+  // ---------- 4. SCAFFOLD ----------
+  const beam_m = span_b/100, joist_m = span_j/100;
+  const S=num('scaf_S'), cap=num('scaf_cap');
+  const A1 = beam_m*(joist_m/2 + S/2);
+  const load1 = w*A1;
+  const cs1 = load1 < cap;
+  const red=num('scaf_reduce'), S2=num('scaf_S2'), cap2=num('scaf_cap2');
+  const A2 = beam_m*S2;                               // หลังดึง tendon = ช่วงคาน × S
+  const load2 = w*red*A2;
+  const cs2 = load2 < cap2;
+  $('res_scaf').innerHTML = head
+    + infoRow('พื้นที่อาณาเขต A (เทคอนกรีต)', A1, 'ม².')
+    + checkRow('นน.ลงขานั่งร้าน (ต่อขา)', load1, '<', cap, 'กก./ขา', cs1)
+    + infoRow(`พื้นที่อาณาเขต A (หลังดึง tendon) = ${fmt(beam_m)} × ${fmt(S2)}`, A2, 'ม².')
+    + checkRow('นน.ลงขานั่งร้าน หลัง tendon', load2, '<', cap2, 'กก./ขา', cs2);
+
+  // ---------- MASTER (ตรงกับ K1 ในไฟล์: 9 รายการ ไม่รวมหลัง tendon) ----------
+  const all = [c1,c2, cj1,cj2,cj3, cb1,cb2,cb3, cs1];
+  const pass = all.every(Boolean);
+  const banner=$('masterBanner');
+  banner.className = 'status-banner ' + (pass?'pass':'fail');
+  $('masterText').textContent = pass ? 'ผ่านทั้งหมด' : 'ต้องแก้ไข';
+
+  drawCad();
+}
+
+/* ====================== CAD SECTION (รูปตัดสไตล์ CAD) ======================
+   กฎข้อ 1: วาดด้วย <svg> · ข้อ 2: คิดเป็นเมตร × scale เดียว · ข้อ 3: <pattern> hatch
+   ข้อ 4: helper dim/callout · ข้อ 6: verify ไม่มี undefined/NaN · ข้อ 7: ฟอนต์ Sarabun */
+const CAD_DEFS = `<defs>
+ <pattern id="pConc" width="14" height="14" patternUnits="userSpaceOnUse">
+   <rect width="14" height="14" fill="#eef1f5"/>
+   <circle cx="3" cy="4" r="1.3" fill="#b9c2cf"/><circle cx="9" cy="9" r="1.6" fill="#aab4c4"/>
+   <circle cx="11" cy="3" r="1" fill="#c3ccd9"/><circle cx="6" cy="11" r="1.1" fill="#b9c2cf"/></pattern>
+ <pattern id="pPly" width="10" height="5" patternUnits="userSpaceOnUse">
+   <rect width="10" height="5" fill="#f6e2bf"/><line x1="0" y1="0" x2="10" y2="0" stroke="#d9b574" stroke-width="0.8"/></pattern>
+ <pattern id="pSteel" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+   <rect width="6" height="6" fill="#cfd8e6"/><line x1="0" y1="0" x2="0" y2="6" stroke="#7e93b5" stroke-width="0.9"/></pattern>
+ <pattern id="pGround" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+   <rect width="9" height="9" fill="#efe9df"/><line x1="0" y1="0" x2="0" y2="9" stroke="#b8ac95" stroke-width="1"/></pattern>
+</defs>`;
+const CAD_STYLE = `<style>
+ .cs-t{font-family:'Sarabun','TH Sarabun New',Tahoma,sans-serif}
+ .cs-conc{fill:url(#pConc);stroke:#5b6b80;stroke-width:1.2}
+ .cs-ply{fill:url(#pPly);stroke:#b88a3a;stroke-width:1}
+ .cs-steel{fill:url(#pSteel);stroke:#2f5597;stroke-width:1.3}
+ .cs-steel2{fill:url(#pSteel);stroke:#1f4e79;stroke-width:1.9}
+ .cs-hollow{fill:#fff;stroke:#2f5597;stroke-width:.8}
+ .cs-ground{fill:url(#pGround);stroke:#9a8f7c;stroke-width:1}
+ .cs-dim{stroke:#444;stroke-width:1} .cs-ext{stroke:#9aa3b0;stroke-width:.7} .cs-tick{stroke:#444;stroke-width:1.2}
+ .cs-dimt{font-size:12px;fill:#222} .cs-callt{font-size:12px;fill:#1f4e79;font-weight:600}
+ .cs-lead{fill:none;stroke:#1f4e79;stroke-width:1} .cs-dot{fill:#1f4e79}
+ .cs-title{font-size:14px;fill:#1f4e79;font-weight:700}
+ .cs-scaf{fill:#dfe6f2;stroke:#1f4e79;stroke-width:1.6} .cs-scafln{stroke:#1f4e79;stroke-width:1.5;fill:none}
+ .cs-deckf{fill:url(#pPly);fill-opacity:.32;stroke:#b88a3a;stroke-width:1.1}
+ .cs-conctop{fill:none;stroke:#5b6b80;stroke-width:1.1;stroke-dasharray:6 3}
+ .cs-joistf{fill:#dfe6ef;stroke:#2f5597;stroke-width:1}
+ .cs-beamf{fill:url(#pSteel);stroke:#1f4e79;stroke-width:1.4}
+ .cs-postln{stroke:#1f4e79;stroke-width:2.4;fill:none;stroke-linecap:round}
+ .cs-postbk{stroke:#7e93b5;stroke-width:1.8;fill:none}
+ .cs-rung{stroke:#1f4e79;stroke-width:1.3;fill:none}
+ .cs-brace{stroke:#2f5597;stroke-width:1;fill:none;stroke-dasharray:5 3}
+ .cs-edge{fill:none;stroke:#33475b;stroke-width:.9}
+ /* ---- นั่งร้านญี่ปุ่น multi-bay (ตามรูปอ้างอิง) ---- */
+ .cs-grid{stroke:#e8863a;stroke-width:1;stroke-dasharray:7 5;fill:none;opacity:.85}
+ .cs-bub{fill:#fff;stroke:#b06a28;stroke-width:1.1}
+ .cs-bubt{font-size:10px;fill:#8a4f1c;font-weight:700}
+ .cs-jp-base{fill:#bcd2e6;stroke:#3f6f93;stroke-width:.7}
+ .cs-jp-brace{stroke:#9cc1e0;stroke-width:1;fill:none;opacity:.95}
+ .cs-jp-led{stroke:#79a6c8;stroke-width:1.2;fill:none}
+ .cs-jp-post{stroke:#5f93b8;stroke-width:1.8;fill:none;stroke-linecap:round}
+ .cs-jp-postF{stroke:#3f6f93;stroke-width:2.3;fill:none;stroke-linecap:round}
+ .cs-jp-deck{fill:#39cabd;fill-opacity:.7;stroke:#1c8f85;stroke-width:1.2}
+ .cs-jp-deckS{fill:#1c9b90;fill-opacity:.85;stroke:#16776e;stroke-width:1}
+ .cs-jp-deckbeam{stroke:#1c8f85;stroke-width:1.4;fill:none}
+ .cs-jp-joistY{stroke:#f1d84b;stroke-width:1.2;fill:none;opacity:.9}
+ /* ---- ตามรูปอ้างอิง: ผนังโปร่งแสง · ฐานแจ็คส้ม · ลูกศรน้ำหนัก ---- */
+ .cs-jp-face{fill:#37c0c9;fill-opacity:.15;stroke:#2c8c93;stroke-width:.7}
+ .cs-jp-baseO{fill:#f4a23c;fill-opacity:.55;stroke:#d77f1e;stroke-width:1.1}
+ .cs-load-box{fill:#39c46b;fill-opacity:.13;stroke:#2faa5a;stroke-width:1.2}
+ .cs-load-edge{stroke:#2faa5a;stroke-width:.9;fill:none;stroke-dasharray:4 3}
+ .cs-load-arr{stroke:#1f9b50;stroke-width:2.6;fill:none}
+ .cs-load-arrhd{fill:#1f9b50}
+ .cs-load-t{font-size:13px;fill:#157d3c;font-weight:700}
+ .cs-load-cap{font-size:10px;fill:#15893f;font-weight:600}
+</style>`;
+function csDimV(y1,y2,x,label,extTo){
+  let s=`<line x1="${x}" y1="${y1}" x2="${x}" y2="${y2}" class="cs-dim"/>`;
+  for(const yy of [y1,y2]){ s+=`<line x1="${x-4}" y1="${yy+4}" x2="${x+4}" y2="${yy-4}" class="cs-tick"/>`;
+    if(extTo!=null) s+=`<line x1="${x}" y1="${yy}" x2="${extTo}" y2="${yy}" class="cs-ext"/>`; }
+  const cy=(y1+y2)/2;
+  return s+`<text x="${x-5}" y="${cy}" class="cs-dimt cs-t" text-anchor="middle" transform="rotate(-90 ${x-5} ${cy})">${label}</text>`;
+}
+function csDimH(x1,x2,y,label,extTo){
+  let s=`<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" class="cs-dim"/>`;
+  for(const xx of [x1,x2]){ s+=`<line x1="${xx-4}" y1="${y+4}" x2="${xx+4}" y2="${y-4}" class="cs-tick"/>`;
+    if(extTo!=null) s+=`<line x1="${xx}" y1="${y}" x2="${xx}" y2="${extTo}" class="cs-ext"/>`; }
+  return s+`<text x="${(x1+x2)/2}" y="${y-6}" class="cs-dimt cs-t" text-anchor="middle">${label}</text>`;
+}
+function csCallout(xt,yt,xl,yl,text,anchor){
+  anchor=anchor||'start';
+  const bend = anchor==='end'? xl+8 : xl-8;
+  return `<polyline points="${xt},${yt} ${bend},${yt} ${bend},${yl}" class="cs-lead"/>`
+       + `<circle cx="${xt}" cy="${yt}" r="2.4" class="cs-dot"/>`
+       + `<text x="${xl}" y="${yl+4}" class="cs-callt cs-t" text-anchor="${anchor}">${text}</text>`;
+}
+function csWrap(vb,body){
+  const out=`<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg">${CAD_DEFS}${CAD_STYLE}${body}</svg>`;
+  if(/undefined|NaN/.test(out)) console.warn('CAD verify FAIL: พบ undefined/NaN ใน SVG');   // กฎข้อ 6
+  return out;
+}
+function cadSize(name){ const m=(name||'').match(/(\d+)x(\d+)x([\d.]+)/);
+  return m? {a:+m[1]/1000,b:+m[2]/1000,t:+m[3]/1000} : {a:.05,b:.05,t:.0016}; }
+function cadLabel(name){ return (name||'').replace('Square Tube ','').replace(' mm.',' มม.').replace(/x/g,'×'); }
+const r1 = v => (Math.round(v*10)/10);
+
+function drawCad(){
+  // ---- CONFIG จากค่าจริง (เมตร) — กฎข้อ 5 ----
+  const tS = (num('t_slab')||20)/100;       // ความหนาพื้นคอนกรีต (m)
+  const tP = (num('t_ply')||15)/1000;        // ไม้อัด (m)
+  const jz = cadSize($('sec_joist').value), bm = cadSize($('sec_beam').value);
+  const jo = jz.a, be = bm.a;                // ตง / คาน (m)
+  const Lb = (num('span_beam')||180)/100;    // ช่วงคาน (m)
+  const jsp= (num('joist_spacing')||35)/100; // ระยะตง (m)
+  const slabCm = r1(tS*100), plyMm = r1(tP*1000), jspCm = r1(jsp*100);
+  const jLab = cadLabel($('sec_joist').value), bLab = cadLabel($('sec_beam').value);
+
+  /* ============ PANEL 1 : ISOMETRIC นั่งร้านญี่ปุ่น multi-bay หลายชั้น (ตามรูปอ้างอิง) ============ */
+  (function(){
+    const bay = 1.20;                 // ระยะ grid ต่อช่อง (ม.)
+    const nx = 4, ny = 6, nt = 3;     // จำนวนช่วง: ลึก × กว้าง × จำนวนชั้นนั่งร้าน
+    const h  = 1.70;                  // ความสูงต่อชุดนั่งร้าน (ม.)
+    const Lx = bay*nx, Ly = bay*ny, Htot = h*nt;
+    const S  = 44;                    // px ต่อ 1 เมตร (กฎข้อ 2)
+    const VX=[-0.866,0.5], VY=[0.866,0.5], VZ=[0,-1];   // เวกเตอร์ isometric (y ลงล่าง)
+    const P=(x,y,z)=>[ +((x*VX[0]+y*VY[0]+z*VZ[0])*S).toFixed(1),
+                       +((x*VX[1]+y*VY[1]+z*VZ[1])*S).toFixed(1) ];
+    const L=(a,c,cls)=>`<line x1="${a[0]}" y1="${a[1]}" x2="${c[0]}" y2="${c[1]}" class="${cls}"/>`;
+    const POLY=(ps,cls)=>`<polygon points="${ps.map(p=>p[0]+','+p[1]).join(' ')}" class="${cls}"/>`;
+    let b='';
+
+    // ---------- bounds (auto viewBox) ----------
+    let minX=1e9,maxX=-1e9,minY=1e9,maxY=-1e9;
+    const track=p=>{minX=Math.min(minX,p[0]);maxX=Math.max(maxX,p[0]);minY=Math.min(minY,p[1]);maxY=Math.max(maxY,p[1]);};
+    const ext=0.75;
+    for(const X of [-ext,Lx+ext]) for(const Y of [-ext,Ly+ext]) track(P(X,Y,0));
+    for(const X of [0,Lx]) for(const Y of [0,Ly]) track(P(X,Y,Htot+0.4));
+
+    // ---------- ground grid + bubbles (สีส้ม dashed) ----------
+    for(let i=0;i<=nx;i++) b+=L(P(i*bay,-ext,0),P(i*bay,Ly+ext,0),'cs-grid');
+    for(let j=0;j<=ny;j++) b+=L(P(-ext,j*bay,0),P(Lx+ext,j*bay,0),'cs-grid');
+    const bubble=(p,txt)=>`<circle cx="${p[0]}" cy="${p[1]}" r="9" class="cs-bub"/>`
+        +`<text x="${p[0]}" y="${p[1]+3.5}" text-anchor="middle" class="cs-bubt cs-t">${txt}</text>`;
+    for(let i=0;i<=nx;i++){ const p=P(i*bay,Ly+ext,0); track(p); b+=bubble(p,String.fromCharCode(65+i)); } // A,B,C…
+    for(let j=0;j<=ny;j++){ const p=P(-ext,j*bay,0);   track(p); b+=bubble(p,String(j+1)); }              // 1,2,3…
+
+    // ---------- base plates (ฐานแจ็คส้ม ตามรูปอ้างอิง) ----------
+    for(let i=0;i<=nx;i++)for(let j=0;j<=ny;j++){ const p=P(i*bay,j*bay,0);
+      b+=`<ellipse cx="${p[0]}" cy="${p[1]}" rx="11" ry="6" class="cs-jp-baseO"/>`; }
+
+    // ---------- ผนังโปร่งแสง 2 ด้านหน้า (teal) ตามรูปอ้างอิง ----------
+    b+=POLY([P(Lx,0,0),P(Lx,Ly,0),P(Lx,Ly,Htot),P(Lx,0,Htot)],'cs-jp-face');
+    b+=POLY([P(0,Ly,0),P(Lx,Ly,0),P(Lx,Ly,Htot),P(0,Ly,Htot)],'cs-jp-face');
+
+    // ---------- braces (X) ทุกระนาบ ทุกชั้น ----------
+    for(let k=0;k<nt;k++){ const z0=k*h,z1=(k+1)*h;
+      for(let j=0;j<=ny;j++)for(let i=0;i<nx;i++){ const y=j*bay,x0=i*bay,x1=(i+1)*bay;     // ระนาบตามแนว x
+        b+=L(P(x0,y,z0),P(x1,y,z1),'cs-jp-brace')+L(P(x1,y,z0),P(x0,y,z1),'cs-jp-brace'); }
+      for(let i=0;i<=nx;i++)for(let j=0;j<ny;j++){ const x=i*bay,y0=j*bay,y1=(j+1)*bay;     // ระนาบตามแนว y
+        b+=L(P(x,y0,z0),P(x,y1,z1),'cs-jp-brace')+L(P(x,y1,z0),P(x,y0,z1),'cs-jp-brace'); }
+    }
+
+    // ---------- ledgers (คานราวนอน) ทุกชั้น ----------
+    for(let k=0;k<=nt;k++){ const z=k*h;
+      for(let j=0;j<=ny;j++)for(let i=0;i<nx;i++) b+=L(P(i*bay,j*bay,z),P((i+1)*bay,j*bay,z),'cs-jp-led');
+      for(let i=0;i<=nx;i++)for(let j=0;j<ny;j++) b+=L(P(i*bay,j*bay,z),P(i*bay,(j+1)*bay,z),'cs-jp-led');
+    }
+
+    // ---------- posts (เสา) ----------
+    for(let i=0;i<=nx;i++)for(let j=0;j<=ny;j++){
+      const front=(i===nx||j===ny);
+      b+=L(P(i*bay,j*bay,0),P(i*bay,j*bay,Htot), front?'cs-jp-postF':'cs-jp-post'); }
+
+    // ---------- deck พื้นไม้แบบ+คอนกรีต (สีเขียว) ด้านบน ----------
+    const zB=Htot, zT=Htot+0.22;
+    b+=POLY([P(Lx,0,zB),P(Lx,Ly,zB),P(Lx,Ly,zT),P(Lx,0,zT)],'cs-jp-deckS');       // หน้าหนา (แนว x)
+    b+=POLY([P(0,Ly,zB),P(Lx,Ly,zB),P(Lx,Ly,zT),P(0,Ly,zT)],'cs-jp-deckS');       // หน้าหนา (แนว y)
+    b+=POLY([P(0,0,zT),P(Lx,0,zT),P(Lx,Ly,zT),P(0,Ly,zT)],'cs-jp-deck');          // ผิวบน
+    const jsp=(num('joist_spacing')||35)/100;
+    for(let y=0;y<=Ly+1e-6;y+=jsp){ const yy=Math.min(y,Ly);                       // ตง (เส้นเหลือง)
+      b+=L(P(0,yy,zT),P(Lx,yy,zT),'cs-jp-joistY'); if(yy>=Ly)break; }
+    for(let i=0;i<=nx;i++) b+=L(P(i*bay,0,zT),P(i*bay,Ly,zT),'cs-jp-deckbeam');    // คานพื้น (เส้นเขียว)
+
+    // ---------- น้ำหนักบรรทุก: กล่องเขียว + ลูกศรกดลง + ป้ายค่า (อัตโนมัติจากการคำนวณ) ----------
+    (function(){
+      const wTot=Math.round(LOADS.w||0), wLive=Math.round(LOADS.live||0);
+      const zG=zT+0.78;                                        // ระดับบนของกล่อง load
+      const g00=P(0,0,zG),g10=P(Lx,0,zG),g11=P(Lx,Ly,zG),g01=P(0,Ly,zG);
+      b+=POLY([g00,g10,g11,g01],'cs-load-box');                // ผิวบนกล่องน้ำหนัก
+      [[P(0,0,zT),g00],[P(Lx,0,zT),g10],[P(Lx,Ly,zT),g11],[P(0,Ly,zT),g01]]
+        .forEach(e=>{ b+=L(e[0],e[1],'cs-load-edge'); });       // ขอบกล่อง (เส้นประ)
+      [g00,g10,g11,g01].forEach(track);
+      const arrow=(x,y)=>{ const a=P(x,y,zG),c=P(x,y,zT);       // ลูกศรดิ่งลงบนจอ
+        return `<line x1="${a[0]}" y1="${a[1]}" x2="${c[0]}" y2="${c[1]}" class="cs-load-arr"/>`
+             + `<polygon points="${c[0]-5.5},${c[1]-11} ${c[0]+5.5},${c[1]-11} ${c[0]},${c[1]}" class="cs-load-arrhd"/>`; };
+      b+=arrow(Lx*0.5,Ly*0.5)+arrow(Lx*0.82,Ly*0.22)+arrow(Lx*0.2,Ly*0.82);
+      // ป้ายค่าน้ำหนัก (วางมุมซ้ายบน ตามรูปอ้างอิง) — ค่าดึงจากผลคำนวณ real-time
+      const cTop=g10, cDeck=P(Lx,0,zT);
+      b+=`<text x="${cTop[0]-10}" y="${cTop[1]-2}"  text-anchor="end" class="cs-load-t cs-t">${wTot} กก./ม²</text>`;
+      b+=`<text x="${cTop[0]-10}" y="${cTop[1]+12}" text-anchor="end" class="cs-load-cap cs-t">นน.บรรทุกรวม w</text>`;
+      b+=`<text x="${cDeck[0]-10}" y="${cDeck[1]-2}"  text-anchor="end" class="cs-load-t cs-t">${wLive} กก./ม²</text>`;
+      b+=`<text x="${cDeck[0]-10}" y="${cDeck[1]+12}" text-anchor="end" class="cs-load-cap cs-t">นน.จร (live)</text>`;
+      track([cTop[0]-135,cTop[1]-8]); track([cDeck[0]-135,cDeck[1]+16]);
+    })();
+
+    // ---------- CALLOUTS (ป้ายด้านขวา ชี้เข้าหาโครงสร้าง) ----------
+    const xR=maxX+34; let yc=minY+18;
+    const cap=(target,text)=>{ b+=csCallout(target[0],target[1], xR, yc, text); track([xR,yc]); yc+=24; };
+    cap(P(Lx*0.5,Ly*0.45,zT),               `พื้นคอนกรีต หนา ${slabCm} ซม.`);
+    cap(P(Lx,Ly*0.5,zB),                     `ไม้อัดหนา ${plyMm} มม.`);
+    cap(P(Lx,Ly*0.7,zB),                     `ตง ${jLab} @ ${jspCm} ซม.`);
+    cap(P(Lx,Ly,Htot-h*0.5),                 `คาน ${bLab}`);
+    cap(P(Lx,Ly,Htot*0.45),                  `นั่งร้านญี่ปุ่น ${nt} ชั้น × ${h.toFixed(2)} ม.`);
+    track([xR+185,yc]);
+
+    // ---------- TITLE / NOTE ----------
+    const cx=(minX+maxX)/2, yT1=maxY+30, yT2=maxY+48;
+    b+=`<text x="${cx}" y="${yT1}" text-anchor="middle" class="cs-title cs-t">ระบบไม้แบบพื้น–นั่งร้านญี่ปุ่น (ภาพ Isometric)</text>`;
+    b+=`<text x="${cx}" y="${yT2}" text-anchor="middle" class="cs-dimt cs-t">grid ${nx}×${ny} ช่วง @ ${bay.toFixed(2)} ม. · ${nt} ชั้น × ${h.toFixed(2)} ม. รวมสูง ${Htot.toFixed(2)} ม.</text>`;
+    track([cx,yT2+8]);
+
+    // ---------- viewBox ----------
+    const pad=22;
+    const vbX=minX-pad, vbY=minY-pad, vbW=(maxX-minX)+pad*2, vbH=(maxY-minY)+pad*2;
+    $('cadSection').innerHTML = csWrap(`${r1(vbX)} ${r1(vbY)} ${r1(vbW)} ${r1(vbH)}`, b);
+  })();
+
+  /* ============ PANEL 2 : ZOOM การเรียงชั้น (Build-up) ============ */
+  (function(){
+    const S2=620, oxd=150, oyd=50, Ww=0.42, Wd=Ww*S2;
+    let y=oyd;
+    const yC=y, hC=tS*S2; y+=hC;
+    const yP=y, hP=tP*S2; y+=hP;
+    const yJ=y, hJ=jo*S2; y+=hJ;
+    const yB=y, hB=be*S2; y+=hB;
+    const yBot=y, x2=oxd+Wd;
+    let b='';
+    // concrete
+    b+=`<rect x="${oxd}" y="${yC}" width="${Wd}" height="${hC}" class="cs-conc"/>`;
+    // plywood
+    b+=`<rect x="${oxd}" y="${yP}" width="${Wd}" height="${hP}" class="cs-ply"/>`;
+    // joists (hollow square tubes)
+    let jcx=[];
+    for(let i=0;;i++){ const jx=oxd+8+i*jsp*S2; if(jx+jo*S2>x2-4) break; jcx.push(jx);
+      b+=`<rect x="${jx}" y="${yJ}" width="${jo*S2}" height="${hJ}" class="cs-steel"/>`;
+      b+=`<rect x="${jx+3}" y="${yJ+3}" width="${jo*S2-6}" height="${hJ-6}" class="cs-hollow"/>`; }
+    if(jcx.length===0){ const jx=oxd+8; jcx.push(jx);
+      b+=`<rect x="${jx}" y="${yJ}" width="${jo*S2}" height="${hJ}" class="cs-steel"/>`;
+      b+=`<rect x="${jx+3}" y="${yJ+3}" width="${jo*S2-6}" height="${hJ-6}" class="cs-hollow"/>`; }
+    // beam (hollow square tube)
+    b+=`<rect x="${oxd}" y="${yB}" width="${Wd}" height="${hB}" class="cs-steel2"/>`;
+    b+=`<rect x="${oxd+4}" y="${yB+4}" width="${Wd-8}" height="${hB-8}" class="cs-hollow"/>`;
+    // dim chain (ขวา) — ความหนาแต่ละชั้น
+    const xd=x2+40;
+    b+=csDimV(yC,yP,xd,`${slabCm} ซม.`,x2);
+    b+=csDimV(yP,yJ,xd,`${plyMm}`,x2);
+    b+=csDimV(yJ,yB,xd,`${r1(jo*1000)}`,x2);
+    b+=csDimV(yB,yBot,xd,`${r1(be*1000)}`,x2);
+    // callouts (ซ้าย)
+    const xL=oxd-16;
+    b+=csCallout(oxd+Wd*0.40, yC+hC/2, xL, yC+hC/2, `พื้นคอนกรีต t=${slabCm} ซม.`,'end');
+    b+=csCallout(oxd+Wd*0.58, yP+hP/2, xL, yP+hP/2, `ไม้อัดหนา ${plyMm} มม.`,'end');
+    b+=csCallout(jcx[0]+jo*S2/2, yJ+hJ/2, xL, yJ+hJ/2, `ตง □${jLab}`,'end');
+    b+=csCallout(oxd+Wd*0.5, yB+hB/2, xL, yB+hB/2, `คาน □${bLab}`,'end');
+    // title
+    b+=`<text x="${(oxd+x2)/2}" y="${yBot+30}" text-anchor="middle" class="cs-title cs-t">การเรียงชั้นไม้แบบ (มาตราส่วนขยาย)</text>`;
+    const VW=x2+150, VH=yBot+46;
+    $('cadDetail').innerHTML = csWrap(`0 0 ${r1(VW)} ${r1(VH)}`, b);
+  })();
+}
+
+function resetDefaults(){
+  for(const k in DEFAULTS) if($(k)) $(k).value = DEFAULTS[k];
+  fillSection('joist'); fillSection('beam');
+  calc();
+}
+
+// init
+buildSelects();
+resetDefaults();
+document.querySelectorAll('input,select').forEach(el=>{
+  el.addEventListener('input', calc);
+});
+</script>
+</body>
+</html>
