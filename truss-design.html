@@ -504,6 +504,7 @@ function checkSection(sec,Tmax,Cmax,Lmax,Fy,E){
    ============================================================ */
 let MODEL=null, RESULT=null, plList=[{node:-1,fx:0,fy:0}], picks={};
 const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const ROLE={top:{label:'Upper cord',color:'#C9633F'},bottom:{label:'Lower cord',color:'#2E7D52'},
   diagonal:{label:'Diagonal',color:'#2C5AA0'},vertical:{label:'Vertical',color:'#8a6d3b'}};
 
@@ -561,8 +562,8 @@ function renderAll(){
   renderDesign();
   // print meta
   $('pTitle').textContent='รายงานการออกแบบโครงถักเหล็ก — '+$('projName').value;
-  $('pMeta').innerHTML=`โครงการ: ${$('projName').value}<br>ออกแบบโดย: ${$('projBy').value} · ${$('projDate').value||''}<br>
-    ${$('ttype').selectedOptions[0].text} · L=${$('span').value}m H=${$('height').value}m`;
+  $('pMeta').innerHTML=`โครงการ: ${esc($('projName').value)}<br>ออกแบบโดย: ${esc($('projBy').value)} · ${esc($('projDate').value||'')}<br>
+    ${esc($('ttype').selectedOptions[0].text)} · L=${esc($('span').value)}m H=${esc($('height').value)}m`;
   $('diagTag').textContent=`${MODEL.nodes.length} joints · ${MODEL.members.length} members`;
 }
 

@@ -471,7 +471,7 @@ function buildReport(r){
   const x=S;
   const row=(lbl,sym,val,unit,hl)=>`<tr class="${hl?'hl':''}"><td class="lbl">${lbl}</td><td class="sym">${sym}</td><td class="r">${val}</td><td>${unit}</td></tr>`;
   const ob=(ok)=>`<span class="okbox ${ok?'ok':'ng'}">[${ok?'Satisfactory':'Unsatisfactory'}]</span>`;
-  const proj=id=>document.getElementById(id).value||"—";
+  const proj=id=>(document.getElementById(id).value||"—").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const rb=r.reb;
   const rebRow=o=>`<tr><td class="l">${o.name}</td><td>${o.pre}${o.d}</td><td>${f(o.prov,1)}</td><td>${isFinite(o.req)?f(o.req,1):'—'}</td><td class="okbox ${o.ok?'ok':'ng'}">${o.ok?'OK':'NG'}</td></tr>`;
 

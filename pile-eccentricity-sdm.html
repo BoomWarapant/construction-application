@@ -452,7 +452,7 @@ function footingMoments(dims,pts){
 const $=id=>document.getElementById(id);
 const num=id=>{const v=parseFloat($(id).value);return isNaN(v)?0:v;};
 const fmt=(x,d=2)=>isFinite(x)?x.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}):'—';
-const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 function chkRow(ok,label,detail,warn){const cls=ok?'ok':(warn?'warn':'bad');
   return `<div class="chk ${cls}">${ok?'✔':(warn?'▲':'✘')} ${label}<b>${detail||''}</b></div>`;}
 
@@ -1052,7 +1052,7 @@ function drawPlan(){
   // legend
   b+=`<text x="14" y="22" class="cnote">— เส้นประเทา = ตำแหน่งเข็มตามแบบ · ทึบ = เข็มตอกจริง (เขียว ≤100%, เหลือง 100–110%, แดง >110%/แรงดึง · ม่วง = เข็มแซม)</text>`;
   if(eff.mode==='c')b+=`<text x="14" y="36" class="cnote" fill="${CAD_OK}">— แรงที่แสดง = ก่อนแก้ไข · หลังติดตั้ง Strap Beam แรงเข็มกลับสู่ P/N = ${fmt(G.P/ana.N,1)} ตัน/ต้น</text>`;
-  $('figPlan').innerHTML=cadSheet(wd,b,`แปลนฐานราก ${$('p_foot').value||''} — ตำแหน่งเสาเข็มตามแบบเทียบตอกจริง (e = ${fmt(G.ana.e*100,2)} ซม.)`);
+  $('figPlan').innerHTML=cadSheet(wd,b,`แปลนฐานราก ${esc($('p_foot').value||'')} — ตำแหน่งเสาเข็มตามแบบเทียบตอกจริง (e = ${fmt(G.ana.e*100,2)} ซม.)`);
 }
 
 function drawSection(){
@@ -1125,7 +1125,7 @@ function drawSection(){
   b+=cadDimV(wd,-d2.t,0,-xmax-0.18,`t = ${fmt(d2.t)} ม.`,-d2.L/2);
   b+=cadDimV(wd,0,glY,xmax+0.18,`h = ${fmt(G.dims.h)} ม.`,d2.L/2);
   b+=cadDimH(wd,-d2.L/2,d2.L/2,-d2.t-pileLen-0.18,`${eff.mode==='b'?'L′':'L'} = ${fmt(d2.L)} ม.`,-d2.t);
-  $('figSec').innerHTML=cadSheet(wd,b,`รูปตัดฐานราก ${$('p_foot').value||''} — SECTION A-A (ตัดตามแกน X)`);
+  $('figSec').innerHTML=cadSheet(wd,b,`รูปตัดฐานราก ${esc($('p_foot').value||'')} — SECTION A-A (ตัดตามแกน X)`);
 }
 
 /* ---- 10. SUMMARY ---- */

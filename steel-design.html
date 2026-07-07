@@ -1038,7 +1038,7 @@ function runTests(){
    ============================================================ */
 function doPrint(){ buildPrint(); window.print(); }
 function buildPrint(){
-  const get=id=>$(id).value;
+  const get=id=>String($(id).value).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const M=mat();
   const head=`<div class="pr-head">
      <div style="display:flex;justify-content:space-between;align-items:flex-start">

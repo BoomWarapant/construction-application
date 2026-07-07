@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+<html lang="th">
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>CRD Engineering Tools</title>
@@ -135,6 +137,33 @@
     text-transform: uppercase;
     color: var(--clay-deep);
     margin-bottom: 18px;
+  }
+
+  /* Tool search */
+  .search {
+    width: 100%;
+    max-width: 420px;
+    margin: 28px 0 0;
+    padding: 12px 16px;
+    font: inherit;
+    font-size: 15px;
+    color: var(--ink);
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    outline: none;
+    transition: border-color 0.15s ease;
+  }
+
+  .search:focus {
+    border-color: var(--clay);
+  }
+
+  .search-empty {
+    color: var(--ink-soft);
+    font-size: 14px;
+    padding: 8px 2px;
   }
 
   /* Grid of category cards */
@@ -354,10 +383,24 @@
         A curated collection of structural design and construction management
         applications. Choose a category to begin.
       </p>
+      <input
+        type="search"
+        class="search"
+        id="tool-search"
+        placeholder="ค้นหาเครื่องมือ… เช่น footing, truss, planner"
+        autocomplete="off"
+      />
     </div>
 
-    <div class="eyebrow">Categories</div>
-    <div class="grid" id="cat-grid"></div>
+    <div id="search-section" style="display: none">
+      <div class="eyebrow">Search results</div>
+      <div class="tools" id="search-results"></div>
+    </div>
+
+    <div id="cat-section">
+      <div class="eyebrow">Categories</div>
+      <div class="grid" id="cat-grid"></div>
+    </div>
   </section>
 
   <!-- PAGE VIEWS injected here -->
@@ -522,6 +565,44 @@
     location.hash = "";
   }
 
+  // ---- Tool search ----
+  const allTools = pages.flatMap((p) =>
+    p.groups.flatMap((g) =>
+      g.tools.map((t) => ({ ...t, cat: p.title, group: g.name }))
+    )
+  );
+
+  const toolLink = (t) => `
+    <a class="tool" href="${t.file}">
+      <span class="tool-icon">${icon}</span>
+      <span>
+        <span class="tool-name">${t.name}</span>
+        <span class="tool-file">${t.cat}${t.group ? " · " + t.group : ""} — ${t.file}</span>
+      </span>
+    </a>`;
+
+  const searchInput = document.getElementById("tool-search");
+  const searchSection = document.getElementById("search-section");
+  const searchResults = document.getElementById("search-results");
+  const catSection = document.getElementById("cat-section");
+
+  searchInput.addEventListener("input", () => {
+    const q = searchInput.value.trim().toLowerCase();
+    if (!q) {
+      searchSection.style.display = "none";
+      catSection.style.display = "";
+      return;
+    }
+    const hits = allTools.filter((t) =>
+      [t.name, t.file, t.cat, t.group || ""].join(" ").toLowerCase().includes(q)
+    );
+    searchResults.innerHTML = hits.length
+      ? hits.map(toolLink).join("")
+      : `<p class="search-empty">ไม่พบเครื่องมือที่ตรงกับ "${q.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]))}"</p>`;
+    searchSection.style.display = "";
+    catSection.style.display = "none";
+  });
+
   // ---- Deep-link support ----
   window.addEventListener("hashchange", route);
   function route() {
@@ -531,3 +612,4 @@
   }
   route();
 </script>
+</html>

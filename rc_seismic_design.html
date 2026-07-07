@@ -661,6 +661,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
    ============================================================ */
 const $=id=>document.getElementById(id);
 const val=id=>{const e=$(id);return e?e.value:''};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const num=id=>{const v=parseFloat(val(id));return isNaN(v)?0:v};
 const fmt=(n,d=2)=>isNaN(n)?'-':Number(n).toLocaleString('th-TH',{minimumFractionDigits:d,maximumFractionDigits:d});
 const fmt0=n=>fmt(n,0);
@@ -1226,7 +1227,7 @@ function renderInputTable(S){
     ['Sa (ออกแบบ) / Cs',fmt(S.Sa,3)+'g / '+fmt(S.Cs,3)],
     ['Soil Report',val('p_soil')==='yes'?'มี':'ยังไม่มี'],
   ];
-  $('tbl-input').innerHTML='<tbody>'+rows.map(r=>`<tr><td>${r[0]}</td><td style="text-align:right;font-weight:600">${r[1]}</td></tr>`).join('')+'</tbody>';
+  $('tbl-input').innerHTML='<tbody>'+rows.map(r=>`<tr><td>${r[0]}</td><td style="text-align:right;font-weight:600">${esc(r[1])}</td></tr>`).join('')+'</tbody>';
 }
 
 function renderOutputTable(S){
@@ -1272,11 +1273,11 @@ function generateReport(){
   Object.keys(CHECKLISTS).forEach(k=>{const p=checklistProgress(k);
     clRows+=`<div><span>${k}. ${CHECKLISTS[k].title}</span><span>${p.done}/${p.total} (${p.pct}%)</span></div>`;});
 
-  const g=(a,b)=>`<div><span>${a}</span><span>${b}</span></div>`;
+  const g=(a,b)=>`<div><span>${a}</span><span>${esc(b)}</span></div>`;
 
   let html=`
     <h2>รายงานสรุปการวิเคราะห์เบื้องต้น (Preliminary Seismic Report)</h2>
-    <div class="rep-meta">จัดทำโดย RC Seismic Dashboard · วันที่ ${today} · ${val('c_std')||'มยผ.1301/1302-61'}</div>
+    <div class="rep-meta">จัดทำโดย RC Seismic Dashboard · วันที่ ${today} · ${esc(val('c_std'))||'มยผ.1301/1302-61'}</div>
 
     <h3>1. ข้อมูลโครงการ</h3>
     <div class="rep-grid">
