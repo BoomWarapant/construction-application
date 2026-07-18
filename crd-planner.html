@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CRD Interactive Construction Planning &amp; Control</title>
+<title>CRD Construction Planning &amp; Control</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -54,8 +54,8 @@ input,select{font-family:inherit;font-size:12.5px}
 }
 #brand{display:flex;align-items:baseline;gap:10px}
 #brand .logo{
-  align-self:center; width:24px;height:24px;border-radius:6px;background:#fff;color:var(--navy);
-  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:10px;letter-spacing:.5px;
+  align-self:center; height:30px; width:auto; border-radius:6px; background:#fff;
+  padding:2px 5px; display:block;
 }
 #brand .t1{font-weight:600;font-size:13px;line-height:1.2;color:#fff}
 #brand .t2{font-size:11px;color:#B9C6DA;line-height:1.2}
@@ -144,6 +144,9 @@ td input.cellEdit{
 
 /* ---------- Row selection / duration spinner / start date picker ---------- */
 tbody tr.selrow td, tbody tr.summary.selrow td{background:#E8EEF8}
+tbody tr.dragging td{opacity:.45}
+tbody tr.drop-above td{box-shadow:inset 0 2px 0 0 var(--navy)}
+tbody tr.drop-below td{box-shadow:inset 0 -2px 0 0 var(--navy)}
 .spin{display:inline-flex;flex-direction:column;vertical-align:-3px;margin-left:5px}
 .spin b{font-size:7px;line-height:7px;font-weight:400;color:var(--muted);cursor:pointer;padding:0 2px;user-select:none}
 .spin b:hover{color:var(--navy)}
@@ -175,9 +178,9 @@ svg text{font-family:'Prompt','Leelawadee UI',sans-serif}
 
 <div id="brandbar">
   <div id="brand">
-    <div class="logo">CRD</div>
-    <div class="t1">Interactive Construction Planning &amp; Control</div>
-    <div class="t2" id="projName">Arise Hill Sansai</div>
+    <img class="logo" src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAYEBQUFBAYFBQUHBgYHCQ8KCQgICRMNDgsPFhMXFxYTFRUYGyMeGBohGhUVHikfISQlJygnGB0rLismLiMmJyb/2wBDAQYHBwkICRIKChImGRUZJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJib/wAARCAFhAeADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD6pooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiig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" alt="CRD">
+    <div class="t1">Construction Planning &amp; Control</div>
+    <div class="t2">Project : <span id="projName">Arise Hill Sansai</span></div>
   </div>
 </div>
 
@@ -199,8 +202,10 @@ svg text{font-family:'Prompt','Leelawadee UI',sans-serif}
     <div class="gbtns">
       <button class="btn" id="btnAddTask" data-tip="เพิ่มงานใหม่ต่อจากแถวที่เลือก"><svg viewBox="0 0 16 16"><path d="M8 3v10M3 8h10"/></svg></button>
       <button class="btn danger" id="btnDelTask" data-tip="ลบงานที่เลือก (รวมงานย่อยทั้งหมด)"><svg viewBox="0 0 16 16"><path d="M2.5 4.5h11M6 4.5V3h4v1.5M4.5 4.5l.6 9h5.8l.6-9M6.5 7v4M9.5 7v4"/></svg></button>
+      <button class="btn" id="btnCopyTask" data-tip="คัดลอกงานที่เลือก รวมงานย่อยทั้งหมด (Ctrl+C)"><svg viewBox="0 0 16 16"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 5.5V3.5a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2"/></svg></button>
+      <button class="btn" id="btnPasteTask" data-tip="วางงานที่คัดลอกไว้ ต่อจากแถวที่เลือก — ไม่ได้เลือกแถว = วางต่อท้ายตาราง (Ctrl+V)"><svg viewBox="0 0 16 16"><path d="M5.5 3.5h-1a1 1 0 0 0-1 1v8.5a.5.5 0 0 0 .5.5h8a.5.5 0 0 0 .5-.5V4.5a1 1 0 0 0-1-1h-1M5.5 2.5h5v2h-5zM6 8.5h4M6 11h4"/></svg></button>
     </div>
-    <div class="glabel">เพิ่ม / ลบ Tasks</div>
+    <div class="glabel">เพิ่ม / ลบ / คัดลอก</div>
   </div>
   <div class="tgroup">
     <div class="gbtns">
@@ -245,8 +250,13 @@ svg text{font-family:'Prompt','Leelawadee UI',sans-serif}
   </div>
   <div class="tgroup">
     <div class="gbtns">
-      <button class="btn primary" id="btnBaseline" data-tip="บันทึกแผนปัจจุบันเป็น Baseline สำหรับเปรียบเทียบความก้าวหน้า"><svg viewBox="0 0 16 16"><path d="M3.5 14.5V1.5M3.5 2.5h9l-2.2 2.75 2.2 2.75h-9"/></svg></button>
-      <button class="btn" id="btnClearBaseline" data-tip="ล้าง Baseline ที่บันทึกไว้"><svg viewBox="0 0 16 16"><path d="M3.5 14.5V1.5M3.5 2.5h9l-2.2 2.75 2.2 2.75h-9M9 10.5l4 4M13 10.5l-4 4"/></svg></button>
+      <select class="btn" id="blSel" data-tip="เลือก Baseline (1–3) ที่ใช้บันทึกและเปรียบเทียบแผนงาน/ความก้าวหน้า — แบบ MS Project">
+        <option value="1" selected>BL 1</option>
+        <option value="2">BL 2</option>
+        <option value="3">BL 3</option>
+      </select>
+      <button class="btn primary" id="btnBaseline" data-tip="บันทึกแผนปัจจุบันลง Baseline ที่เลือก สำหรับเปรียบเทียบความก้าวหน้า"><svg viewBox="0 0 16 16"><path d="M3.5 14.5V1.5M3.5 2.5h9l-2.2 2.75 2.2 2.75h-9"/></svg></button>
+      <button class="btn" id="btnClearBaseline" data-tip="ล้างข้อมูล Baseline ที่เลือก"><svg viewBox="0 0 16 16"><path d="M3.5 14.5V1.5M3.5 2.5h9l-2.2 2.75 2.2 2.75h-9M9 10.5l4 4M13 10.5l-4 4"/></svg></button>
       <div id="statusDateWrap" data-tip="กำหนด Status Date (วันตัดข้อมูล) สำหรับคำนวณ EVM">Status <input type="date" id="statusDate"></div>
     </div>
     <div class="glabel">Baseline &amp; สถานะ</div>
@@ -262,10 +272,7 @@ svg text{font-family:'Prompt','Leelawadee UI',sans-serif}
   </div>
   <div class="tgroup">
     <div class="gbtns">
-      <button class="btn" id="btnExport" data-tip="ส่งออกแผนงานเป็นไฟล์ JSON"><svg viewBox="0 0 16 16"><path d="M8 9V2M5 5l3-3 3 3M2 10.5V13h12v-2.5"/></svg><span class="bl">JSON</span></button>
-      <button class="btn" id="btnExportXml" data-tip="ส่งออกแผนงานเป็นไฟล์ MS Project XML"><svg viewBox="0 0 16 16"><path d="M8 9V2M5 5l3-3 3 3M2 10.5V13h12v-2.5"/></svg><span class="bl">XML</span></button>
-      <button class="btn" id="btnExportXlsx" data-tip="ส่งออกแผนงานเป็นไฟล์ Excel (XLSX)"><svg viewBox="0 0 16 16"><path d="M8 9V2M5 5l3-3 3 3M2 10.5V13h12v-2.5"/></svg><span class="bl">XLSX</span></button>
-      <button class="btn" id="btnSaveAs" data-tip="Save As — บันทึกแผนงานเป็นไฟล์ XML โดยเลือกโฟลเดอร์ปลายทางเอง"><svg viewBox="0 0 16 16"><path d="M2.5 2.5h9l2 2v9h-11zM5 2.5V6h6V2.5M4.5 13.5V9.5h7v4"/></svg><span class="bl">SAVE AS</span></button>
+      <button class="btn" id="btnSaveAs" data-tip="Save As — บันทึกแผนงานเป็นไฟล์ XML / XLSX / JSON โดยเลือกรูปแบบและโฟลเดอร์ปลายทางเอง"><svg viewBox="0 0 16 16"><path d="M2.5 2.5h9l2 2v9h-11zM5 2.5V6h6V2.5M4.5 13.5V9.5h7v4"/></svg><span class="bl">SAVE AS</span></button>
       <button class="btn" id="btnPrint" data-tip="พิมพ์ / บันทึกเป็น PDF ขนาด A3"><svg viewBox="0 0 16 16"><path d="M4.5 6V2.5h7V6M2.5 6h11a1 1 0 0 1 1 1v4h-3M1.5 11V7a1 1 0 0 1 1-1M4.5 9.5h7v4h-7z"/></svg></button>
     </div>
     <div class="glabel">ส่งออก / พิมพ์</div>
@@ -333,7 +340,7 @@ const fmtNum = (v, d=2) => (v === null || !isFinite(v)) ? '—' : v.toLocaleStri
 /* ---------------------------------------------------------------------
    State
 --------------------------------------------------------------------- */
-let state = null;         // { projectStart, statusDate, baselineSet, zoom, showLinks, evmVisible, tasks[] }
+let state = null;         // { projectStart, statusDate, baselineSet, activeBl, zoom, showLinks, evmVisible, tasks[] }
 let collapsed = new Set();
 let byUid = new Map();
 let visibleRows = [];     // tasks currently shown (respecting collapse)
@@ -362,11 +369,11 @@ function buildDefaultState() {
     percentComplete: t.percentComplete || 0,
     baselineCost: t.cost || 0, actualCost: 0,
     snet: t.start ? daysBetween(minStart, t.start) : 0,
-    blStart: null, blFinish: null
+    blStart: null, blFinish: null, bl: {}
   }));
   return {
     projectStart: minStart, statusDate: toISO(new Date()),
-    baselineSet: false, zoom: 'week', zoomPx: null, showLinks: false, showCritical: false, evmVisible: true,
+    baselineSet: false, activeBl: 1, zoom: 'week', zoomPx: null, showLinks: false, showCritical: false, evmVisible: true,
     projName: 'Arise Hill Sansai', tasks
   };
 }
@@ -589,6 +596,47 @@ function recalcAll() {
 }
 
 /* ---------------------------------------------------------------------
+   Multi-baseline (3 slots แบบ MS Project)
+   - t.bl = { 1:{s,f}, 2:{s,f}, 3:{s,f} } เก็บทุก slot
+   - t.blStart / t.blFinish = ค่าของ slot ที่เลือก (state.activeBl)
+     ให้โค้ดเดิม (EVM, Gantt, สถานะ, export) ใช้ต่อได้โดยไม่ต้องแก้
+--------------------------------------------------------------------- */
+function applyActiveBaseline() {
+  if (!state.activeBl) state.activeBl = 1;
+  let any = false;
+  for (const t of state.tasks) {
+    const b = t.bl ? t.bl[state.activeBl] : null;
+    t.blStart = b ? b.s : null;
+    t.blFinish = b ? b.f : null;
+    if (b && !t.isSummary) any = true;
+  }
+  state.baselineSet = any;
+}
+
+function slotHasData(n) {
+  return state.tasks.some(t => !t.isSummary && t.bl && t.bl[n]);
+}
+
+// ข้อมูลเก่าที่มีแค่ blStart/blFinish → ย้ายเข้า Baseline 1
+function migrateBaselines() {
+  if (!state.activeBl) state.activeBl = 1;
+  for (const t of state.tasks) {
+    if (!t.bl || typeof t.bl !== 'object') t.bl = {};
+    if (t.blStart !== undefined && t.blStart !== null && !t.bl[1] && !t.bl[2] && !t.bl[3])
+      t.bl[1] = { s: t.blStart, f: t.blFinish };
+  }
+  applyActiveBaseline();
+}
+
+function updateBlUI() {
+  const sel = document.getElementById('blSel');
+  if (!sel) return;
+  for (const opt of sel.options)
+    opt.textContent = `BL ${opt.value}${slotHasData(parseInt(opt.value, 10)) ? ' ✓' : ''}`;
+  sel.value = String(state.activeBl || 1);
+}
+
+/* ---------------------------------------------------------------------
    Delay tracking status
 --------------------------------------------------------------------- */
 function taskStatus(t) {
@@ -653,7 +701,7 @@ function renderTable() {
       : '<span class="toggle"></span>';
     const st = taskStatus(t);
     const editable = f => t.isSummary ? '' : ` editable" data-uid="${t.uid}" data-field="${f}`;
-    rows.push(`<tr class="${cls}" data-uid="${t.uid}">
+    rows.push(`<tr class="${cls}" data-uid="${t.uid}" draggable="true">
       <td class="num" style="color:var(--muted)">${t.uid}</td>
       <td title="${esc(t.wbs)}">${esc(t.wbs)}</td>
       <td class="c-name editable" data-uid="${t.uid}" data-field="name" title="${esc(t.name)}"><span style="display:inline-block;width:${indent}px"></span>${tog}${t.milestone ? '&#9670; ' : ''}${esc(t.name)}</td>
@@ -835,7 +883,7 @@ function renderFooter() {
     `<span>เริ่มโครงการ <b>${fmtDay(0)}</b></span>` +
     `<span>สิ้นสุดโครงการ <b>${fmtDay(Math.max(0, ...leaves.map(t => t.cpm.ef - (t.duration > 0 ? 1 : 0))))}</b></span>` +
     `<span>ระยะเวลารวม <b>${Math.round(projectEndDay)}</b> วัน (ปฏิทิน 7 วัน/สัปดาห์)</span>` +
-    `<span>Baseline: <b>${state.baselineSet ? 'บันทึกแล้ว' : 'ยังไม่บันทึก'}</b></span>`;
+    `<span>Baseline ${state.activeBl || 1}: <b>${state.baselineSet ? 'บันทึกแล้ว' : 'ยังไม่บันทึก'}</b></span>`;
 }
 
 function renderAll() {
@@ -925,7 +973,7 @@ function scheduleSave() {
   saveTimer = setTimeout(() => {
     const slim = {
       projectStart: state.projectStart, statusDate: state.statusDate,
-      baselineSet: state.baselineSet, zoom: state.zoom, zoomPx: state.zoomPx || null, showLinks: state.showLinks,
+      baselineSet: state.baselineSet, activeBl: state.activeBl || 1, zoom: state.zoom, zoomPx: state.zoomPx || null, showLinks: state.showLinks,
       showCritical: !!state.showCritical, evmVisible: state.evmVisible, projName: state.projName,
       collapsed: [...collapsed],
       tasks: state.tasks.map(t => ({
@@ -933,7 +981,7 @@ function scheduleSave() {
         duration: t.isSummary ? 0 : t.duration, milestone: t.milestone,
         predecessors: t.predecessors, percentComplete: t.isSummary ? 0 : t.percentComplete,
         baselineCost: t.baselineCost, actualCost: t.actualCost,
-        snet: t.snet, blStart: t.blStart, blFinish: t.blFinish
+        snet: t.snet, blStart: t.blStart, blFinish: t.blFinish, bl: t.bl || {}
       }))
     };
     try { localStorage.setItem(STORE_KEY, JSON.stringify(slim)); } catch (e) { /* quota */ }
@@ -960,13 +1008,13 @@ let undoStack = [], redoStack = [];
 function snapshot() {
   return JSON.stringify({
     projectStart: state.projectStart, statusDate: state.statusDate,
-    baselineSet: state.baselineSet, projName: state.projName,
+    baselineSet: state.baselineSet, activeBl: state.activeBl || 1, projName: state.projName,
     tasks: state.tasks.map(t => ({
       uid: t.uid, wbs: t.wbs, outlineLevel: t.outlineLevel, name: t.name,
       duration: t.isSummary ? 0 : t.duration, milestone: t.milestone,
       predecessors: t.predecessors, percentComplete: t.isSummary ? 0 : t.percentComplete,
       baselineCost: t.baselineCost, actualCost: t.actualCost,
-      snet: t.snet, blStart: t.blStart, blFinish: t.blFinish
+      snet: t.snet, blStart: t.blStart, blFinish: t.blFinish, bl: t.bl || {}
     }))
   });
 }
@@ -983,10 +1031,12 @@ function commitUndo(before) {
 function restoreSnapshot(json) {
   const s = JSON.parse(json);
   state.projectStart = s.projectStart; state.statusDate = s.statusDate;
-  state.baselineSet = s.baselineSet; state.projName = s.projName;
+  state.baselineSet = s.baselineSet; state.activeBl = s.activeBl || 1; state.projName = s.projName;
   state.tasks = s.tasks;
   selectedUid = null;
   buildHierarchy();
+  migrateBaselines();
+  updateBlUI();
   recomputeWbs();
   recalcAll();
   document.getElementById('projName').textContent = state.projName;
@@ -1102,11 +1152,11 @@ function download(name, text, type = 'application/json') {
   URL.revokeObjectURL(a.href);
 }
 
-function exportJSON() {
+function buildJSONText() {
   const out = {
     app: 'crd-planner', version: 1,
     projectStart: state.projectStart, statusDate: state.statusDate,
-    baselineSet: state.baselineSet, projName: state.projName,
+    baselineSet: state.baselineSet, activeBl: state.activeBl || 1, projName: state.projName,
     tasks: state.tasks.map(t => ({
       uid: t.uid, wbs: t.wbs, outlineLevel: t.outlineLevel, name: t.name,
       duration: t.duration, milestone: t.milestone,
@@ -1115,10 +1165,10 @@ function exportJSON() {
       baselineCost: t.baselineCost, actualCost: t.actualCost, isSummary: t.isSummary,
       baselineStart: t.blStart !== null ? toISO(d2date(t.blStart)) : null,
       baselineFinish: t.blFinish !== null ? toISO(d2date(t.blFinish)) : null,
-      snet: t.snet, cpm_data: t.cpm, evm_data: t.evm
+      bl: t.bl || {}, snet: t.snet, cpm_data: t.cpm, evm_data: t.evm
     }))
   };
-  download(`crd-plan-${state.statusDate}.json`, JSON.stringify(out, null, 1));
+  return JSON.stringify(out, null, 1);
 }
 
 function buildProjectXML() {
@@ -1150,28 +1200,45 @@ function buildProjectXML() {
   return x.join('\n');
 }
 
-function exportXML() {
-  download(`crd-plan-${state.statusDate}.xml`, buildProjectXML(), 'application/xml');
+const SAVE_MIME = {
+  xml: 'application/xml',
+  json: 'application/json',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+};
+
+function buildFileFor(ext) {
+  if (ext === 'json') return new Blob([buildJSONText()], { type: SAVE_MIME.json });
+  if (ext === 'xlsx') return buildXlsxBlob();
+  return new Blob([buildProjectXML()], { type: SAVE_MIME.xml });
 }
 
-async function saveAsXML() {
-  const xml = buildProjectXML();
-  const name = `crd-plan-${state.statusDate}.xml`;
+async function saveAsFile() {
+  const base = `crd-plan-${state.statusDate}`;
   if (window.showSaveFilePicker) {
     try {
       const handle = await window.showSaveFilePicker({
-        suggestedName: name,
-        types: [{ description: 'MS Project XML', accept: { 'application/xml': ['.xml'] } }]
+        suggestedName: base + '.xml',
+        types: [
+          { description: 'MS Project XML', accept: { 'application/xml': ['.xml'] } },
+          { description: 'Excel Workbook (XLSX)', accept: { [SAVE_MIME.xlsx]: ['.xlsx'] } },
+          { description: 'JSON', accept: { 'application/json': ['.json'] } }
+        ]
       });
+      const m = handle.name.match(/\.(xml|xlsx|json)$/i);
+      const ext = m ? m[1].toLowerCase() : 'xml';
       const w = await handle.createWritable();
-      await w.write(new Blob([xml], { type: 'application/xml' }));
+      await w.write(buildFileFor(ext));
       await w.close();
       return;
     } catch (e) {
       if (e && e.name === 'AbortError') return; // ผู้ใช้กดยกเลิก
     }
   }
-  download(name, xml, 'application/xml'); // เบราว์เซอร์ที่ไม่รองรับ File System Access API
+  // เบราว์เซอร์ที่ไม่รองรับ File System Access API
+  const fmt = (prompt('พิมพ์รูปแบบไฟล์ที่ต้องการบันทึก: xml / xlsx / json', 'xml') || '').trim().toLowerCase();
+  if (!fmt) return;
+  if (!['xml', 'xlsx', 'json'].includes(fmt)) { alert('รูปแบบไม่ถูกต้อง — เลือกได้เฉพาะ xml, xlsx, json'); return; }
+  download(base + '.' + fmt, buildFileFor(fmt), SAVE_MIME[fmt]);
 }
 
 function importJSON(text) {
@@ -1182,6 +1249,7 @@ function importJSON(text) {
   state.projectStart = s.projectStart || state.projectStart;
   state.statusDate = s.statusDate || state.statusDate;
   state.baselineSet = !!s.baselineSet;
+  state.activeBl = s.activeBl || 1;
   state.projName = s.projName || state.projName;
   state.tasks = s.tasks.map(t => ({
     uid: t.uid, wbs: t.wbs || '', outlineLevel: t.outlineLevel || 1, name: t.name || '',
@@ -1190,7 +1258,8 @@ function importJSON(text) {
     baselineCost: t.baselineCost || 0, actualCost: t.actualCost || 0,
     snet: t.snet !== undefined ? t.snet : (t.start ? daysBetween(state.projectStart, t.start) : 0),
     blStart: t.blStart !== undefined ? t.blStart : (t.baselineStart ? daysBetween(state.projectStart, t.baselineStart) : null),
-    blFinish: t.blFinish !== undefined ? t.blFinish : (t.baselineFinish ? daysBetween(state.projectStart, t.baselineFinish) : null)
+    blFinish: t.blFinish !== undefined ? t.blFinish : (t.baselineFinish ? daysBetween(state.projectStart, t.baselineFinish) : null),
+    bl: (t.bl && typeof t.bl === 'object') ? t.bl : {}
   }));
   afterDataReplaced();
   commitUndo(before);
@@ -1230,12 +1299,13 @@ function importXML(text) {
   state.projectStart = minStart;
   state.projName = val(doc.documentElement, 'Title') || state.projName;
   state.baselineSet = false;
+  state.activeBl = 1;
   state.tasks = raw.map(t => ({
     uid: t.uid, wbs: t.wbs, outlineLevel: t.outlineLevel, name: t.name,
     duration: t.duration, milestone: t.milestone,
     predecessors: t.predecessors, percentComplete: t.percentComplete || 0,
     baselineCost: t.cost || 0, actualCost: 0,
-    snet: t.start ? daysBetween(minStart, t.start) : 0, blStart: null, blFinish: null
+    snet: t.start ? daysBetween(minStart, t.start) : 0, blStart: null, blFinish: null, bl: {}
   }));
   afterDataReplaced();
   commitUndo(before);
@@ -1322,7 +1392,7 @@ async function zipReadText(z, name) {
 
 const XLSX_HEADS = ['UID', 'WBS', 'Level', 'Name', 'Duration (days)', 'Milestone', 'Predecessors', '% Complete', 'Start', 'Finish', 'Baseline Cost', 'Actual Cost', 'Baseline Start', 'Baseline Finish'];
 
-function exportXLSX() {
+function buildXlsxBlob() {
   const XM = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
   const colL = i => { let s = ''; i++; while (i > 0) { s = String.fromCharCode(65 + (i - 1) % 26) + s; i = Math.floor((i - 1) / 26); } return s; };
   const widths = [6, 10, 6, 45, 13, 9, 16, 11, 11, 11, 13, 13, 13, 13];
@@ -1359,7 +1429,7 @@ function exportXLSX() {
     ['xl/styles.xml', styles],
     ['xl/worksheets/sheet1.xml', sheet]
   ];
-  download(`crd-plan-${state.statusDate}.xlsx`, buildZip(files), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  return buildZip(files);
 }
 
 function sheetToRows(xmlText, shared) {  // → array of rows, each row = array of cell values
@@ -1496,6 +1566,7 @@ async function importXLSX(buf) {
   const minStart = starts.length ? starts.reduce((m, s) => (s < m ? s : m)) : state.projectStart;
   state.projectStart = minStart;
   state.baselineSet = raw.some(t => t.blStart);
+  state.activeBl = 1;
   state.tasks = raw.map(t => ({
     uid: t.uid, wbs: t.wbs, outlineLevel: t.outlineLevel, name: t.name,
     duration: t.duration, milestone: t.milestone,
@@ -1515,6 +1586,8 @@ function afterDataReplaced() {
   selectedUid = null;
   renumberIds();
   buildHierarchy();
+  migrateBaselines();
+  updateBlUI();
   recomputeWbs();
   const res = recalcAll();
   if (!res.ok) alert('คำเตือน: ข้อมูลที่นำเข้ามี Circular Dependency:\n' + res.cycle.slice(0, 12).join('\n'));
@@ -1617,6 +1690,35 @@ function moveTask(dir) {
   commitUndo(before);
 }
 
+// ลากแถว (พร้อม subtree) ไปวางก่อน/หลังแถวปลายทาง — destUid = null คือวางต่อท้ายตาราง
+function dropTaskAt(srcUid, destUid, after) {
+  const si = state.tasks.findIndex(t => t.uid === srcUid);
+  if (si < 0) return;
+  const sj = subtreeEnd(si);
+  let di, refLevel;
+  if (destUid === null) {
+    di = state.tasks.length;
+    refLevel = state.tasks[si].outlineLevel;
+  } else {
+    const d = state.tasks.findIndex(t => t.uid === destUid);
+    if (d < 0) return;
+    if (d >= si && d < sj) return; // วางลงในกลุ่มงานของตัวเองไม่ได้
+    di = after ? subtreeEnd(d) : d;
+    refLevel = state.tasks[d].outlineLevel;
+  }
+  if (di >= si && di <= sj) return; // ตำแหน่งเดิม — ไม่ต้องย้าย
+  const before = snapshot();
+  let shift = refLevel - state.tasks[si].outlineLevel;
+  if (state.tasks[si].outlineLevel + shift < 1) shift = 1 - state.tasks[si].outlineLevel;
+  const block = state.tasks.splice(si, sj - si);
+  for (const t of block) t.outlineLevel = Math.max(1, t.outlineLevel + shift);
+  if (di > si) di -= block.length;
+  state.tasks.splice(di, 0, ...block);
+  selectedUid = block[0].uid;
+  afterStructureChange();
+  commitUndo(before);
+}
+
 function addTask() {
   const before = snapshot();
   let idx = state.tasks.length, level = 1;
@@ -1628,10 +1730,58 @@ function addTask() {
   state.tasks.splice(idx, 0, {
     uid: tmpUid, wbs: '', outlineLevel: level, name: 'งานใหม่', duration: 1, milestone: false,
     predecessors: [], percentComplete: 0, baselineCost: 0, actualCost: 0,
-    snet: 0, blStart: null, blFinish: null,
+    snet: 0, blStart: null, blFinish: null, bl: {},
     cpm: { es: 0, ef: 1, ls: 0, lf: 1, totalFloat: 0, freeFloat: 0, isCritical: false }
   });
   selectedUid = tmpUid;
+  afterStructureChange();
+  commitUndo(before);
+}
+
+/* ---- Copy / Paste row (รวมงานย่อยทั้ง subtree) ---- */
+let taskClipboard = null;
+
+function copyTask() {
+  const i = selIndex(); if (i < 0) return;
+  const j = subtreeEnd(i);
+  taskClipboard = state.tasks.slice(i, j).map(t => ({
+    uid: t.uid, outlineLevel: t.outlineLevel, name: t.name,
+    duration: t.isSummary ? 0 : t.duration, milestone: t.milestone,
+    predecessors: t.predecessors.map(p => ({ ...p })),
+    percentComplete: t.isSummary ? 0 : t.percentComplete,
+    baselineCost: t.baselineCost, actualCost: t.actualCost,
+    snet: t.snet, bl: JSON.parse(JSON.stringify(t.bl || {}))
+  }));
+}
+
+function pasteTask() {
+  if (!taskClipboard || !taskClipboard.length) {
+    alert('ยังไม่มีงานที่คัดลอกไว้ — เลือกแถวแล้วกดปุ่มคัดลอก (Ctrl+C) ก่อน');
+    return;
+  }
+  const before = snapshot();
+  let idx = state.tasks.length, refLevel = taskClipboard[0].outlineLevel;
+  if (selectedUid !== null) {
+    const i = state.tasks.findIndex(t => t.uid === selectedUid);
+    if (i >= 0) { idx = subtreeEnd(i); refLevel = state.tasks[i].outlineLevel; }
+  }
+  let shift = refLevel - taskClipboard[0].outlineLevel;
+  if (taskClipboard[0].outlineLevel + shift < 1) shift = 1 - taskClipboard[0].outlineLevel;
+  let nextUid = state.tasks.reduce((m, t) => Math.max(m, t.uid), 0) + 1;
+  const map = new Map();
+  for (const t of taskClipboard) map.set(t.uid, nextUid++);
+  // remap predecessor ภายใน block ที่คัดลอกมา — อ้างอิงภายนอกคงไว้ (renumberIds กรอง id ที่ไม่มีจริงให้)
+  const block = taskClipboard.map(t => ({
+    uid: map.get(t.uid), wbs: '', outlineLevel: Math.max(1, t.outlineLevel + shift),
+    name: t.name, duration: t.duration, milestone: t.milestone,
+    predecessors: t.predecessors.map(p => ({ id: map.has(p.id) ? map.get(p.id) : p.id, type: p.type, lag: p.lag })),
+    percentComplete: t.percentComplete, baselineCost: t.baselineCost, actualCost: t.actualCost,
+    snet: t.snet, blStart: null, blFinish: null, bl: JSON.parse(JSON.stringify(t.bl || {})),
+    cpm: { es: 0, ef: 0, ls: 0, lf: 0, totalFloat: 0, freeFloat: 0, isCritical: false }
+  }));
+  state.tasks.splice(idx, 0, ...block);
+  selectedUid = block[0].uid;
+  applyActiveBaseline();
   afterStructureChange();
   commitUndo(before);
 }
@@ -1650,25 +1800,26 @@ function deleteTask() {
 }
 
 function newPlan() {
-  if (!confirm('เริ่มสร้างแผนงานใหม่? ข้อมูลปัจจุบันจะถูกแทนที่ (หากต้องการเก็บไว้ ให้ส่งออก JSON ก่อน)')) return;
+  if (!confirm('เริ่มสร้างแผนงานใหม่? ข้อมูลปัจจุบันจะถูกแทนที่ (หากต้องการเก็บไว้ ให้กด Save As ก่อน)')) return;
   const name = prompt('ชื่อโครงการ', 'โครงการใหม่');
   if (name === null) return;
   const before = snapshot();
   const today = toISO(new Date());
   state = {
-    projectStart: today, statusDate: today, baselineSet: false,
+    projectStart: today, statusDate: today, baselineSet: false, activeBl: 1,
     zoom: 'week', zoomPx: null, showLinks: false, showCritical: false, evmVisible: true,
     projName: name.trim() || 'โครงการใหม่',
     tasks: [{
       uid: 1, wbs: '1', outlineLevel: 1, name: 'งานที่ 1', duration: 5, milestone: false,
       predecessors: [], percentComplete: 0, baselineCost: 0, actualCost: 0,
-      snet: 0, blStart: null, blFinish: null
+      snet: 0, blStart: null, blFinish: null, bl: {}
     }]
   };
   collapsed = new Set();
   selectedUid = null;
   document.getElementById('projName').textContent = state.projName;
   document.getElementById('statusDate').value = state.statusDate;
+  updateBlUI();
   applyCritUI();
   afterStructureChange();
   commitUndo(before);
@@ -1681,6 +1832,7 @@ function rebaseProjectStart(newStart) {
     t.snet = (t.snet || 0) + shift;
     if (t.blStart !== null) t.blStart += shift;
     if (t.blFinish !== null) t.blFinish += shift;
+    if (t.bl) for (const k in t.bl) if (t.bl[k]) { t.bl[k].s += shift; t.bl[k].f += shift; }
   }
   state.projectStart = newStart;
 }
@@ -1784,7 +1936,7 @@ tr.crit td.nm{color:#D0342C}
 svg{display:block}
 </style></head><body>
 <div id="hdr"><h1>${esc(state.projName)} — แผนงานก่อสร้าง</h1>
-<div class="sub">Status Date: ${fmtDay(sdDay)} &nbsp;|&nbsp; พิมพ์เมื่อ: ${printedAt} &nbsp;|&nbsp; ระยะเวลารวม ${Math.round(projectEndDay)} วัน &nbsp;|&nbsp; Baseline: ${state.baselineSet ? 'บันทึกแล้ว' : 'ยังไม่บันทึก'}</div></div>
+<div class="sub">Status Date: ${fmtDay(sdDay)} &nbsp;|&nbsp; พิมพ์เมื่อ: ${printedAt} &nbsp;|&nbsp; ระยะเวลารวม ${Math.round(projectEndDay)} วัน &nbsp;|&nbsp; Baseline ${state.activeBl || 1}: ${state.baselineSet ? 'บันทึกแล้ว' : 'ยังไม่บันทึก'}</div></div>
 <table>
 <colgroup><col style="width:9mm"><col style="width:14mm"><col style="width:52mm"><col style="width:8mm"><col style="width:13mm"><col style="width:13mm"><col style="width:8mm"><col></colgroup>
 <thead><tr><th class="num">ID</th><th>WBS</th><th>ชื่องาน</th><th class="num">วัน</th><th>เริ่ม</th><th>เสร็จ</th><th class="num">%</th>
@@ -1839,6 +1991,45 @@ function wireEvents() {
     if (td) beginEdit(td);
   });
 
+  // drag & drop สลับตำแหน่งแถว (ย้ายทั้ง subtree)
+  let dragSrcUid = null;
+  const clearDropMarks = () =>
+    tbody.querySelectorAll('.drop-above,.drop-below').forEach(r => r.classList.remove('drop-above', 'drop-below'));
+  tbody.addEventListener('dragstart', e => {
+    const tr = e.target.closest('tr[data-uid]');
+    if (!tr || tr.querySelector('input.cellEdit')) { e.preventDefault(); return; }
+    dragSrcUid = parseInt(tr.dataset.uid, 10);
+    e.dataTransfer.effectAllowed = 'move';
+    try { e.dataTransfer.setData('text/plain', tr.dataset.uid); } catch (err) { /* ignore */ }
+    tr.classList.add('dragging');
+  });
+  tbody.addEventListener('dragover', e => {
+    if (dragSrcUid === null) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    const tr = e.target.closest('tr[data-uid]');
+    clearDropMarks();
+    if (!tr) return;
+    const r = tr.getBoundingClientRect();
+    tr.classList.add(e.clientY > r.top + r.height / 2 ? 'drop-below' : 'drop-above');
+  });
+  tbody.addEventListener('drop', e => {
+    if (dragSrcUid === null) return;
+    e.preventDefault();
+    const tr = e.target.closest('tr[data-uid]');
+    clearDropMarks();
+    const src = dragSrcUid;
+    dragSrcUid = null;
+    if (!tr) { dropTaskAt(src, null, true); return; }
+    const r = tr.getBoundingClientRect();
+    dropTaskAt(src, parseInt(tr.dataset.uid, 10), e.clientY > r.top + r.height / 2);
+  });
+  tbody.addEventListener('dragend', () => {
+    dragSrcUid = null;
+    clearDropMarks();
+    tbody.querySelectorAll('tr.dragging').forEach(r => r.classList.remove('dragging'));
+  });
+
   const startPick = document.getElementById('startPick');
   startPick.addEventListener('change', () => {
     const t = byUid.get(parseInt(startPick.dataset.uid, 10));
@@ -1876,22 +2067,37 @@ function wireEvents() {
     const k = e.key.toLowerCase();
     if (k === 'z') { e.preventDefault(); e.shiftKey ? doRedo() : doUndo(); }
     else if (k === 'y') { e.preventDefault(); doRedo(); }
+    else if (k === 'c') { if (selectedUid !== null && window.getSelection().isCollapsed) { e.preventDefault(); copyTask(); } }
+    else if (k === 'v') { if (taskClipboard) { e.preventDefault(); pasteTask(); } }
   });
 
-  document.getElementById('btnBaseline').addEventListener('click', () => {
-    if (state.baselineSet && !confirm('มี Baseline เดิมอยู่แล้ว ต้องการบันทึกทับหรือไม่?')) return;
+  const blSel = document.getElementById('blSel');
+  blSel.addEventListener('change', () => {
     const before = snapshot();
-    for (const t of state.tasks) if (!t.isSummary) { t.blStart = t.cpm.es; t.blFinish = t.cpm.ef; }
-    state.baselineSet = true;
-    recalcAll(); commitUndo(before); renderAll(); scheduleSave();
+    state.activeBl = parseInt(blSel.value, 10) || 1;
+    applyActiveBaseline();
+    recalcAll(); commitUndo(before); renderAll(); scheduleSave(); updateBlUI();
+  });
+  document.getElementById('btnBaseline').addEventListener('click', () => {
+    const slot = parseInt(blSel.value, 10) || 1;
+    if (slotHasData(slot) && !confirm(`Baseline ${slot} มีข้อมูลเดิมอยู่แล้ว ต้องการบันทึกทับหรือไม่?`)) return;
+    const before = snapshot();
+    for (const t of state.tasks) {
+      if (!t.bl) t.bl = {};
+      if (!t.isSummary) t.bl[slot] = { s: t.cpm.es, f: t.cpm.ef };
+    }
+    state.activeBl = slot;
+    applyActiveBaseline();
+    recalcAll(); commitUndo(before); renderAll(); scheduleSave(); updateBlUI();
   });
   document.getElementById('btnClearBaseline').addEventListener('click', () => {
-    if (!state.baselineSet) return;
-    if (!confirm('ต้องการล้าง Baseline หรือไม่?')) return;
+    const slot = parseInt(blSel.value, 10) || 1;
+    if (!slotHasData(slot)) return;
+    if (!confirm(`ต้องการล้าง Baseline ${slot} หรือไม่?`)) return;
     const before = snapshot();
-    for (const t of state.tasks) { t.blStart = null; t.blFinish = null; }
-    state.baselineSet = false;
-    recalcAll(); commitUndo(before); renderAll(); scheduleSave();
+    for (const t of state.tasks) if (t.bl) delete t.bl[slot];
+    applyActiveBaseline();
+    recalcAll(); commitUndo(before); renderAll(); scheduleSave(); updateBlUI();
   });
   const sd = document.getElementById('statusDate');
   sd.value = state.statusDate;
@@ -1967,6 +2173,8 @@ function wireEvents() {
 
   document.getElementById('btnAddTask').addEventListener('click', addTask);
   document.getElementById('btnDelTask').addEventListener('click', deleteTask);
+  document.getElementById('btnCopyTask').addEventListener('click', copyTask);
+  document.getElementById('btnPasteTask').addEventListener('click', pasteTask);
   document.getElementById('btnMoveUp').addEventListener('click', () => moveTask(-1));
   document.getElementById('btnMoveDown').addEventListener('click', () => moveTask(1));
   document.getElementById('btnOutdent').addEventListener('click', outdentTask);
@@ -1974,10 +2182,7 @@ function wireEvents() {
   document.getElementById('btnNew').addEventListener('click', newPlan);
 
   document.getElementById('btnPrint').addEventListener('click', printA3);
-  document.getElementById('btnExport').addEventListener('click', exportJSON);
-  document.getElementById('btnExportXml').addEventListener('click', exportXML);
-  document.getElementById('btnSaveAs').addEventListener('click', saveAsXML);
-  document.getElementById('btnExportXlsx').addEventListener('click', exportXLSX);
+  document.getElementById('btnSaveAs').addEventListener('click', saveAsFile);
   document.getElementById('btnImportJson').addEventListener('click', () => document.getElementById('fileJson').click());
   document.getElementById('btnImportXml').addEventListener('click', () => document.getElementById('fileXml').click());
   document.getElementById('btnImportXlsx').addEventListener('click', () => document.getElementById('fileXlsx').click());
@@ -2005,12 +2210,14 @@ function wireEvents() {
   renumberIds();
   document.getElementById('projName').textContent = state.projName || '';
   buildHierarchy();
+  migrateBaselines();
   recomputeWbs();
   const res = recalcAll();
   if (!res.ok) alert('คำเตือน: ข้อมูลตั้งต้นมี Circular Dependency:\n' + res.cycle.slice(0, 12).join('\n'));
   wireEvents();
   wireColResize();
   applyCritUI();
+  updateBlUI();
   updateUndoButtons();
   renderAll();
 })();
